@@ -13,7 +13,7 @@ const Footer = () => {
           {/* for logo */}
           <div className='flex flex-col gap-2 text-[#435058]'>
             <IoBook size={40}/>
-            <h1 className='text-[32px] leading-3 font-extrabold'>Booklet</h1>
+            <h1 className='text-[32px] leading-7 font-extrabold'>Estarr BookArt</h1>
           </div>
           {/* for contact info */}
           <div className='flex flex-col gap-2 text-[#435058]'>

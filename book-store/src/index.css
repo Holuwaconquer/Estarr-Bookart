@@ -12,13 +12,11 @@
 	background: linear-gradient(to right, #dcf76300, #DCF763),url('./assets/shop-bg.png') no-repeat left;
 	background-size: contain;
 }
-/* .showcase{
-	background: linear-gradient(to right, #bfb7b6db, #bfb7b6de) ,url('./assets/rightClip.png') no-repeat center;
-	background-size: cover;
-} */
+.coloredTxt{
+	color: #FF8682;
+}
 @media screen and (max-width: 1024px){
 	.shopUs{
 		background: #DCF763;
 	}
-    
 }
