@@ -35,19 +35,19 @@ app.use(helmet({
     },
   },
   hsts: {
-    maxAge: 31536000, // 1 year
+    maxAge: 31536000,
     includeSubDomains: true,
     preload: true
   }
 }));
 
-// CORS - allow configured frontend URL and Vite dev server
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.PRODUCTION_URL,
   'http://localhost:3000',
   'http://localhost:5173',
   'http://localhost:5174',
+  'https://estarrbookart.vercel.app'
 ].filter(Boolean);
 
 app.use(cors({
@@ -78,8 +78,8 @@ app.use('/api', apiLimiter);
 
 // Login rate limiting (stricter)
 const loginLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5,
+  windowMs: 60 * 60 * 1000,
+  max: 20,
   message: 'Too many login attempts, please try again later',
   skipSuccessfulRequests: true
 });
