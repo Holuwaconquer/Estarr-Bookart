@@ -15,7 +15,7 @@ import {
   HiSparkles
 } from 'react-icons/hi';
 import { motion, AnimatePresence } from 'framer-motion';
-import BookCard from '../components/BookCard';
+import BookCard from '../components/Bookcard.jsx';
 import { bookAPI, categoryAPI } from '../services/api';
 
 const CategoryPage = () => {
