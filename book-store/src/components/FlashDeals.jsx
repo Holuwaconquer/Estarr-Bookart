@@ -14,14 +14,14 @@ const FlashDeals = () => {
     seconds: 0
   });
   const [loading, setLoading] = useState(true);
-
+  const API_URL = import.meta.env.VITE_API_URL;
   // Fetch flash deals from backend
   useEffect(() => {
     const fetchFlashDeals = async () => {
       try {
         setLoading(true);
         // Use dedicated flash deals endpoint
-        const response = await fetch('http://localhost:5000/api/books/flash/deals?limit=4');
+        const response = await fetch(`${API_URL}/api/books/flash/deals?limit=4`);
         const result = await response.json();
         
         if (result.success && result.data) {
@@ -105,7 +105,6 @@ const FlashDeals = () => {
           minutes = 59;
           seconds = 59;
         } else {
-          // Reset to 24 hours when time's up
           hours = 24;
           minutes = 0;
           seconds = 0;
