@@ -68,7 +68,7 @@ const Overview = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl sm:text-5xl font-bold mb-2">Welcome back, {user?.name}! 👋</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Welcome back, {user?.name}!</h1>
           <p className="text-blue-100 text-lg">Here's your dashboard overview</p>
         </motion.div>
       </div>

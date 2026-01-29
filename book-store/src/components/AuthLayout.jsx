@@ -41,28 +41,6 @@ const AuthLayout = ({ children, title, subtitle, logo = true }) => {
         />
       </div>
 
-      {/* Logo */}
-      {logo && (
-        <Link to="/" className="absolute top-6 left-6 z-20">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="flex items-center gap-3"
-          >
-            <div className="w-12 h-12 bg-white rounded p-2 flex items-center justify-center">
-              <img 
-                src="/estarr-logo.png" 
-                className='w-full h-full object-contain drop-shadow-lg' 
-                alt="Estarr BookArt" 
-              />
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Estarr BookArt
-              </h1>
-            </div>
-          </motion.div>
-        </Link>
-      )}
 
       <div className="relative z-10 w-full max-w-md">
         <motion.div

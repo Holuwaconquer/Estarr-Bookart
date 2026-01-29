@@ -35,12 +35,12 @@ const DashboardLayout = () => {
         {/* Sidebar Header */}
         <div className="p-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 flex items-center justify-center">
-              <span className="text-white text-xl font-bold">EB</span>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl font-bold"><img src="/estarr.jpeg" alt="Estarr BookArt Logo" className="w-full h-full object-contain" /></span>
             </div>
             <div>
               <h2 className="font-bold text-gray-900">Estarr BookArt</h2>
-              <p className="text-sm text-gray-500">Collector Dashboard</p>
+              <p className="text-sm text-gray-500">User Dashboard</p>
             </div>
           </div>
         </div>
@@ -53,12 +53,10 @@ const DashboardLayout = () => {
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-gray-900">{user?.name || user?.username || 'User'}</h3>
-              <p className="text-sm text-gray-500">{user?.email || 'Premium Member'}</p>
             </div>
           </div>
           <div className="mt-4 bg-blue-50 rounded-lg p-3">
-            <div className="text-sm text-blue-700 font-medium">Member Since: {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Jan 2024'}</div>
-            <div className="text-xs text-blue-600">Premium Member</div>
+            <div className="text-sm text-blue-700 font-medium">Member Since: {user?.createdAt && new Date(user.createdAt).toLocaleDateString()}</div>
           </div>
         </div>
 
@@ -106,7 +104,7 @@ const DashboardLayout = () => {
       <div className="md:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-lg bg-white shadow-md border border-slate-200"
+          className="p-2 rounded-lg bg-white/60 shadow-lg"
         >
           {sidebarOpen ? (
             <HiX className="w-6 h-6 text-gray-700" />

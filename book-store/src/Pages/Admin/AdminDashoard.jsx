@@ -39,21 +39,26 @@ const AdminDashboard = () => {
         setLoading(true);
         
         // Fetch orders and books
-        const [ordersRes, booksRes] = await Promise.all([
+        const [ordersRes, booksRes, userRes] = await Promise.all([
           orderAPI.getAllOrders({ limit: 100 }),
-          bookAPI.getAllBooks({ limit: 100 })
+          bookAPI.getAllBooks({ limit: 100 }),
+          userAPI.getAllUsers({ limit: 100})
         ]);
 
         const orders = ordersRes.data?.orders || [];
         const books = booksRes.data?.books || [];
+        const allUsers = userRes.data?.books || [];
 
         // Calculate stats
         const totalOrders = orders.length;
         const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
         const avgOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+        const totalUsers = allUsers.length
 
+        console.log(totalUsers);
+        
         setDashboardStats({
-          totalUsers: 0, // Would need users endpoint
+          totalUsers,
           totalOrders,
           totalRevenue,
           avgOrderValue: avgOrder

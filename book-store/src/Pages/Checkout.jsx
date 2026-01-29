@@ -39,8 +39,7 @@ const Checkout = () => {
   // Calculate totals
   const subtotal = items?.reduce((sum, item) => sum + (parseFloat(item.price) * (item.quantity || 1)), 0) || 0;
   const shippingFee = subtotal > 100 ? 0 : 9.99;
-  const tax = subtotal * 0.1;
-  const total = subtotal + shippingFee + tax;
+  const total = subtotal + shippingFee;
 
   // Fetch bank accounts on mount
   useEffect(() => {
@@ -324,7 +323,7 @@ const Checkout = () => {
                     </button>
                     <button
                       onClick={() => setStep(3)}
-                      className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700"
+                      className="flex-1 bg-purple-600 px-2 text-white py-3 rounded-lg font-bold hover:bg-purple-700"
                     >
                       Continue to Payment
                     </button>
@@ -573,10 +572,6 @@ const Checkout = () => {
                 <div className="flex justify-between text-sm">
                   <span>Shipping</span>
                   <span>{shippingFee === 0 ? 'Free' : `₦${shippingFee.toFixed(2)}`}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Tax (10%)</span>
-                  <span>₦{tax.toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex justify-between font-bold text-lg mt-4">

@@ -25,8 +25,7 @@ const Cart = () => {
     return s + (price * (it.quantity || 1));
   }, 0) || 0;
   const shippingFee = subtotal > 5000 ? 0 : 1499;
-  const tax = subtotal * 0.075;
-  const total = subtotal + shippingFee + tax;
+  const total = subtotal + shippingFee;
 
   const handleCheckout = () => {
     if (!authenticated) {
@@ -254,11 +253,7 @@ const Cart = () => {
                         Free shipping on orders over ₦5,000
                       </p>
                     )}
-                    
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Tax (7.5%)</span>
-                      <span className="font-medium">₦{tax.toFixed(2)}</span>
-                    </div>
+
                   </div>
 
                   <div className="flex justify-between items-center mb-8">

@@ -49,7 +49,7 @@ const UserSignup = () => {
 
     try {
       setLoading(true);
-      await authAPI.signup({
+      await authAPI.register({
         name: formData.name,
         email: formData.email,
         password: formData.password
