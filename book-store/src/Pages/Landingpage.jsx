@@ -50,12 +50,16 @@ const Landingpage = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+
+        setLoading(true);
         const response = await categoryAPI.getAllCategories();
-        const apiCategories = response.data?.categories || [];
+        console.log('Categories response:', response);
+        // API returns data directly as an array
+        const fetchedCategories = response.data?.categories || [];
         
-        if (apiCategories.length > 0) {
+        if (fetchedCategories.length > 0) {
           // Map API categories with default styling
-          const styledCategories = apiCategories.slice(0, 8).map((cat, idx) => ({
+          const styledCategories = fetchedCategories.slice(0, 8).map((cat, idx) => ({
             name: cat.name || cat,
             icon: defaultCategories[idx]?.icon || '📚',
             color: defaultCategories[idx]?.color || 'from-blue-500 to-cyan-500',
@@ -157,13 +161,13 @@ const Landingpage = () => {
       className="group bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200 relative"
     >
       {/* Discount Badge */}
-      {/* {book?.discount && book.discount > 0 && (
+      {book?.discount && book.discount > 0 && (
         <div className="absolute top-3 left-3 z-10">
           <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
             -{book.discount}%
           </div>
         </div>
-      )} */}
+      )}
 
       {/* New Badge */}
       {showBadge && (
@@ -177,7 +181,7 @@ const Landingpage = () => {
       {/* Wishlist Button */}
       <button
         onClick={() => toggleWishlist(book._id)}
-        className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-white transition-colors"
+        className="absolute top-3 right-3 z-10 flex items-center justify-center bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-white transition-colors"
       >
         {wishlist.has(book._id) ? (
           <HiHeart className="w-5 h-5 text-red-500" />
@@ -264,7 +268,7 @@ const Landingpage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section with Categories (20%), Flash Deals (60%) and Right Sidebar (20%) */}
-      <section className="py-6 px-4">
+      <section className="px-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex gap-4">
             {/* Categories - 20% width */}
@@ -302,7 +306,7 @@ const Landingpage = () => {
           <div className="flex overflow-x-auto pb-4 snap-x snap-mandatory md:grid md:grid-cols-3 lg:grid-cols-8 gap-4 md:gap-[32px] md:overflow-visible">
             {loading ? (
               [...Array(8)].map((_, idx) => (
-                <div key={idx} className="bg-white rounded-xl p-4 shadow-lg animate-pulse">
+                <div style={{ minWidth: '150px' }} key={idx} className="bg-white rounded-xl p-4 shadow-lg animate-pulse">
                   <div className="bg-gray-200 h-16 rounded-lg mb-4"></div>
                   <div className="space-y-3">
                     <div className="h-2 bg-gray-200 rounded"></div>
@@ -321,7 +325,7 @@ const Landingpage = () => {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => navigate(`/category?cat=${cat.name.toLowerCase()}`)}
                   className={`${cat.bg} rounded-xl p-4 cursor-pointer hover:shadow-xl transition-all text-center group border border-gray-200 flex-shrink-0 w-40 snap-center md:w-auto md:snap-none`}
-                  style={{ minWidth: '160px' }}
+                  style={{ minWidth: '150px' }}
                 >
                   <div className={`inline-flex p-3 rounded-lg bg-gradient-to-r ${cat.color} text-white text-2xl mb-3 group-hover:scale-105 transition-transform duration-300`}>
                     {cat.icon}
@@ -352,7 +356,7 @@ const Landingpage = () => {
               // Loading skeletons
               [...Array(4)].map((_, idx) => (
                 <div key={idx} className="bg-white rounded-xl p-4 shadow-lg animate-pulse">
-                  <div className="bg-gray-200 h-64 rounded-lg mb-4"></div>
+                  <div style={{ minWidth: '160px' }} className="bg-gray-200 h-64 rounded-lg mb-4"></div>
                   <div className="space-y-3">
                     <div className="h-4 bg-gray-200 rounded"></div>
                     <div className="h-3 bg-gray-200 rounded w-3/4"></div>

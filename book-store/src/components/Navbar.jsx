@@ -22,7 +22,6 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [categories, setCategories] = useState([]);
-  const { isPromoBarVisible } = useContext(PromoBarContext) || { isPromoBarVisible: true };
   const { totalItems } = useCart();
   const navigate = useNavigate();
 
@@ -80,13 +79,7 @@ const Navbar = () => {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className={`fixed left-0 right-0 z-40 transition-all duration-300 ${
-          isPromoBarVisible ? 'top-[35px] md:top-[40px]' : 'top-0'
-        } ${
-          isScrolled 
-            ? 'bg-white shadow-2xl py-3' 
-            : 'bg-gray-100 py-5'
-        }`}
+        className='fixed left-0 right-0 z-40 transition-all duration-300 top-0 bg-gray-100 py-3'
       >
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="flex items-center justify-between">
@@ -107,7 +100,7 @@ const Navbar = () => {
               </motion.div>
               <div className="flex flex-col">
                 <motion.h1 
-                  className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
+                  className="md:text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
                   whileHover={{ scale: 1.02 }}
                 >
                   Estarr BookArt
@@ -165,7 +158,7 @@ const Navbar = () => {
             </nav>
 
             {/* Right Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center md:gap-2">
               {/* Search */}
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -374,7 +367,7 @@ const Navbar = () => {
       </AnimatePresence>
 
       {/* Spacer for fixed header - Adjusted for new design */}
-      <div className={`transition-all duration-300 ${isScrolled ? 'h-20' : 'h-24'}`}></div>
+      <div className={`transition-all duration-300 ${isScrolled ? 'h-20' : 'h-18'}`}></div>
     </>
   );
 };

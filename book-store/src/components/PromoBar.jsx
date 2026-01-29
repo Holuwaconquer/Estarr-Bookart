@@ -35,7 +35,7 @@ const PromoBar = () => {
       initial={{ y: -60, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 text-white py-2 px-4 fixed top-0 left-0 right-0 z-50 shadow-lg"
+      className="bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 text-white md:py-2 px-4 fixed top-0 left-0 right-0 z-50 shadow-lg"
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
         <div className="flex-1 text-center min-w-0">
