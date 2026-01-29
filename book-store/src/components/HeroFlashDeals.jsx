@@ -15,12 +15,13 @@ const HeroFlashDeals = () => {
   const [loading, setLoading] = useState(true);
   const [swiperRef, setSwiperRef] = useState(null);
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchDeals = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/books/flash/deals?limit=8');
+        const response = await fetch(`${API_URL}/api/books/flash/deals?limit=8`);
         const result = await response.json();
         
         if (result.success && result.data) {
@@ -32,7 +33,7 @@ const HeroFlashDeals = () => {
         console.error('Error fetching flash deals:', error);
         // Fallback: get any books with discounts
         try {
-          const response = await fetch('http://localhost:5000/api/books?limit=8');
+          const response = await fetch(`${API_URL}/api/books?limit=8`);
           const result = await response.json();
           if (result.data?.books) {
             const dealsWithDiscount = result.data.books.filter(b => b.discount > 0);

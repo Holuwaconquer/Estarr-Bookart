@@ -24,12 +24,14 @@ const AdminFlashSalesManagement = () => {
     priority: 1
   });
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   // Fetch all books
   useEffect(() => {
     const fetchBooks = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/books?limit=100');
+        const response = await fetch(`${API_URL}/api/books?limit=100`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -51,7 +53,7 @@ const AdminFlashSalesManagement = () => {
   // Fetch flash sales products (those with high discounts)
   const fetchFlashSales = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/books/flash/deals?limit=20');
+      const response = await fetch(`${API_URL}/api/books/flash/deals?limit=20`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -85,7 +87,7 @@ const AdminFlashSalesManagement = () => {
       }
 
       // Update book with discount
-      const updateResponse = await fetch(`http://localhost:5000/api/books/${formData.bookId}`, {
+      const updateResponse = await fetch(`${API_URL}/api/books/${formData.bookId}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -130,7 +132,7 @@ const AdminFlashSalesManagement = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/books/${bookId}`, {
+      const response = await fetch(`${API_URL}api/books/${bookId}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -170,7 +172,7 @@ const AdminFlashSalesManagement = () => {
 
       const originalPrice = book.originalPrice || book.price / (1 - (book.discount || 0) / 100);
 
-      const response = await fetch(`http://localhost:5000/api/books/${bookId}`, {
+      const response = await fetch(`${API_URL}/api/books/${bookId}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
