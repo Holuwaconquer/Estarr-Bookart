@@ -70,8 +70,16 @@ const userLogin = async (req, res) =>{
 
 const ForgotPassword = async (req, res) => {
   const { email } = req.body;
+  // Normalize email: sometimes frontend may send an object like { email: 'x' }
+  let emailValue = email;
+  if (typeof emailValue === 'object' && emailValue !== null) {
+    if (typeof emailValue.email === 'string') emailValue = emailValue.email;
+    else if (typeof emailValue.value === 'string') emailValue = emailValue.value;
+  }
+
   try{
-    const user = await userModel.findOne({ email });
+    console.log('ForgotPassword payload:', req.body, 'using email:', emailValue);
+    const user = await userModel.findOne({ email: emailValue });
     if(!user){
       console.log("No user find with the email");
       return res.status(404).json({ message: "Email is not registered", status: false })

@@ -1,102 +1,149 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { useFormik } from 'formik'
-import * as yup from 'yup'
-import axios from 'axios'
-import { IoBook } from "react-icons/io5";
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import {toast, ToastContainer} from 'react-toastify'
-import { AuthContext } from '../../AuthContext';
-import OAuthComponent from '../../components/OAuthComponent';
-import { IoIosArrowBack } from "react-icons/io";
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { authAPI } from '../../services/api';
+import { motion } from 'framer-motion';
+import { HiMail, HiArrowLeft, HiArrowRight, HiCheckCircle } from 'react-icons/hi';
+import toast from 'react-hot-toast';
+import AuthLayout from '../../components/AuthLayout';
 
-const ForgotPassword = () => { 
-  const { authenticated, user, setAuthenticated, authLoading } = useContext(AuthContext)
-  useEffect(() => {
-    if (!authLoading && authenticated) {
-      window.location.assign('/')
-    }
-  }, [authenticated, authLoading])
-  const navigate = useNavigate()
-  const formik = useFormik({
-    initialValues: {
-      email: '',
-    },
-    validationSchema: yup.object().shape({
-      email: yup.string().email('This is not a valid email').required('Email must be provided'),
-    }),
+const ForgotPassword = () => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-    onSubmit: (values) =>{
-      console.log(values);
-      axios.post('http://localhost:5000/user/forgot-password', values)
-      .then((res) =>{
-        if(res.data.status){
-          toast.success("Password reset link sent to your email!")
-           setTimeout(() => {
-            navigate('/account/verify-code', {state: {email: values.email }});
-          }, 1500);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await authAPI.forgotPassword({ email });
+      setSubmitted(true);
+      toast.success('Check your email for reset link', {
+        icon: '📧',
+        style: {
+          background: '#1e293b',
+          color: '#fff',
+          border: '1px solid #334155'
         }
-      }).catch((err)=>{
-        if(err.status==404){
-          toast.error("This email is not registered")
-        }
-      })
+      });
+    } catch (error) {
+      toast.error(error.message || 'Failed to send reset link');
+    } finally {
+      setLoading(false);
     }
-  })
+  };
+
   return (
-    <div className='w-full h-full py-[40px] px-[10%] flex flex-col items-center justify-center'>
-      <div className='w-full grid md:grid-cols-[50%_50%] items-center justify-center gap-[4rem]'>
-        <div className='w-full flex flex-col gap-4 justify-self-end'>
-          {/* for logo */}
-          <div className='flex'>
-            <div onClick={() => window.location.href='/'} className='flex items-center gap-2 text-[#515DEF]'>
-              <IoBook size={40}/>
-              <h1 className='text-[32px] leading-7 font-extrabold'>Estarr BookArt</h1>
-            </div>
+    <AuthLayout
+      title="Reset Password"
+      subtitle={submitted ? 'Check your email for instructions' : 'Enter your email to reset your password'}
+    >
+      {!submitted ? (
+        <motion.form
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          onSubmit={handleSubmit}
+          className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-xl border border-gray-800/50 rounded-2xl p-8 shadow-2xl"
+        >
+          <div className="mb-6">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-3">
+              <HiMail className="w-4 h-4 text-cyan-400" />
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              required
+              className="w-full px-4 py-3 bg-white/5 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              We'll send a reset link to this email address
+            </p>
           </div>
-          {/* form */}
-          <div className='w-full flex flex-col gap-4'>
-            <div>
-              <div onClick={() => window.location.href='/login'} className='text-[#313131] flex items-center cursor-pointer'>
-                <IoIosArrowBack size={24}/>
-                <p className='text-[14px] font-medium'>Back to login</p>
-              </div>
-              <h1 className='text-[40px] text-[#313131] font-semibold'>Forgot Password?</h1>
-              <p className='text-[16px] text-[#313131]'>Don’t worry, happens to all of us. Enter your email below to recover your password</p>
-            </div>
-            <form onSubmit={formik.handleSubmit} className='w-full flex flex-col gap-4'>
-              {/* for email */}
-              <div className='relative'>
-                <label className='bg-white absolute top-[-10px] left-5 px-2 text-[16px] text-[#1C1B1F] font-medium' htmlFor="email">Email</label>
-                <input type="email" onBlur={formik.handleBlur} onChange={formik.handleChange} name='email' placeholder='johndoe@example.com' className='w-full border border-[#79747E] rounded-[4px] p-4 text-[#1C1B1F] outline-0'/>
-                <small className='text-red-600'>{formik.touched.email && formik.errors.email}</small>
-              </div>
-              <div>
-                <button type='submit' disabled={!formik.isValid || !formik.dirty} className={`w-full rounded-[4px] py-[10px] bg-[#515DEF] text-[#F3F3F3] cursor-pointer ${(!formik.isValid || !formik.dirty) ? 'cursor-not-allowed opacity-50 pointer-events-none' : ''}`}>Submit</button>
-              </div>
-            </form>
-            <div className='w-full flex flex-col gap-8'>
-              <div className='w-full flex items-center gap-4'>
-                <span className='h-[0.5px] w-[40%] bg-[#313131]'></span>
-                <span>Or Sign up with</span>
-                <span className='h-[0.5px] w-[40%] bg-[#313131]'></span>
-              </div>
-              <OAuthComponent />
-            </div>
-          </div>
-        </div>
-        <div className='w-full h-full rounded-[30px] bg-[#D9D9D9] flex flex-col items-center justify-center'>
-          <DotLottieReact
-            src="https://lottie.host/645bd343-126f-47af-bdbf-8c6423539d46/htMDuHmwiu.lottie"
-            loop
-            autoplay
-          />
-        </div>
-        
-      </div>
-      <ToastContainer />
-    </div>
-  )
-}
 
-export default ForgotPassword
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="submit"
+            disabled={loading}
+            className="w-full px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-bold hover:shadow-lg hover:shadow-cyan-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                Send Reset Link <HiArrowRight className="w-5 h-5" />
+              </>
+            )}
+          </motion.button>
+
+          <div className="mt-6">
+            <Link
+              to="/login"
+              className="flex items-center justify-center gap-2 text-cyan-400 hover:text-cyan-300 font-semibold transition-colors"
+            >
+              <HiArrowLeft className="w-4 h-4" />
+              Back to Login
+            </Link>
+          </div>
+        </motion.form>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-xl border border-gray-800/50 rounded-2xl p-8 shadow-2xl text-center"
+        >
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="w-16 h-16 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6"
+          >
+            <HiCheckCircle className="w-8 h-8 text-white" />
+          </motion.div>
+
+          <h3 className="text-2xl font-bold text-white mb-3">
+            Email Sent!
+          </h3>
+
+          <p className="text-gray-400 mb-4">
+            We've sent a password reset link to{' '}
+            <span className="text-cyan-400 font-semibold">{email}</span>
+          </p>
+
+          <p className="text-sm text-gray-500 mb-6">
+            Check your inbox and follow the link to reset your password. The link will expire in 1 hour.
+          </p>
+
+          <div className="space-y-4">
+            <p className="text-gray-400">
+              Didn't receive an email?{' '}
+              <button
+                onClick={() => {
+                  setSubmitted(false);
+                  setEmail('');
+                }}
+                className="text-cyan-400 font-semibold hover:text-cyan-300 transition-colors"
+              >
+                Try again
+              </button>
+            </p>
+
+            <Link
+              to="/login"
+              className="inline-block px-6 py-2 bg-white/5 hover:bg-white/10 border border-gray-700/50 text-white rounded-lg font-medium transition-all"
+            >
+              Back to Login
+            </Link>
+          </div>
+        </motion.div>
+      )}
+    </AuthLayout>
+  );
+};
+
+export default ForgotPassword;

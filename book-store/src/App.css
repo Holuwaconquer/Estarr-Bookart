@@ -1,0 +1,60 @@
+:root{
+	--brand-900: #28303F;
+	--brand-400: #DCF763;
+	--muted: #435058;
+	--glass: rgba(241,242,238,0.6);
+}
+
+/* Card shadow used for premium feel */
+.shadow-card{
+	box-shadow: 0 8px 30px rgba(40,48,63,0.08), 0 2px 6px rgba(40,48,63,0.04);
+}
+
+/* subtle rounded container */
+.rounded-2xl{
+	border-radius: 20px;
+}
+
+/* utilities for glass effect */
+.glass{
+	background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.45));
+	backdrop-filter: blur(6px);
+}
+
+/* small helpers */
+.line-clamp-3{
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+}
+
+/* Make buttons slightly larger on desktop */
+button{
+	transition: transform 120ms ease, box-shadow 120ms ease;
+}
+button:active{transform: translateY(1px);} 
+
+/* Landing page and hero styles */
+.hero-cta{
+	background: linear-gradient(90deg, var(--brand-400), #bfe67a);
+}
+
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 1.5rem;
+}
+
+/* Make the site background subtle and premium */
+body{
+	background: linear-gradient(180deg,#FEFEFE 0%, #FBFDF8 100%);
+	color: var(--brand-900);
+}
+
+/* Larger heading scale for premium look */
+h1,h2,h3{letter-spacing:-0.02em}
+
+/* Responsive image treatment */
+img{max-width:100%;height:auto}
+

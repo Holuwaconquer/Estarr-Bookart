@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import Google from '../assets/google.png';
 import Facebook from '../assets/facebook.png';
 import Apple from '../assets/apple.png';
-import axios from 'axios';
+import api from '../services/api';
 import { toast, ToastContainer } from 'react-toastify';
 
 const OAuthComponent = () => {
@@ -21,19 +21,17 @@ const OAuthComponent = () => {
     try {
       const idToken = response.credential; // This is the JWT ID token
 
-      const res = await axios.post(
-        'http://localhost:5000/user/google-auth',
-        { idToken },
-        { withCredentials: true }
-      );
-
-      if (res.data.status) {
-        toast.success('Login Successful!');
-        setTimeout(() => {
-          window.location.assign('/');
-        }, 2500);
-      } else {
-        toast.error(res.data.message || 'Authentication failed');
+      try {
+        const res = await api.userAPI.oauthGoogle(idToken);
+        if (res && (res.data || res.success)) {
+          toast.success('Login Successful!');
+          setTimeout(() => window.location.assign('/'), 1200);
+        } else {
+          toast.error(res.message || 'Authentication failed');
+        }
+      } catch (err) {
+        toast.error('Authentication failed');
+        console.error(err);
       }
     } catch (err) {
       toast.error('Google OAuth failed');
@@ -69,19 +67,17 @@ const OAuthComponent = () => {
           const accessToken = response.authResponse.accessToken;
 
           try {
-            const res = await axios.post(
-              'http://localhost:5000/user/facebook-auth',
-              { accessToken },
-              { withCredentials: true }
-            );
-
-            if (res.data.status) {
-              toast.success('Facebook login successful!');
-              setTimeout(() => {
-                window.location.assign('/');
-              }, 2500);
-            } else {
-              toast.error(res.data.message || 'Facebook authentication failed');
+            try {
+              const res = await api.userAPI.oauthFacebook(accessToken);
+              if (res && (res.data || res.success)) {
+                toast.success('Facebook login successful!');
+                setTimeout(() => window.location.assign('/'), 1200);
+              } else {
+                toast.error(res.message || 'Facebook authentication failed');
+              }
+            } catch (err) {
+              toast.error('Facebook OAuth failed');
+              console.error('Facebook login error:', err);
             }
           } catch (err) {
             toast.error('Facebook OAuth failed');

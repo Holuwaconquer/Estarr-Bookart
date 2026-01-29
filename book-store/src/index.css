@@ -1,22 +1,346 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
-*{
-  font-family: "Urbanist", sans-serif;
+
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
 }
 
-.clipPath, .showcase{
-	background: linear-gradient(to right, #bfb7b6db, #bfb7b6de) ,url('./assets/rightClip.png') no-repeat center;
-	background-size: cover;
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
 }
-.shopUs{
-	background: linear-gradient(to right, #dcf76300, #DCF763),url('./assets/shop-bg.png') no-repeat left;
-	background-size: contain;
+
+::-webkit-scrollbar-track {
+  background: #0A0A0A;
 }
-.coloredTxt{
-	color: #FF8682;
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #D97706, #B45309);
+  border-radius: 5px;
 }
-@media screen and (max-width: 1024px){
-	.shopUs{
-		background: #DCF763;
-	}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #F59E0B, #D97706);
+}
+
+/* Selection color */
+::selection {
+  background: rgba(245, 158, 11, 0.3);
+  color: white;
+}
+
+/* Focus styles */
+*:focus {
+  outline: 2px solid rgba(245, 158, 11, 0.5);
+  outline-offset: 2px;
+}
+
+
+:root {
+  --brand-primary: #7C3AED;
+  --brand-primary-dark: #5B21B6;
+  --brand-primary-light: #8B5CF6;
+  --brand-secondary: #10B981;
+  --brand-accent: #F59E0B;
+  --brand-surface: #FFFFFF;
+  --brand-surface-alt: #F8FAFC;
+  --brand-text-primary: #1E293B;
+  --brand-text-secondary: #64748B;
+  --brand-border: #E2E8F0;
+}
+
+* {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  background: var(--brand-surface-alt);
+  color: var(--brand-text-primary);
+}
+
+/* Premium animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Premium button hover effect */
+.hover-effect {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hover-effect::before {
+  content: '';
+  position: absolute;
+  background: radial-gradient(circle at center, rgba(124, 58, 237, 0.2) 0%, transparent 70%);
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.hover-effect:hover::before {
+  opacity: 1;
+}
+
+/* Directional hover effect */
+.btn-directional-hover {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.btn-directional-hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+
+.btn-directional-hover:hover::before {
+  transform: translateX(100%);
+}
+
+/* Glass morphism */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Premium shadow system */
+.shadow-premium {
+  box-shadow: 0 10px 40px rgba(124, 58, 237, 0.08),
+              0 2px 10px rgba(124, 58, 237, 0.04),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.shadow-card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.shadow-card-hover:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 60px rgba(124, 58, 237, 0.12),
+              0 8px 30px rgba(124, 58, 237, 0.08);
+}
+
+/* Responsive Typography */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Scrollbar Hide */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth transitions */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Better image rendering */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Prevent horizontal scroll */
+body {
+  overflow-x: hidden;
+}
+
+/* Touch-friendly buttons */
+@media (hover: none) and (pointer: coarse) {
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  input, select, textarea {
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+}
+
+/* Swiper custom styles */
+.swiper-pagination-bullet {
+  background-color: rgb(255 255 255 / 0.5);
+  width: 12px;
+  height: 12px;
+}
+
+.swiper-pagination-bullet-active {
+  background-color: white;
+  width: 32px;
+  border-radius: 9999px;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+  color: white;
+}
+
+/* Product card hover effects */
+.product-card {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+/* Gradient text */
+.gradient-text {
+  background-image: linear-gradient(to right, #2563eb, #06b6d4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Loading skeleton animation */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background-image: linear-gradient(to bottom, #3b82f6, #06b6d4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-image: linear-gradient(to bottom, #2563eb, #0891b2);
+}
+
+/* Add these to your global CSS file */
+.navbar-glass {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-link-active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #06b6d4, #3b82f6);
+  border-radius: 2px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Additional utility classes */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+
+/* Fix for Swiper width issues */
+.swiper {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  overflow: hidden !important;
+}
+
+.swiper-slide {
+  width: 100% !important;
+  flex-shrink: 0;
+  display: block;
+}
+
+/* Ensure all swiper containers have proper constraints */
+.swiper-container {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }

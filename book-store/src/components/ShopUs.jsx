@@ -1,19 +1,36 @@
 import React from 'react';
+import Bookcard from './Bookcard';
+import Book1 from '../assets/book1.png'
+import Book2 from '../assets/book2.png'
+import Book3 from '../assets/book3.png'
+
+const sampleBooks = [
+  { id: 1, image: Book1, title: 'The Silent Sea', author: 'Clive Cussler', price: '14.99', rating: 4.6, description: 'A thrilling aquatic adventure with danger at every turn.' },
+  { id: 2, image: Book2, title: 'Lost Horizon', author: 'James Hilton', price: '11.50', rating: 4.2, description: 'A classic tale exploring the mysterious valley of Shangri-La.' },
+  { id: 3, image: Book3, title: 'Deep Waters', author: 'Boyd Morrison', price: '16.00', rating: 4.8, description: 'High-octane suspense and a dive into forgotten secrets.' },
+]
 
 const ShopUs = () => {
+  const handleAdd = (book) => {
+    // placeholder for add-to-cart integration
+    console.log('Add to cart', book)
+  }
+
   return (
     <div className='m-4 lg:m-0'>
-      <div className='w-full shopUs px-[6%] py-[100px] lg:flex lg:flex-row'>
-        <div className='w-full lg:w-[40%] flex flex-col gap-4 text-center items-center justify-center ml-auto'>
-          <h1 className='text-[26px] md:text-[42px] font-bold'>Why Shop with Us?</h1>
-          <p className='text-[#435058] text-[18px] md:text-[22px] font-medium'>
-            Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.
-          </p>
-          <button className='text-[#DCF763] rounded-[40px] border border-[#435058] hover:bg-transparent hover:text-[#435058] cursor-pointer transition-all bg-[#435058] text-[20px] md:text-[24px] font-bold px-[19px] py-[5px] md:px-[40px] md:py-[15px]'>
-            Read More
-          </button>
-        </div>
+      <div className='w-full shopUs px-[6%] py-[60px]'>
+        <div className='max-w-[1200px] mx-auto'>
+          <h2 className='text-3xl md:text-4xl font-extrabold text-center mb-6'>Featured Books</h2>
+          <p className='text-center text-[#435058] max-w-[900px] mx-auto mb-8'>Discover curated picks hand-selected for quality, storytelling and design — crafted for readers who love beautiful books.</p>
 
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+            {sampleBooks.map(b => (
+              <div key={b.id} className='flex justify-center'>
+                <Bookcard book={b} onAddToCart={handleAdd} />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

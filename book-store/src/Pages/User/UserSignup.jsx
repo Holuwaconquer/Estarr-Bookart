@@ -1,152 +1,259 @@
-import React, { useContext, useEffect } from 'react'
-import { useFormik } from 'formik'
-import * as yup from 'yup'
-import axios from 'axios'
-import { IoBook } from "react-icons/io5";
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import {toast, ToastContainer} from 'react-toastify'
-import { AuthContext } from '../../AuthContext';
-import OAuthComponent from '../../components/OAuthComponent';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { authAPI } from '../../services/api';
+import { motion } from 'framer-motion';
+import { HiMail, HiLockClosed, HiUser, HiEye, HiEyeOff, HiArrowRight, HiCheckCircle } from 'react-icons/hi';
+import toast from 'react-hot-toast';
+import AuthLayout from '../../components/AuthLayout';
 
 const UserSignup = () => {
-  const { authenticated, authLoading } = useContext(AuthContext)
-  useEffect(() => {
-    if (!authLoading && authenticated) {
-      window.location.assign('/')
-    }
-  }, [authenticated, authLoading])
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
 
-  const formik = useFormik({
-    initialValues: {
-      firstname: '',
-      lastname: '',
-      email: '',
-      phonenumber: '',
-      password: '',
-      confirmpassword: '',
-      agree: false
-    },
-    validationSchema: yup.object().shape({
-      firstname: yup.string().required('This field is required'),
-      lastname: yup.string().required('This field is required'),
-      email: yup.string().email('This is not a valid email').required('Email must be provided'),
-      phonenumber: yup.string().required('Phone number is required'),
-      password: yup.string().required('Password is required for registration').min(6, 'password must be at least 6 characters long'),
-      confirmpassword: yup.string().oneOf([yup.ref('password')], "password must match").required('please confirm your password'),
-      agree: yup.boolean().oneOf([true], 'you must accept the terms and conditions')
-    }),
+  const calculatePasswordStrength = (password) => {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+    if (/\d/.test(password)) strength++;
+    if (/[^a-zA-Z\d]/.test(password)) strength++;
+    setPasswordStrength(strength);
+  };
 
-    onSubmit: (values) =>{
-      console.log(values);
-      axios.post('http://localhost:5000/user/signup', values)
-      .then((res) =>{
-        console.log(res);
-        if(res.data.status){
-          toast.success('Congratulations! Your account has been created successfully')
-          setTimeout(() =>{
-            window.location.href = '/login'
-          }, 3000)
-        }
-      }).catch((err)=>{
-        console.log(err);
-        if(err.status === 400){
-          toast.error('This email has already been registered')
-        }
-        if(err.message=='Network Error'){
-          toast.error('Network error! cannot connect to server please try again')
-        }
-      })
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'password') calculatePasswordStrength(value);
+  };
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
     }
-  })
+
+    if (passwordStrength < 2) {
+      toast.error('Password must be strong (min 8 chars, uppercase, lowercase, number)');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await authAPI.signup({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      });
+      
+      toast.success('Account created successfully! Please log in.', {
+        icon: '🎉',
+        style: {
+          background: '#1e293b',
+          color: '#fff',
+          border: '1px solid #334155'
+        }
+      });
+      navigate('/login');
+    } catch (error) {
+      toast.error(error.message || 'Signup failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className='w-full h-full flex flex-col'>
-      <div className='w-full flex justify-start px-[7%] py-[40px]'>
-        <div onClick={() => window.location.href='/'} className='flex items-center gap-2 text-[#515DEF] cursor-pointer'>
-          <IoBook size={25}/>
-          <h1 className='text-[25px] leading-7 font-extrabold'>Estarr BookArt</h1>
+    <AuthLayout
+      title="Join Estarr BookArt"
+      subtitle="Create your premium bookstore account"
+    >
+      <motion.form
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        onSubmit={handleSignup}
+        className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-xl border border-gray-800/50 rounded-2xl p-8 shadow-2xl"
+      >
+        {/* Name Field */}
+        <div className="mb-5">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
+            <HiUser className="w-4 h-4 text-cyan-400" />
+            Full Name
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="John Doe"
+            required
+            className="w-full px-4 py-3 bg-white/5 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+          />
         </div>
-      </div>
-      <div className='w-full px-[10%] py-[20px] flex flex-col'>
-        <div className='w-full grid md:grid-cols-[50%_50%] justify-center gap-[4rem]'>
-          <div className='w-full rounded-[30px] bg-[#D9D9D9] flex flex-col items-center justify-center'>
-            <DotLottieReact
-              src="https://lottie.host/f50117ee-434a-45f2-b4d5-650064ff9bd3/cPgO2P5U4N.lottie"
-              loop
-              autoplay
-              className='w-auto h-full'
+
+        {/* Email Field */}
+        <div className="mb-5">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
+            <HiMail className="w-4 h-4 text-cyan-400" />
+            Email Address
+          </label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="your@email.com"
+            required
+            className="w-full px-4 py-3 bg-white/5 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+          />
+        </div>
+
+        {/* Password Field */}
+        <div className="mb-5">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
+            <HiLockClosed className="w-4 h-4 text-cyan-400" />
+            Password
+          </label>
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="••••••••"
+              required
+              className="w-full px-4 py-3 bg-white/5 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-cyan-400 transition-colors"
+            >
+              {showPassword ? <HiEyeOff className="w-5 h-5" /> : <HiEye className="w-5 h-5" />}
+            </button>
           </div>
-          <div className='w-full flex flex-col gap-4 justify-self-end'>
-            <div className='w-full flex flex-col gap-4'>
-              <div>
-                <h1 className='text-[40px] text-[#313131] font-semibold'>Sign up</h1>
-                <p className='text-[16px] text-[#313131]'>let's get you set up so you can access your personal account and start making purchases</p>
+
+          {/* Password Strength */}
+          {formData.password && (
+            <div className="mt-3 space-y-2">
+              <div className="flex gap-1">
+                {[...Array(4)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                      i < passwordStrength
+                        ? 'bg-gradient-to-r from-cyan-500 to-blue-500'
+                        : 'bg-white/10'
+                    }`}
+                  />
+                ))}
               </div>
-              <form onSubmit={formik.handleSubmit} className='w-full flex flex-col gap-4'>
-                <div className='w-full grid md:grid-cols-2 gap-4'>
-                  {/* for firstname */}
-                  <div className='relative'>
-                    <label className='bg-white absolute top-[-10px] left-5 px-2 text-[16px] text-[#1C1B1F] font-medium' htmlFor="firstname">First Name</label>
-                    <input type="text" onBlur={formik.handleBlur} onChange={formik.handleChange} name='firstname' placeholder='John' className='w-full border border-[#79747E] rounded-[4px] p-4 text-[#1C1B1F] outline-0'/>
-                    <small>{formik.touched.firstname && formik.errors.firstname}</small>
-                  </div>
-                  {/* for lastname */}
-                  <div className='relative'>
-                    <label className='bg-white absolute top-[-10px] left-5 px-2 text-[16px] text-[#1C1B1F] font-medium' htmlFor="lastname">Last Name</label>
-                    <input type="text" onBlur={formik.handleBlur} onChange={formik.handleChange} name='lastname' placeholder='Doe' className='w-full border border-[#79747E] rounded-[4px] p-4 text-[#1C1B1F] outline-0'/>
-                    <small>{formik.touched.lastname && formik.errors.lastname}</small>
-                  </div>
-                  {/* for email */}
-                  <div className='relative'>
-                    <label className='bg-white absolute top-[-10px] left-5 px-2 text-[16px] text-[#1C1B1F] font-medium' htmlFor="email">Email</label>
-                    <input type="email" onBlur={formik.handleBlur} onChange={formik.handleChange} name='email' placeholder='johndoe@example.com' className='w-full border border-[#79747E] rounded-[4px] p-4 text-[#1C1B1F] outline-0'/>
-                    <small>{formik.touched.email && formik.errors.email}</small>
-                    
-                  </div>
-                  {/* for phone number */}
-                  <div className='relative'>
-                    <label className='bg-white absolute top-[-10px] left-5 px-2 text-[16px] text-[#1C1B1F] font-medium' htmlFor="phonenumber">Phone Number</label>
-                    <input type="text" onBlur={formik.handleBlur} onChange={formik.handleChange} name='phonenumber' placeholder='000000000' className='w-full border border-[#79747E] rounded-[4px] p-4 text-[#1C1B1F] outline-0'/>
-                  </div>
-                </div>
-                <div className='w-full grid gap-4'>
-                  {/* for firstname */}
-                  <div className='relative'>
-                    <label className='bg-white absolute top-[-10px] left-5 px-2 text-[16px] text-[#1C1B1F] font-medium' htmlFor="password">Password</label>
-                    <input type="password" onBlur={formik.handleBlur} onChange={formik.handleChange} name='password' placeholder='00000000' className='w-full bg-white border border-[#79747E] rounded-[4px] p-4 text-[#1C1B1F] outline-0'/>
-                  </div>
-                  {/* for lastname */}
-                  <div className='relative'>
-                    <label className='bg-white absolute top-[-10px] left-5 px-2 text-[16px] text-[#1C1B1F] font-medium' htmlFor="confirmpassword">Confirm Password</label>
-                    <input type="password" onBlur={formik.handleBlur} onChange={formik.handleChange} name='confirmpassword' placeholder='000000' className='w-full border border-[#79747E] rounded-[4px] p-4 text-[#1C1B1F] outline-0'/>
-                  </div>
-                </div>
-                {/* for agree terms and conditions */}
-                <div className='flex gap-2 items-center'>
-                  <input type="checkbox" onBlur={formik.handleBlur} onChange={formik.handleChange} name='agree' className='border-2 border-[#313131]'/>
-                  <label htmlFor="agree"  className='text-[16px] font-bold'><span>I agree to all the <span className='coloredTxt'>Terms </span>and <span className='coloredTxt'>Privacy Policies</span> </span></label>
-                </div>
-                <div>
-                  <button type='submit' disabled={!formik.isValid || !formik.dirty} className={`w-full rounded-[4px] py-[10px] bg-[#515DEF] text-[#F3F3F3] cursor-pointer ${(!formik.isValid || !formik.dirty) ? 'cursor-not-allowed opacity-50 pointer-events-none' : ''}`}>Create Account</button>
-                </div>
-                <p className='text-center text-[#313131] font-medium'>Already have an account? <a className='coloredTxt' href="/login">Login</a></p>
-              </form>
-              <div className='w-full flex flex-col gap-8'>
-                <div className='w-full flex items-center gap-4'>
-                  <span className='h-[0.5px] w-[40%] bg-[#313131]'></span>
-                  <span>Or Sign up with</span>
-                  <span className='h-[0.5px] w-[40%] bg-[#313131]'></span>
-                </div>
-                <OAuthComponent />
+              <div className="flex items-center gap-2">
+                <span className={`text-xs ${
+                  passwordStrength < 2 ? 'text-red-400' :
+                  passwordStrength === 2 ? 'text-amber-400' :
+                  passwordStrength === 3 ? 'text-blue-400' :
+                  'text-green-400'
+                }`}>
+                  {passwordStrength < 2 && 'Weak password'}
+                  {passwordStrength === 2 && 'Fair password'}
+                  {passwordStrength === 3 && 'Good password'}
+                  {passwordStrength === 4 && 'Strong password'}
+                </span>
+                {passwordStrength >= 3 && (
+                  <HiCheckCircle className="w-4 h-4 text-green-400" />
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
-        <ToastContainer />
-      </div>
-      
-    </div>
-  )
-}
 
-export default UserSignup
+        {/* Confirm Password Field */}
+        <div className="mb-6">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
+            <HiLockClosed className="w-4 h-4 text-cyan-400" />
+            Confirm Password
+          </label>
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="••••••••"
+              required
+              className="w-full px-4 py-3 bg-white/5 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-cyan-400 transition-colors"
+            >
+              {showConfirmPassword ? <HiEyeOff className="w-5 h-5" /> : <HiEye className="w-5 h-5" />}
+            </button>
+          </div>
+          {formData.confirmPassword && formData.password === formData.confirmPassword && (
+            <p className="text-xs text-green-400 mt-2 flex items-center gap-1">
+              <HiCheckCircle className="w-4 h-4" /> Passwords match
+            </p>
+          )}
+        </div>
+
+        {/* Terms */}
+        <div className="flex items-start gap-2 mb-6">
+          <input
+            type="checkbox"
+            id="terms"
+            required
+            className="w-4 h-4 mt-1 rounded border-gray-700/50 bg-white/5 focus:ring-cyan-500"
+          />
+          <label htmlFor="terms" className="text-sm text-gray-300">
+            I agree to the{' '}
+            <a href="#" className="text-cyan-400 hover:text-cyan-300">Terms of Service</a>
+            {' '}and{' '}
+            <a href="#" className="text-cyan-400 hover:text-cyan-300">Privacy Policy</a>
+          </label>
+        </div>
+
+        {/* Submit Button */}
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          type="submit"
+          disabled={loading}
+          className="w-full px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-bold hover:shadow-lg hover:shadow-cyan-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Creating Account...
+            </>
+          ) : (
+            <>
+              Create Account <HiArrowRight className="w-5 h-5" />
+            </>
+          )}
+        </motion.button>
+
+        {/* Login Link */}
+        <p className="text-center mt-8 text-gray-400">
+          Already have an account?{' '}
+          <Link to="/login" className="text-cyan-400 font-semibold hover:text-cyan-300 transition-colors">
+            Sign in
+          </Link>
+        </p>
+      </motion.form>
+    </AuthLayout>
+  );
+};
+
+export default UserSignup;

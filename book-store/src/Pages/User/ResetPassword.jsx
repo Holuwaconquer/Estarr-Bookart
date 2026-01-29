@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { useFormik } from 'formik'
 import * as yup from 'yup'
-import axios from 'axios'
+import api from '../../services/api'
 import { IoBook } from "react-icons/io5";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import {toast, ToastContainer} from 'react-toastify'
@@ -14,6 +14,7 @@ import { useLocation } from 'react-router-dom';
 
 const ResetPassword = () => { 
   const { authenticated, user, setAuthenticated, authLoading } = useContext(AuthContext)
+  const [loginProcessing, setloginProcessing] = useState(false)
   const location = useLocation()
   const { email } = location.state || {};
   useEffect(() => {
@@ -23,44 +24,43 @@ const ResetPassword = () => {
   }, [authenticated, authLoading])
   const navigate = useNavigate()
   const formik = useFormik({
-    initialValues: {
-      code: '',
-    },
+    initialValues: { code: '' },
     validationSchema: yup.object().shape({
       code: yup.string()
-    .required('Reset code is required')
-    .matches(/^\d{6}$/, 'Code must be exactly 6 digits'),
+        .required('Reset code is required')
+        .matches(/^\d{6}$/, 'Code must be exactly 6 digits')
     }),
-
-    onSubmit: (values) =>{
+    onSubmit: async (values) => {
       console.log(values.code, email);
-      if(!email){
-        toast.error("No email provided for verification")
-        setTimeout(() => {
-          navigate('/account/forgot-password');
-        }, 1500);
+      setloginProcessing(true);
+      if (!email) {
+        toast.error('No email provided for verification');
+        setTimeout(() => navigate('/account/forgot-password'), 2000);
+        setloginProcessing(false);
         return;
       }
-      axios.post('http://localhost:5000/user/verify-reset-code', {code: values.code, email})
-      .then((res) =>{
-        if(res.data.status){
-          toast.success("Code verified! You can now reset your password.")
-           setTimeout(() => {
-            navigate('/account/reset-password', { state: {email: email, code: values.code } } );
+      try {
+        const res = await api.userAPI.verifyResetCode(email, values.code);
+        if (res && (res.data || res.success)) {
+          toast.success('Code verified! You can now reset your password.');
+          setTimeout(() => {
+            navigate('/account/reset-password', { state: { email, code: values.code } });
           }, 1500);
         }
-      }).catch((err)=>{
-        if(err.status==400 && err.response.data.message=='Invalid request'){
-          toast.error("Invalid request, please go back and try again!")
-        }
-        if(err.status==404 && err.response.data.message=='Invalid code'){
-          toast.error("Invalid code, please input the correct code  !")
+      } catch (err) {
+        if (err && err.status === 400) {
+          toast.error('Invalid request, please go back and try again!');
+        } else if (err && err.status === 404) {
+          toast.error('Invalid code, please input the correct code!');
+        } else {
+          toast.error('Verification failed');
         }
         console.log(err);
-        
-      })
+      } finally {
+        setloginProcessing(false);
+      }
     }
-  })
+  });
   return (
     <div className='w-full h-full flex flex-col'>
         {/* for logo */}
@@ -91,20 +91,20 @@ const ResetPassword = () => {
                   <small className='text-red-600'>{formik.touched.code && formik.errors.code}</small>
                 </div>
                 <div>
-                  <button type='submit' disabled={!formik.isValid || !formik.dirty} className={`w-full rounded-[4px] py-[10px] bg-[#515DEF] text-[#F3F3F3] cursor-pointer ${(!formik.isValid || !formik.dirty) ? 'cursor-not-allowed opacity-50 pointer-events-none' : ''}`}>Verify</button>
+                  <button type='submit' disabled={ !formik.isValid || !formik.dirty || loginProcessing } className={`w-full rounded-[4px] py-[10px] bg-[#515DEF] text-[#F3F3F3] cursor-pointer ${( !formik.isValid || !formik.dirty || loginProcessing ) ? 'cursor-not-allowed opacity-50 pointer-events-none' : ''}`}>{ loginProcessing ? 'verifying..' : 'Verify' }</button>
                 </div>
               </form>
               <div className='w-full flex flex-col gap-8'>
                 <div className='w-full flex items-center gap-4'>
                   <span className='h-[0.5px] w-[40%] bg-[#313131]'></span>
-                  <span className='w-auto'>Or Sign up with</span>
+                  <span className='w-auto text-center'>Or Sign up with</span>
                   <span className='h-[0.5px] w-[40%] bg-[#313131]'></span>
                 </div>
                 <OAuthComponent />
               </div>
             </div>
           </div>
-          <div className='w-full h-full rounded-[30px] bg-[#D9D9D9] flex flex-col items-center justify-center'>
+          <div className='w-full h-full hidden rounded-[30px] bg-[#D9D9D9] md:flex flex-col items-center justify-center'>
             <DotLottieReact
               src="https://lottie.host/cf8f94bf-4913-4654-9f10-283bf544782e/Xvpqa4Sop5.lottie"
               loop

@@ -1,126 +1,204 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { useFormik } from 'formik'
-import * as yup from 'yup'
-import axios from 'axios'
-import { IoBook } from "react-icons/io5";
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import {toast, ToastContainer} from 'react-toastify'
+import React, { useState, useContext } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../../AuthContext';
-import OAuthComponent from '../../components/OAuthComponent';
-import PasswordCheck from './PasswordCheck';
+import { authAPI } from '../../services/api';
+import { motion } from 'framer-motion';
+import { HiMail, HiLockClosed, HiEye, HiEyeOff, HiArrowRight, HiSparkles, HiUser } from 'react-icons/hi';
+import toast from 'react-hot-toast';
+import AuthLayout from '../../components/AuthLayout';
 
-const UserLogin = () => { 
-  const { authenticated, user, setAuthenticated, authLoading } = useContext(AuthContext)
-  const [pwdType, setpwdType] = useState('password')
-  useEffect(() => {
-    if (!authLoading && authenticated) {
-      window.location.assign('/')
-    }
-  }, [authenticated, authLoading])
-  
-  const formik = useFormik({
-    initialValues: {
-      email: '',
-      password: '',
-    },
-    validationSchema: yup.object().shape({
-      email: yup.string().email('This is not a valid email').required('Email must be provided'),
-      password: yup.string().required('Password is required for registration').min(6, 'password must be at least 6 characters long'),
-    }),
+const UserLogin = () => {
+  const navigate = useNavigate();
+  const { setUser, setAuthenticated } = useContext(AuthContext);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-    onSubmit: (values) =>{
-      console.log(values);
-      axios.post('http://localhost:5000/user/login', values, { withCredentials:  true})
-      .then((res) =>{
-        if(res.data.status){
-          toast.success('Congratulations! Your have gain access to your account')
-          setTimeout(() =>{
-            setAuthenticated(true)
-            
-          }, 2500)
+  const handleChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const response = await authAPI.login(formData);
+      
+      if (response && response.data) {
+        const token = response.data.token || response.data.accessToken;
+        if (token) {
+          localStorage.setItem('token', token);
+          localStorage.setItem('accessToken', token);
         }
-      }).catch((err)=>{
-        console.log(err);
-        if(err.response?.status === 400){
-          toast.error('This email has already been registered')
+        
+        if (response.data.user) {
+          setUser(response.data.user);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+          setAuthenticated(true);
         }
-        if(err.message=='Network Error'){
-          toast.error('Network error! cannot connect to server please try again')
-        }
-      })
+        
+        toast.success('Welcome back!', {
+          icon: '📚',
+          style: {
+            background: '#1e293b',
+            color: '#fff',
+            border: '1px solid #334155'
+          }
+        });
+        navigate(response.data.user?.role === 'admin' ? '/admin/dashboard' : '/dashboard');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
-  })
+  };
+
   return (
-    <div className='w-full h-full flex flex-col'>
-      <div className='w-full flex justify-start px-[7%] py-[40px]'>
-        <div onClick={() => window.location.href='/'} className='flex items-center gap-2 text-[#515DEF] cursor-pointer'>
-          <IoBook size={25}/>
-          <h1 className='text-[25px] leading-7 font-extrabold'>Estarr BookArt</h1>
+    <AuthLayout
+      title="Welcome Back"
+      subtitle="Sign in to your Estarr BookArt account"
+    >
+      <motion.form
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        onSubmit={handleLogin}
+        className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-xl border border-gray-800/50 rounded-2xl p-8 shadow-2xl"
+      >
+        {/* Email Field */}
+        <div className="mb-6">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
+            <HiMail className="w-4 h-4 text-cyan-400" />
+            Email Address
+          </label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="your@email.com"
+            required
+            className="w-full px-4 py-3 bg-white/5 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+          />
         </div>
-      </div>
-      <div className='w-full h-full py-[20px] px-[10%] flex flex-col items-center justify-center'>
-        <div className='w-full grid md:grid-cols-[50%_50%] items-center justify-center gap-[4rem]'>
-          <div className='w-full flex flex-col gap-4 justify-self-end'>
-            {/* form */}
-            <div className='w-full flex flex-col gap-4'>
-              <div>
-                <h1 className='text-[40px] text-[#313131] font-semibold'>Login</h1>
-                <p className='text-[16px] text-[#313131]'>Login to access your personal account</p>
-              </div>
-              <form onSubmit={formik.handleSubmit} className='w-full flex flex-col gap-4'>
-                {/* for email */}
-                <div className='relative'>
-                  <label className='bg-white absolute top-[-10px] left-5 px-2 text-[16px] text-[#1C1B1F] font-medium' htmlFor="email">Email</label>
-                  <input type="email" onBlur={formik.handleBlur} onChange={formik.handleChange} name='email' placeholder='johndoe@example.com' className='w-full border border-[#79747E] rounded-[4px] p-4 text-[#1C1B1F] outline-0'/>
-                  <small>{formik.touched.email && formik.errors.email}</small>
-                </div>
-                <div className='w-full grid gap-4'>
-                  {/* for firstname */}
-                  <div className='relative'>
-                    <label className='bg-white absolute top-[-10px] left-5 px-2 text-[16px] text-[#1C1B1F] font-medium z-10' htmlFor="password">Password</label>
-                    <div className="relative">
-                      <input type={pwdType} onBlur={formik.handleBlur} onChange={formik.handleChange} name='password' placeholder='00000000' className='w-full bg-white border border-[#79747E] rounded-[4px] p-4 text-[#1C1B1F] outline-0'/>
-                      <PasswordCheck pwdType={pwdType} setpwdType={setpwdType}/>
-                    </div>
-                    <small className='text-red-600'>{formik.touched.password && formik.errors.password}</small>
-                  </div>
-                </div>
-                {/* for agree terms and conditions */}
-                <div className='flex gap-2 items-center'>
-                  <input type="checkbox" onBlur={formik.handleBlur} onChange={formik.handleChange} name='agree' className='border-2 border-[#313131]'/>
-                  <div className='flex items-center justify-between w-full'>
-                    <label htmlFor="agree"  className='text-[16px] font-bold'>Remember me</label>
-                    <a href='/account/forgot-password' className='coloredTxt'>Forgot Password</a>
-                  </div>
-                </div>
-                <div>
-                  <button type='submit' disabled={!formik.isValid || !formik.dirty} className={`w-full rounded-[4px] py-[10px] bg-[#515DEF] text-[#F3F3F3] cursor-pointer ${(!formik.isValid || !formik.dirty) ? 'cursor-not-allowed opacity-50 pointer-events-none' : ''}`}>Login</button>
-                </div>
-                <p className='text-center text-[#313131] font-medium'>Don’t have an account? <a className='coloredTxt' href="/register">Sign up</a></p>
-              </form>
-              <div className='w-full flex flex-col gap-8'>
-                <div className='w-full flex items-center gap-4'>
-                  <span className='h-[0.5px] w-[40%] bg-[#313131]'></span>
-                  <span>Or Sign up with</span>
-                  <span className='h-[0.5px] w-[40%] bg-[#313131]'></span>
-                </div>
-                <OAuthComponent />
-              </div>
-            </div>
-          </div>
-          <div className='w-full h-full rounded-[30px] bg-[#D9D9D9] flex flex-col items-center justify-center'>
-            <DotLottieReact
-              src="https://lottie.host/645bd343-126f-47af-bdbf-8c6423539d46/htMDuHmwiu.lottie"
-              loop
-              autoplay
-            />
-          </div>
-          
-        </div>
-        <ToastContainer />
-      </div>
-    </div>
-  )
-}
 
-export default UserLogin
+        {/* Password Field */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-300">
+              <HiLockClosed className="w-4 h-4 text-cyan-400" />
+              Password
+            </label>
+            <Link
+              to="/account/forgot-password"
+              className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="••••••••"
+              required
+              className="w-full px-4 py-3 bg-white/5 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-cyan-400 transition-colors"
+            >
+              {showPassword ? <HiEyeOff className="w-5 h-5" /> : <HiEye className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Remember Me */}
+        <div className="flex items-center gap-2 mb-6">
+          <input
+            type="checkbox"
+            id="remember"
+            className="w-4 h-4 rounded border-gray-700/50 bg-white/5 focus:ring-cyan-500"
+          />
+          <label htmlFor="remember" className="text-sm text-gray-300">
+            Remember me for 30 days
+          </label>
+        </div>
+
+        {/* Submit Button */}
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          type="submit"
+          disabled={loading}
+          className="w-full px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-bold hover:shadow-lg hover:shadow-cyan-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Signing In...
+            </>
+          ) : (
+            <>
+              Sign In <HiArrowRight className="w-5 h-5" />
+            </>
+          )}
+        </motion.button>
+
+        {/* Divider */}
+        <div className="my-6">
+          <div className="flex items-center">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent to-gray-700/50" />
+            <span className="px-4 text-sm text-gray-500">or continue with</span>
+            <div className="flex-1 h-px bg-gradient-to-r from-gray-700/50 to-transparent" />
+          </div>
+        </div>
+
+        {/* Social Login */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <button
+            type="button"
+            className="px-4 py-3 bg-white/5 hover:bg-white/10 border border-gray-700/50 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Google
+          </button>
+          <button
+            type="button"
+            className="px-4 py-3 bg-white/5 hover:bg-white/10 border border-gray-700/50 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+            Facebook
+          </button>
+        </div>
+
+        {/* Sign Up Link */}
+        <p className="text-center text-gray-400">
+          Don't have an account?{' '}
+          <Link to="/register" className="text-cyan-400 font-semibold hover:text-cyan-300 transition-colors">
+            Create one
+          </Link>
+        </p>
+      </motion.form>
+    </AuthLayout>
+  );
+};
+
+export default UserLogin;

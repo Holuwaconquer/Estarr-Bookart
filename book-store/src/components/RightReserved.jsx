@@ -1,13 +1,18 @@
-import React from 'react'
+import React from 'react';
 
 const RightReserved = () => {
-    const date = new Date();
-    const year = date.getFullYear();
-  return (
-    <div className='w-full bg-[#4350582b] p-4 flex flex-col items-center justify-center'>
-        <p className='text-[18px] text-[#435058]'>All Right Reserved. Copyright © {year}</p>
-    </div>
-  )
-}
+  const currentYear = new Date().getFullYear();
 
-export default RightReserved
+  return (
+    <div className="bg-gray-900 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center text-gray-500 text-sm">
+          <p>© {currentYear} Estarr BookArt. All premium editions are authenticated and guaranteed.</p>
+          <p className="mt-1 text-xs">Estarr BookArt is a registered trademark. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RightReserved;

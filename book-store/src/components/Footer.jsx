@@ -1,96 +1,157 @@
-import React from 'react'
-import { IoBook } from "react-icons/io5";
-import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
+import React from 'react';
 import { Link } from 'react-router-dom';
+import { 
+  IoBook,
+  IoLocationOutline,
+  IoCallOutline,
+  IoMailOutline,
+  IoLogoFacebook,
+  IoLogoTwitter,
+  IoLogoInstagram,
+  IoLogoYoutube
+} from 'react-icons/io5';
 
 const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <div className='w-full bg-[#F1F2EE] flex flex-col gap-4 px-[6%] py-[3%]'>
-      <div className='w-full grid md:grid-cols-3 lg:grid-cols-5 gap-5 md:items-start'>
-        {/* for contact info and logo */}
-        <div className='w-full flex flex-col gap-4'>
-          {/* for logo */}
-          <div className='flex flex-col gap-2 text-[#435058]'>
-            <IoBook size={40}/>
-            <h1 className='text-[32px] leading-7 font-extrabold'>Estarr BookArt</h1>
-          </div>
-          {/* for contact info */}
-          <div className='flex flex-col gap-2 text-[#435058]'>
-            <p className='text-[24px] font-bold'>Contact Info</p>
-            <p className='font-bold'>Address: <span className='font-normal text-[#848C8E]'>Lorem Ipsum is simply dummy text</span></p>
-            <p className='font-bold'>Call us: <span className='font-normal text-[#848C8E]'> +91 94038XXXXX</span></p>
-            <p className='font-bold'>Email us: <span className='font-normal text-[#848C8E]'> support@xyz.in</span></p>
-          </div>
-          {/* for social link */}
-          <div className='flex flex-col gap-2 text-[#435058]'>
-            <p className='text-[24px] font-bold'>Follow Us</p>
-            <div className='flex items-center gap-2'>
-              {/* for facebook */}
-              <div className='w-[42px] h-[42px] rounded-[12px] bg-[#DCF763] flex flex-col items-center justify-center border border-[#435058]'>
-                <FaFacebook className='text-[24px] text-[#435058]'/>
+    <footer className="bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
+          {/* Brand & Contact */}
+          <div className="lg:col-span-1">
+            <Link to="/" className="inline-flex items-center gap-3 mb-6">
+              <div className="w-15 h-15 rounded-xl p-1 bg-white flex items-center justify-center">
+                <img src="/estarr-logo.png" className='w-full h-full object-contain' alt="logo" />
               </div>
-              {/* for x */}
-              <div className='w-[42px] h-[42px] rounded-[12px] bg-[#DCF763] flex flex-col items-center justify-center border border-[#435058]'>
-                <FaXTwitter className='text-[24px] text-[#435058]'/>
+              <span className="text-xl font-bold">Estarr BookArt</span>
+            </Link>
+            
+            <p className="text-gray-300 mb-6 text-sm leading-relaxed">
+              Your journey to greatness begins with a good book. Shop quality, affordable reads at EStarr Bookart: Your Home of Good Books.
+            </p>
+            
+            {/* Contact Info */}
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <IoLocationOutline className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-sm">Address</p>
+                  <p className="text-gray-400 text-sm">OAU Ile-Ife, Osun State, Nigeria</p>
+                </div>
               </div>
-              {/* for instagram */}
-              <div className='w-[42px] h-[42px] rounded-[12px] bg-[#DCF763] flex flex-col items-center justify-center border border-[#435058]'>
-                <FaInstagram className='text-[24px] text-[#435058]'/>
+              
+              <div className="flex items-center gap-3">
+                <IoCallOutline className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-sm">Phone</p>
+                  <p className="text-gray-400 text-sm">+234 814 515 7410</p>
+                </div>
               </div>
-              {/* for youtube */}
-              <div className='w-[42px] h-[42px] rounded-[12px] bg-[#DCF763] flex flex-col items-center justify-center border border-[#435058]'>
-                <FaYoutube className='text-[24px] text-[#435058]'/>
+              
+              <div className="flex items-center gap-3">
+                <IoMailOutline className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-sm">Email</p>
+                  <p className="text-gray-400 text-sm">contact@estarrbookart.com.ng</p>
+                </div>
               </div>
             </div>
           </div>
-        
-        </div>
-        {/* for company */}
-        <div className='w-full flex flex-col gap-4'>
-          <p className='text-[24px] font-bold text-[#435058]'>Company</p>
-          <div className='w-full flex flex-col gap-2 text-[22px] font-medium text-[#435058]'>
-           <Link to='/about-us'>About Us</Link>
-           <Link to='/about-us'>Publisher Partnership</Link>
-           <Link to='/about-us'>Contact Us</Link>
-           <Link to='/about-us'>Privacy Policy</Link>
-           <Link to='/about-us'>Disclaimer</Link>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="text-lg font-semibold mb-6 pb-2 border-b border-gray-700">Company</h3>
+            <ul className="space-y-3">
+              {[
+                { path: '/about', label: 'About Us' },
+                { path: '/collections', label: 'Collections' },
+                { path: '/limited-editions', label: 'Limited Editions' },
+                { path: '/signed-books', label: 'Signed Copies' },
+                { path: '/concierge', label: 'Concierge Service' },
+              ].map((link) => (
+                <li key={link.path}>
+                  <Link 
+                    to={link.path}
+                    className="text-gray-400 hover:text-white transition-colors text-sm hover:underline"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-        {/* for my account */}
-        <div className='w-full flex flex-col gap-4'>
-          <p className='text-[24px] font-bold text-[#435058]'>Company</p>
-          <div className='w-full flex flex-col gap-2 text-[22px] font-medium text-[#435058]'>
-           <Link to='/about-us'>My Orders</Link>
-           <Link to='/about-us'>My Addresses</Link>
-           <Link to='/about-us'>My Personal Info</Link>
+
+          {/* Customer Support */}
+          <div>
+            <h3 className="text-lg font-semibold mb-6 pb-2 border-b border-gray-700">Support</h3>
+            <ul className="space-y-3">
+              {[
+                { path: '/help', label: 'Help Center' },
+                { path: '/shipping', label: 'Shipping Policy' },
+                { path: '/returns', label: 'Returns & Exchanges' },
+                { path: '/authenticity', label: 'Authenticity Guarantee' },
+                { path: '/contact', label: 'Contact Us' },
+              ].map((link) => (
+                <li key={link.path}>
+                  <Link 
+                    to={link.path}
+                    className="text-gray-400 hover:text-white transition-colors text-sm hover:underline"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-        {/* for my support */}
-        <div className='w-full flex flex-col gap-4'>
-          <p className='text-[24px] font-bold text-[#435058]'>Support</p>
-          <div className='w-full flex flex-col gap-2 text-[22px] font-medium text-[#435058]'>
-           <Link to='/about-us'>Terms of Use</Link>
-           <Link to='/about-us'>How to Order</Link>
-           <Link to='/about-us'>Shipping Policy</Link>
-           <Link to='/about-us'>Return Policy</Link>
-          </div>
-        </div>
-        {/* for more books */}
-        <div className='w-full flex flex-col gap-4'>
-          <p className='text-[24px] font-bold text-[#435058]'>More Books</p>
-          <div className='w-full flex flex-col gap-2 text-[22px] font-medium text-[#435058]'>
-           <Link to='/about-us'>Indian Languages</Link>
-           <Link to='/about-us'>International Languages</Link>
-           <Link to='/about-us'>Award Winning Books</Link>
-           <Link to='/about-us'>Frontlist Picks Books</Link>
-           <Link to='/about-us'>Used Books</Link>
-           <Link to='/about-us'>Exams & Age</Link>
+
+          {/* Legal & Social */}
+          <div>
+            <h3 className="text-lg font-semibold mb-6 pb-2 border-b border-gray-700">Legal</h3>
+            <ul className="space-y-3 mb-8">
+              {[
+                { path: '/privacy', label: 'Privacy Policy' },
+                { path: '/terms', label: 'Terms of Service' },
+                { path: '/cookies', label: 'Cookie Policy' },
+                { path: '/accessibility', label: 'Accessibility' },
+              ].map((link) => (
+                <li key={link.path}>
+                  <Link 
+                    to={link.path}
+                    className="text-gray-400 hover:text-white transition-colors text-sm hover:underline"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            {/* Social Media */}
+            <div>
+              <h4 className="font-semibold mb-4 text-sm">Follow Us</h4>
+              <div className="flex gap-3">
+                {[
+                  { icon: IoLogoFacebook, label: 'Facebook' },
+                  { icon: IoLogoTwitter, label: 'Twitter' },
+                  { icon: IoLogoInstagram, label: 'Instagram' },
+                  { icon: IoLogoYoutube, label: 'YouTube' },
+                ].map((social) => (
+                  <a
+                    key={social.label}
+                    href="#"
+                    className="w-10 h-10 rounded-lg bg-gray-800 hover:bg-purple-600 transition-colors flex items-center justify-center group"
+                    aria-label={social.label}
+                  >
+                    <social.icon className="w-5 h-5 text-gray-300 group-hover:text-white" />
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  )
-}
+    </footer>
+  );
+};
 
-export default Footer
+export default Footer;
