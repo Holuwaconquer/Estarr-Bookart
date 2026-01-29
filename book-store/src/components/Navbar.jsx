@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../contexts/CartContext.jsx';
 import { HiSparkles } from 'react-icons/hi';
 import { categoryAPI } from '../services/api';
-import { PromoBarContext } from './PromoBar';
+import Estarr from '../assets/estarr.jpeg';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -89,9 +89,9 @@ const Navbar = () => {
                 whileHover={{ scale: 1.05 }}
                 className="relative"
               >
-                <div className="w-8 h-8 md:w-12 md:h-12 bg-white rounded flex items-center justify-center">
+                <div className="w-8 h-8 p-1 md:w-12 md:h-12 bg-white rounded flex items-center justify-center">
                   <img 
-                    src="/estarr-logo.png" 
+                    src={Estarr} 
                     className='w-full h-full object-contain drop-shadow-lg' 
                     alt="Estarr BookArt Logo" 
                   />

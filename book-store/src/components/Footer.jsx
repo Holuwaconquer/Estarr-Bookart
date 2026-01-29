@@ -10,6 +10,7 @@ import {
   IoLogoInstagram,
   IoLogoYoutube
 } from 'react-icons/io5';
+import Estarr from '../assets/estarr.jpeg';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -22,7 +23,7 @@ const Footer = () => {
           <div className="lg:col-span-1">
             <Link to="/" className="inline-flex items-center gap-3 mb-6">
               <div className="w-15 h-15 rounded-xl p-1 bg-white flex items-center justify-center">
-                <img src="/estarr-logo.png" className='w-full h-full object-contain' alt="logo" />
+                <img src={Estarr} className='w-full h-full object-contain' alt="logo" />
               </div>
               <span className="text-xl font-bold">Estarr BookArt</span>
             </Link>
