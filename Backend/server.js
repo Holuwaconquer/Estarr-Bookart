@@ -5,10 +5,10 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 
 // Import routes
-const authRoutes = require('./src/routes/auth');
 const bookRoutes = require('./src/routes/books');
 const orderRoutes = require('./src/routes/orders');
 const paymentRoutes = require('./src/routes/payments');
@@ -20,7 +20,9 @@ const userRoutes = require('./src/routes/users');
 
 const app = express();
 
-// Middleware
+// Add cookie parser middleware (IMPORTANT for auth)
+app.use(cookieParser());
+
 // Enhanced security headers
 app.use(helmet({
   contentSecurityPolicy: {
@@ -59,7 +61,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Role'],
 }));
 
 // Rate limiting
@@ -84,7 +86,7 @@ const loginLimiter = rateLimit({
   skipSuccessfulRequests: true
 });
 
-app.use('/api/auth/login', loginLimiter);
+app.use('/api/users/login', loginLimiter);
 
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
@@ -114,8 +116,7 @@ const connectDB = async () => {
   }
 };
 
-// Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
@@ -123,7 +124,6 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/bank-accounts', bankAccountRoutes);
-app.use('/api/users', userRoutes);
 
 // Health check endpoint for Render
 app.get('/health', (req, res) => {

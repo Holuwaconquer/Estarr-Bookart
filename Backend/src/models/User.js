@@ -18,8 +18,8 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters'],
-    select: false
+    minlength: [8, 'Password must be at least 8 characters'],
+    select: false 
   },
   role: {
     type: String,
@@ -33,7 +33,14 @@ const userSchema = new mongoose.Schema({
   verificationToken: String,
   resetPasswordToken: String,
   resetPasswordExpire: Date,
-  phone: String,
+  phone: {
+    type: String,
+    default: ''
+  },
+  phonenumber: {
+    type: String,
+    default: ''
+  },
   address: String,
   city: String,
   state: String,
@@ -80,6 +87,12 @@ userSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
 });
+userSchema.methods.validatePassword = function(password, callback) {
+  bcrypt.compare(password, this.password, (err, isMatch) => {
+    if (err) return callback(err);
+    callback(null, isMatch);
+  });
+};
 
 // Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {

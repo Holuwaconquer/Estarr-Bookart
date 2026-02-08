@@ -205,19 +205,26 @@ exports.getBooksByCategory = async (req, res, next) => {
 exports.getFlashDeals = async (req, res, next) => {
   try {
     const { limit = 4 } = req.query;
+    
+    console.log('🔥 Getting flash deals with limit:', limit);
 
     const books = await Book.find({ discount: { $gt: 0 } })
       .sort('-discount')
       .limit(parseInt(limit))
       .select('-__v');
 
+    console.log('📊 Books with discounts found:', books.length);
+
     const booksWithFinalPrice = books.map(book => ({
       ...book.toObject(),
       finalPrice: book.finalPrice
     }));
 
+    console.log('✅ Flash deals response:', booksWithFinalPrice.map(b => ({ title: b.title, discount: b.discount })));
+
     return ApiResponse.success(res, 'Flash deals retrieved', booksWithFinalPrice);
   } catch (error) {
+    console.error('❌ Error getting flash deals:', error);
     next(error);
   }
 };
@@ -240,18 +247,27 @@ exports.createBook = async (req, res, next) => {
 // @access  Private/Admin
 exports.updateBook = async (req, res, next) => {
   try {
+    const bookId = req.params.id;
+    const updateData = req.body;
+    
+    console.log('📝 Updating book:', { bookId, updateData });
+
     const book = await Book.findByIdAndUpdate(
-      req.params.id,
-      req.body,
+      bookId,
+      updateData,
       { new: true, runValidators: true }
     ).select('-__v');
 
     if (!book) {
+      console.log('❌ Book not found:', bookId);
       return ApiResponse.error(res, 'Book not found', 404);
     }
 
+    console.log('✅ Book updated successfully:', { bookId, discount: book.discount, price: book.price });
+
     return ApiResponse.success(res, 'Book updated successfully', book);
   } catch (error) {
+    console.error('❌ Error updating book:', error);
     next(error);
   }
 };

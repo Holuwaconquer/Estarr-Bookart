@@ -12,6 +12,7 @@ router.get('/:id', categoryController.getCategoryById);
 router.post('/', protect, authorize('admin'), categoryController.createCategory);
 router.put('/:id', protect, authorize('admin'), categoryController.updateCategory);
 router.delete('/:id', protect, authorize('admin'), categoryController.deleteCategory);
-router.get('/admin/all', protect, authorize('admin'), categoryController.getAdminCategories);
 
+// router.get('/admin/all', protect, authorize('admin'), categoryController.getAdminCategories);
+router.get('/admin/all', categoryController.getAdminCategories);
 module.exports = router;

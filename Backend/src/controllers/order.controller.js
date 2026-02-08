@@ -7,7 +7,7 @@ const ApiResponse = require('../utils/apiResponse');
 // @access  Private
 exports.createOrder = async (req, res, next) => {
   try {
-    const { items, shippingAddress, paymentMethod } = req.body;
+    const { items, shippingAddress, paymentMethod, shippingFee: incomingShippingFee } = req.body;
     const userId = req.userId;
 
     // Validate items
@@ -50,10 +50,19 @@ exports.createOrder = async (req, res, next) => {
       await book.save();
     }
 
-    // Calculate totals
-    const shippingFee = subtotal > 100 ? 0 : 9.99;
+    // Calculate totals - use frontend shipping fee if provided, otherwise calculate
+    const shippingFee = incomingShippingFee !== undefined && incomingShippingFee !== null 
+      ? Number(incomingShippingFee) 
+      : (subtotal > 100 ? 0 : 9.99); // Fallback to old logic
     const tax = subtotal * 0.1; // 10% tax
     const total = subtotal + shippingFee + tax;
+
+    console.log('📦 Order creation - Shipping fee:', { 
+      incoming: incomingShippingFee, 
+      used: shippingFee, 
+      subtotal, 
+      total 
+    });
 
     // Create order
     const order = await Order.create({
@@ -120,14 +129,26 @@ exports.getOrderById = async (req, res, next) => {
 // @access  Private/Admin
 exports.getAllOrders = async (req, res, next) => {
   try {
+    console.log('\n========== getAllOrders START ==========');
+    console.log('📦 getAllOrders called:', { userId: req.userId, userRole: req.userRole });
+    console.log('Full req.query:', JSON.stringify(req.query));
+    
     const { page = 1, limit = 20, status } = req.query;
     
+    console.log('Extracted params:', { page, limit, status });
+    console.log('Param types:', { pageType: typeof page, limitType: typeof limit, statusType: typeof status });
+    
     const query = {};
-    if (status) query.status = status;
+    if (status && status !== 'undefined' && status !== undefined) {
+      query.status = status;
+      console.log('Status filter applied:', status);
+    }
 
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
+
+    console.log('Computed values:', { pageNum, limitNum, skip });
 
     const [orders, total] = await Promise.all([
       Order.find(query)
@@ -139,7 +160,10 @@ exports.getAllOrders = async (req, res, next) => {
       Order.countDocuments(query)
     ]);
 
-    return ApiResponse.success(res, 'Orders retrieved successfully', {
+    console.log('📊 Database result:', { ordersLength: orders.length, total });
+    console.log('✅ Orders found:', orders.length, 'Total:', total);
+    
+    const responseData = {
       orders,
       pagination: {
         page: pageNum,
@@ -147,8 +171,19 @@ exports.getAllOrders = async (req, res, next) => {
         total,
         pages: Math.ceil(total / limitNum)
       }
+    };
+
+    console.log('Response structure:', {
+      ordersCount: responseData.orders.length,
+      pagination: responseData.pagination
     });
+
+    const result = ApiResponse.success(res, 'Orders retrieved successfully', responseData);
+    console.log('========== getAllOrders END ==========\n');
+    return result;
   } catch (error) {
+    console.error('❌ Error fetching orders:', error);
+    console.error('Stack:', error.stack);
     next(error);
   }
 };
@@ -342,6 +377,51 @@ exports.approveRefund = async (req, res, next) => {
 
     return ApiResponse.success(res, 'Refund approved successfully', order);
   } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Upload proof of payment for an order
+// @route   POST /api/orders/:id/upload-proof
+// @access  Private
+exports.uploadOrderProof = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId;
+
+    console.log('📤 Upload proof request:', { orderId: id, userId, file: req.file?.filename });
+
+    // Check if file is provided
+    if (!req.file) {
+      console.error('❌ No file provided in upload');
+      return ApiResponse.error(res, 'No file provided', 400);
+    }
+
+    const order = await Order.findById(id);
+    if (!order) {
+      console.error('❌ Order not found:', id);
+      return ApiResponse.error(res, 'Order not found', 404);
+    }
+
+    // Check if user is owner of order
+    if (order.user.toString() !== userId) {
+      console.error('❌ Unauthorized: User mismatch', { orderUser: order.user.toString(), userId });
+      return ApiResponse.error(res, 'Unauthorized', 403);
+    }
+
+    // Construct the file URL - will be accessible at /uploads/payments/filename
+    const fileName = req.file.filename;
+    const proofUrl = `/uploads/payments/${fileName}`;
+
+    order.proofOfPayment = proofUrl;
+    order.paymentStatus = 'processing'; // Update status to show proof is received
+    await order.save();
+
+    console.log('✅ Proof of payment uploaded for order:', { orderId: id, proofUrl, fileName });
+
+    return ApiResponse.success(res, 'Proof of payment uploaded successfully', order);
+  } catch (error) {
+    console.error('❌ Error uploading proof:', error);
     next(error);
   }
 };

@@ -19,6 +19,12 @@ const bookSchema = new mongoose.Schema({
     required: [true, 'Price is required'],
     min: [0, 'Price cannot be negative']
   },
+  shippingCost: {
+    type: Number,
+    default: 0,
+    min: [0, 'Shipping cost cannot be negative'],
+    description: 'Shipping cost for this product. If not set, shipping is free'
+  },
   originalPrice: {
     type: Number,
     min: [0, 'Original price cannot be negative']

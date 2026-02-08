@@ -47,6 +47,10 @@ const orderSchema = new mongoose.Schema({
     default: 'pending'
   },
   paymentId: String,
+  proofOfPayment: {
+    type: String,
+    description: 'URL to uploaded proof of payment (for manual bank transfer)'
+  },
   subtotal: {
     type: Number,
     required: true,
