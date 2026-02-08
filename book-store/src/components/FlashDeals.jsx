@@ -20,29 +20,37 @@ const FlashDeals = () => {
     const fetchFlashDeals = async () => {
       try {
         setLoading(true);
-        // Use dedicated flash deals endpoint
-        const response = await fetch(`${API_URL}/api/books/flash/deals?limit=4`);
-        const result = await response.json();
+        console.log('🔥 Fetching flash deals from:', `${API_URL}/api/books/flash/deals?limit=4`);
         
-        if (result.success && result.data) {
-          const flashDeals = result.data.map((book, idx) => ({
+        const response = await fetch(`${API_URL}/api/books/flash/deals?limit=4`);
+        console.log('📦 Flash deals response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ Flash deals result:', result);
+        
+        if (result.success && result.data && result.data.length > 0) {
+          console.log('📊 Flash deals count:', result.data.length);
+          const flashDeals = result.data.map((book) => ({
             id: book._id,
             title: book.title,
-            discount: book.discount,
+            discount: book.discount || 0,
             price: book.price,
-            originalPrice: book.originalPrice || book.price / (1 - book.discount / 100),
-            image: book.image,
-            expires: ['06:32:15', '04:15:30', '08:45:20', '12:20:45'][idx % 4]
+            originalPrice: book.originalPrice || (book.discount ? book.price / (1 - book.discount / 100) : book.price),
+            image: book.image
           }));
           
           setDeals(flashDeals);
         } else {
-          // Fallback to static data if API fails
+          console.warn('⚠️ No flash deals from API, using fallback');
           throw new Error('No flash deals found');
         }
       } catch (error) {
-        console.error('Error fetching flash deals:', error);
-        // Fallback to static data
+        console.error('❌ Error fetching flash deals:', error);
+        console.log('📌 Using fallback static data');
         setDeals([
           { 
             id: 1, 
@@ -51,7 +59,6 @@ const FlashDeals = () => {
             price: 4500,
             originalPrice: 9000,
             image: 'https://images.unsplash.com/photo-1507842217343-583f7270bfba?q=80&w=500',
-            expires: '06:32:15' 
           },
           { 
             id: 2, 
@@ -60,7 +67,6 @@ const FlashDeals = () => {
             price: 5500,
             originalPrice: 10000,
             image: 'https://images.unsplash.com/photo-1502933691298-84fc14542831?q=80&w=500',
-            expires: '04:15:30' 
           },
           { 
             id: 3, 
@@ -69,7 +75,6 @@ const FlashDeals = () => {
             price: 3999,
             originalPrice: 9999,
             image: 'https://images.unsplash.com/photo-1543002588-d4d13a6f2e5f?q=80&w=500',
-            expires: '08:45:20' 
           },
           { 
             id: 4, 
@@ -78,7 +83,6 @@ const FlashDeals = () => {
             price: 6499,
             originalPrice: 9999,
             image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=500',
-            expires: '12:20:45' 
           },
         ]);
       } finally {
@@ -87,7 +91,7 @@ const FlashDeals = () => {
     };
 
     fetchFlashDeals();
-  }, []);
+  }, [API_URL]);
 
   // Countdown timer
   useEffect(() => {
@@ -212,7 +216,7 @@ const FlashDeals = () => {
                           ₦{Math.round(deal.originalPrice).toLocaleString()}
                         </span>
                       </div>
-                      <p className="text-xs text-gray/70">Ends in {deal.expires}</p>
+                      <p className="text-xs text-gray/70">Ends in {formatTime(timeLeft.hours)}h :{formatTime(timeLeft.minutes)}m :{formatTime(timeLeft.seconds)}s</p>
                     </div>
                   </div>
                 </Link>

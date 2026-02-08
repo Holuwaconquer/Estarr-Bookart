@@ -35,6 +35,7 @@ export const CartProvider = ({ children }) => {
         description: item.description || bookData.description,
         category: item.category || bookData.category,
         discount: item.discount || bookData.discount,
+        shippingCost: item.shippingCost || bookData.shippingCost || 0,
         features: item.features || bookData.features,
         quantity: item.quantity || item.qty || 1
       };
@@ -87,6 +88,7 @@ export const CartProvider = ({ children }) => {
             description: fullBook?.description || item.description,
             category: fullBook?.category || item.category,
             discount: fullBook?.discount || item.discount,
+            shippingCost: fullBook?.shippingCost || item.shippingCost || 0,
             features: fullBook?.features || item.features,
             quantity: item.quantity || item.qty || 1
           };
@@ -176,6 +178,7 @@ export const CartProvider = ({ children }) => {
             description: fullBook?.description || item.description,
             category: fullBook?.category || item.category,
             discount: fullBook?.discount || item.discount,
+            shippingCost: fullBook?.shippingCost || item.shippingCost || 0,
             features: fullBook?.features || item.features,
             quantity: item.quantity || 1
           };
@@ -232,11 +235,46 @@ export const CartProvider = ({ children }) => {
       const token = localStorage.getItem('accessToken');
       
       if (token) {
+        console.log('🗑️ Removing item from cart:', itemId);
+        
         await cartAPI.removeFromCart(itemId);
+        
+        // Fetch all books to enrich response (same as updateQuantity)
+        const booksResponse = await bookAPI.getAllBooks({ limit: 200 });
+        const allBooks = booksResponse.data?.books || booksResponse.data || [];
+        
+        // Get cart and enrich items with full product data
         const response = await cartAPI.getCart();
-        setCart(normalizeItems(response.data.items || []));
+        console.log('📦 Cart after removal:', response.data.items);
+        
+        const enrichedItems = (response.data.items || []).map(item => {
+          const bookId = item.book || item._id || item.id;
+          const fullBook = allBooks.find(b => b._id === bookId || b.id === bookId);
+          
+          return {
+            id: bookId,
+            _id: bookId,
+            book: bookId,
+            title: fullBook?.title || item.title || 'Unknown Title',
+            author: fullBook?.author || item.author || 'Unknown Author',
+            price: fullBook?.price !== undefined ? fullBook.price : (item.price || 0),
+            image: fullBook?.image || item.image,
+            coverImage: fullBook?.coverImage || item.coverImage,
+            edition: fullBook?.edition || item.edition,
+            description: fullBook?.description || item.description,
+            category: fullBook?.category || item.category,
+            discount: fullBook?.discount || item.discount,
+            shippingCost: fullBook?.shippingCost || item.shippingCost || 0,
+            features: fullBook?.features || item.features,
+            quantity: item.quantity || item.qty || 1
+          };
+        });
+        
+        console.log('✅ Enriched items after removal:', enrichedItems);
+        setCart(enrichedItems);
       } else {
-        const updatedCart = cart.filter(item => item.id !== itemId);
+        // Offline mode - just filter from local state
+        const updatedCart = cart.filter(item => item.id !== itemId && item._id !== itemId);
         setCart(updatedCart);
         localStorage.setItem('cart', JSON.stringify(updatedCart));
       }
@@ -244,7 +282,7 @@ export const CartProvider = ({ children }) => {
       toast.success('Item removed from cart');
     } catch (error) {
       toast.error('Failed to remove item');
-      console.error('Remove from cart error:', error);
+      console.error('❌ Remove from cart error:', error);
     }
   };
 
@@ -260,8 +298,36 @@ export const CartProvider = ({ children }) => {
       
       if (token) {
         await cartAPI.updateCartItem(itemId, quantity);
+        
+        // Fetch all books to enrich response
+        const booksResponse = await bookAPI.getAllBooks({ limit: 200 });
+        const allBooks = booksResponse.data?.books || booksResponse.data || [];
+        
+        // Get cart and enrich items
         const response = await cartAPI.getCart();
-        setCart(normalizeItems(response.data.items || []));
+        const enrichedItems = (response.data.items || []).map(item => {
+          const bookId = item.book || item._id || item.id;
+          const fullBook = allBooks.find(b => b._id === bookId || b.id === bookId);
+          
+          return {
+            id: bookId,
+            _id: bookId,
+            book: bookId,
+            title: fullBook?.title || item.title || 'Unknown Title',
+            author: fullBook?.author || item.author || 'Unknown Author',
+            price: fullBook?.price !== undefined ? fullBook.price : (item.price || 0),
+            image: fullBook?.image || item.image,
+            edition: fullBook?.edition || item.edition,
+            description: fullBook?.description || item.description,
+            category: fullBook?.category || item.category,
+            discount: fullBook?.discount || item.discount,
+            shippingCost: fullBook?.shippingCost || item.shippingCost || 0,
+            features: fullBook?.features || item.features,
+            quantity: item.quantity || 1
+          };
+        });
+        
+        setCart(enrichedItems);
       } else {
         const updatedCart = cart.map(item => 
           item.id === itemId ? { ...item, quantity } : item
@@ -271,6 +337,7 @@ export const CartProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Update quantity error:', error);
+      toast.error('Failed to update quantity');
     }
   };
 

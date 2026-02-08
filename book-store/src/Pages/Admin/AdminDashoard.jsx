@@ -27,76 +27,132 @@ const AdminDashboard = () => {
     totalUsers: 0,
     totalOrders: 0,
     totalRevenue: 0,
-    avgOrderValue: 0
+    avgOrderValue: 0,
+    pendingOrders: 0
   });
   const [recentOrdersData, setRecentOrdersData] = useState([]);
   const [topBooksData, setTopBooksData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch orders and books
-        const [ordersRes, booksRes, userRes] = await Promise.all([
-          orderAPI.getAllOrders({ limit: 100 }),
-          bookAPI.getAllBooks({ limit: 100 }),
-          userAPI.getAllUsers({ limit: 100})
-        ]);
+   const checkUserRole = () => {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    const token = localStorage.getItem('token');
+    
+    console.log('🔍 Checking user role for dashboard:');
+    console.log('  - User:', user?.email);
+    console.log('  - Role:', user?.role);
+    console.log('  - Token exists:', !!token);
+    
+    if (!user || !token) {
+      toast.error('Authentication required');
+      window.location.href = '/admin/login';
+      return false;
+    }
+    
+    if (user.role !== 'admin') {
+      toast.error('Admin access required');
+      window.location.href = '/dashboard';
+      return false;
+    }
+    
+    return true;
+  };
 
-        const orders = ordersRes.data?.orders || [];
-        const books = booksRes.data?.books || [];
-        const allUsers = userRes.data?.books || [];
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch orders and books - handle errors individually
+      const promises = [
+        orderAPI.getAllOrders({ limit: 100 }).catch(err => {
+          console.error('Failed to fetch orders:', err);
+          return { data: { orders: [] } };
+        }),
+        bookAPI.getAllBooks({ limit: 100 }).catch(err => {
+          console.error('Failed to fetch books:', err);
+          return { data: { books: [] } };
+        }),
+        userAPI.getAllUsers({ limit: 100 }).catch(err => {
+          console.error('Failed to fetch users:', err);
+          return { data: { users: [] } };
+        })
+      ];
 
-        // Calculate stats
-        const totalOrders = orders.length;
-        const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
-        const avgOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-        const totalUsers = allUsers.length
+      const [ordersRes, booksRes, userRes] = await Promise.all(promises);
 
-        console.log(totalUsers);
-        
-        setDashboardStats({
-          totalUsers,
-          totalOrders,
-          totalRevenue,
-          avgOrderValue: avgOrder
-        });
+      console.log('📋 Dashboard data fetched:', { ordersRes, booksRes, userRes });
 
-        // Get recent orders (first 5)
-        setRecentOrdersData(orders.slice(0, 5).map(order => ({
-          id: order._id,
-          customer: order.user?.name || 'Unknown',
-          amount: `₦${order.total?.toLocaleString() || 0}`,
-          status: order.status || 'pending',
-          date: new Date(order.createdAt).toLocaleDateString()
-        })));
+      const orders = ordersRes.data?.orders || ordersRes.orders || [];
+      const books = booksRes.data?.books || booksRes.books || [];
+      const allUsers = userRes.data?.users || userRes.users || [];
 
-        // Get top books
-        setTopBooksData(books.slice(0, 5).map(book => ({
-          name: book.title,
-          sales: Math.floor(Math.random() * 200) + 50, // Mock for now
-          revenue: `₦${(book.price * 100).toLocaleString()}`,
+      console.log('✅ Parsed data:', { orders: orders.length, books: books.length, users: allUsers.length });
+
+      // Calculate dashboard statistics
+      const totalOrders = orders.length;
+      const totalRevenue = orders.reduce((sum, order) => sum + (order.total || order.amount || 0), 0);
+      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+      const pendingOrders = orders.filter(order => order.status === 'pending').length;
+
+      console.log('📊 Dashboard statistics:', { totalOrders, totalRevenue, avgOrderValue, pendingOrders });
+
+      // Update dashboard stats
+      setDashboardStats({
+        totalUsers: allUsers.length,
+        totalOrders: totalOrders,
+        totalRevenue: totalRevenue,
+        avgOrderValue: avgOrderValue,
+        pendingOrders: pendingOrders
+      });
+
+      // Process recent orders
+      const recentOrders = orders
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5)
+        .map(order => ({
+          id: order._id || order.id,
+          customer: order.user?.name || order.user?.email || 'Unknown',
+          date: new Date(order.createdAt).toLocaleDateString(),
+          amount: `₦${order.total?.toLocaleString()}`,
+          status: order.status || 'Pending'
+        }));
+      
+      setRecentOrdersData(recentOrders);
+
+      // Process top books (you'll need to adjust this based on your actual data)
+      const topBooks = books
+        .slice(0, 5)
+        .map(book => ({
+          name: book.title || 'Unknown Book',
+          sales: book.salesCount || 0,
+          revenue: `₦${((book.price || 0) * (book.salesCount || 0)).toLocaleString()}`,
           stock: book.stock || 0
-        })));
+        }));
+      
+      setTopBooksData(topBooks);
 
-      } catch (error) {
-        toast.error('Failed to load dashboard data');
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    } catch (error) {
+      toast.error('Failed to load dashboard data');
+      console.error('Dashboard error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    if (!checkUserRole()) {
+      return;
+    }
+    
+    // Proceed with data fetching
     fetchDashboardData();
   }, []);
 
   const stats = [
-    { label: 'Total Users', value: dashboardStats.totalUsers.toLocaleString(), change: '+12.5%', icon: HiUserGroup, color: 'from-cyan-500 to-blue-500' },
-    { label: 'Total Orders', value: dashboardStats.totalOrders.toLocaleString(), change: '+8.3%', icon: HiShoppingBag, color: 'from-green-500 to-emerald-500' },
-    { label: 'Revenue', value: `₦${dashboardStats.totalRevenue.toLocaleString()}`, change: '+15.2%', icon: HiCurrencyDollar, color: 'from-purple-500 to-pink-500' },
-    { label: 'Avg. Order', value: `₦${dashboardStats.avgOrderValue.toLocaleString()}`, change: '+3.7%', icon: HiTrendingUp, color: 'from-orange-500 to-amber-500' },
+    { label: 'Total Users', value: (dashboardStats.totalUsers || 0).toLocaleString(), change: '+12.5%', icon: HiUserGroup, color: 'from-cyan-500 to-blue-500' },
+    { label: 'Total Orders', value: (dashboardStats.totalOrders || 0).toLocaleString(), change: '+8.3%', icon: HiShoppingBag, color: 'from-green-500 to-emerald-500' },
+    { label: 'Revenue', value: `₦${Math.round(dashboardStats.totalRevenue || 0).toLocaleString()}`, change: '+15.2%', icon: HiCurrencyDollar, color: 'from-purple-500 to-pink-500' },
+    { label: 'Avg. Order', value: `₦${Math.round(dashboardStats.avgOrderValue || 0).toLocaleString()}`, change: '+3.7%', icon: HiTrendingUp, color: 'from-orange-500 to-amber-500' },
   ];
 
   // Recent orders
@@ -332,7 +388,7 @@ const AdminDashboard = () => {
                           <HiClock className="w-5 h-5 text-yellow-400" />
                         </div>
                       </div>
-                      <p className="text-3xl font-bold mb-2">24</p>
+                      <p className="text-3xl font-bold mb-2">{dashboardStats.pendingOrders}</p>
                       <p className="text-sm text-yellow-400">Need attention</p>
                     </div>
                   </motion.div>

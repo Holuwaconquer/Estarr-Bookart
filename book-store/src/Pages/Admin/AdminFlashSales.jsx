@@ -7,7 +7,7 @@ import AdminSidebar from '../../components/AdminSidebar';
 import AdminHeader from '../../components/AdminHeader';
 
 const AdminFlashSalesManagement = () => {
-  const { user, token } = useContext(AuthContext);
+  const { user, token: contextToken } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [flashSalesProducts, setFlashSalesProducts] = useState([]);
   const [allBooks, setAllBooks] = useState([]);
@@ -25,6 +25,47 @@ const AdminFlashSalesManagement = () => {
   });
 
   const API_URL = import.meta.env.VITE_API_URL;
+
+  // Get token from multiple sources
+  const getToken = () => {
+    const sources = [
+      contextToken,
+      localStorage.getItem('token'),
+      localStorage.getItem('accessToken'),
+      sessionStorage.getItem('token'),
+      sessionStorage.getItem('accessToken')
+    ];
+    
+    const token = sources.find(t => t && t !== 'undefined' && t !== 'null');
+    
+    if (token) {
+      console.log('✅ Token found from:', contextToken ? 'AuthContext' : 'localStorage/sessionStorage');
+      console.log('🔑 Token preview:', token.substring(0, 20) + '...');
+    } else {
+      console.warn('❌ No valid token found in any source');
+      console.log('Context token:', !!contextToken);
+      console.log('localStorage.token:', !!localStorage.getItem('token'));
+      console.log('localStorage.accessToken:', !!localStorage.getItem('accessToken'));
+    }
+    
+    return token;
+  };
+
+  // Get auth headers
+  const getAuthHeaders = () => {
+    const token = getToken();
+    if (!token) {
+      console.warn('⚠️ No token available');
+      return {
+        'Content-Type': 'application/json'
+      };
+    }
+    console.log('🔐 Auth header prepared with token');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+  };
 
   // Fetch all books
   useEffect(() => {
@@ -53,16 +94,25 @@ const AdminFlashSalesManagement = () => {
   // Fetch flash sales products (those with high discounts)
   const fetchFlashSales = async () => {
     try {
+      console.log('📥 Fetching flash sales from:', `${API_URL}/api/books/flash/deals?limit=20`);
       const response = await fetch(`${API_URL}/api/books/flash/deals?limit=20`);
+      console.log('📦 Flash sales response status:', response.status);
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
+      console.log('✅ Flash sales fetched:', result);
+      
       if (result.success && result.data) {
+        console.log('📊 Flash sales count:', result.data.length);
         setFlashSalesProducts(result.data);
+      } else {
+        console.warn('⚠️ No flash sales data in response');
+        setFlashSalesProducts([]);
       }
     } catch (error) {
-      console.error('Error fetching flash sales:', error);
+      console.error('❌ Error fetching flash sales:', error);
       toast.error('Failed to load flash sales');
     }
   };
@@ -86,13 +136,17 @@ const AdminFlashSalesManagement = () => {
         return;
       }
 
+      console.log('🔥 Adding to flash sales:', { 
+        bookId: formData.bookId,
+        discount: formData.discountPercentage,
+        originalPrice: selectedBook.price,
+        salePrice: selectedBook.price * (1 - formData.discountPercentage / 100)
+      });
+
       // Update book with discount
       const updateResponse = await fetch(`${API_URL}/api/books/${formData.bookId}`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           discount: formData.discountPercentage,
           originalPrice: selectedBook.price,
@@ -102,10 +156,16 @@ const AdminFlashSalesManagement = () => {
         })
       });
 
+      console.log('Update response status:', updateResponse.status);
+
       if (!updateResponse.ok) {
         const errorData = await updateResponse.json();
+        console.error('❌ Update failed:', errorData);
         throw new Error(errorData.message || 'Failed to update product');
       }
+
+      const updateResult = await updateResponse.json();
+      console.log('✅ Product updated:', updateResult);
 
       toast.success('Product added to flash sales!');
       setShowAddModal(false);
@@ -121,7 +181,7 @@ const AdminFlashSalesManagement = () => {
       await fetchFlashSales();
       
     } catch (error) {
-      console.error('Error adding flash sale product:', error);
+      console.error('❌ Error adding flash sale product:', error);
       toast.error(error.message || 'Error adding product to flash sales');
     }
   };
@@ -132,27 +192,38 @@ const AdminFlashSalesManagement = () => {
     }
 
     try {
-      const response = await fetch(`${API_URL}api/books/${bookId}`, {
+      const bookToRemove = flashSalesProducts.find(p => p._id === bookId);
+      if (!bookToRemove) {
+        toast.error('Product not found');
+        return;
+      }
+
+      console.log('🗑️ Removing flash sale for:', bookId);
+      
+      const response = await fetch(`${API_URL}/api/books/${bookId}`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ 
           discount: 0,
-          price: flashSalesProducts.find(p => p._id === bookId)?.originalPrice 
+          price: bookToRemove.originalPrice || bookToRemove.price
         })
       });
 
+      console.log('Remove response status:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('❌ Failed to remove:', errorData);
         throw new Error(errorData.message || 'Failed to remove from flash sales');
       }
 
+      const result = await response.json();
+      console.log('✅ Product removed from flash sales:', result);
+      
       toast.success('Removed from flash sales');
       setFlashSalesProducts(prev => prev.filter(p => p._id !== bookId));
     } catch (error) {
-      console.error('Error removing flash sale:', error);
+      console.error('❌ Error removing flash sale:', error);
       toast.error(error.message || 'Failed to remove from flash sales');
     }
   };
@@ -174,10 +245,7 @@ const AdminFlashSalesManagement = () => {
 
       const response = await fetch(`${API_URL}/api/books/${bookId}`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           discount: newDiscount,
           price: originalPrice * (1 - newDiscount / 100)

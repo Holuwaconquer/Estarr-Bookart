@@ -5,6 +5,7 @@ import { useCart } from '../contexts/CartContext';
 import { motion } from 'framer-motion';
 import { HiHeart, HiShoppingBag, HiStar, HiArrowLeft, HiCheckCircle, HiTruck, HiShieldCheck, HiFire, HiPlus, HiMinus } from 'react-icons/hi';
 import toast from 'react-hot-toast';
+import { useWishlist } from '../contexts/WishlistContext';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -18,6 +19,13 @@ const ProductDetail = () => {
   const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+
+  useEffect(() => {
+    if (book && id) {
+      setIsLiked(isInWishlist(id));
+    }
+  }, [book, id, isInWishlist]);
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -90,6 +98,8 @@ const ProductDetail = () => {
     fetchBook();
   }, [id, navigate]);
 
+
+
   const handleAddToCart = () => {
     setAddingToCart(true);
     addToCart(book);
@@ -102,6 +112,38 @@ const ProductDetail = () => {
       }
     });
     setTimeout(() => setAddingToCart(false), 800);
+  };
+
+  const handleAddToWishlist = () => {
+    if (!book) return;
+    
+    if (isLiked) {
+      // Remove from wishlist
+      removeFromWishlist(id);
+      setIsLiked(false);
+      toast.success('Removed from wishlist', {
+        icon: '💔',
+        style: {
+          background: '#1e293b',
+          color: '#fff',
+          border: '1px solid #334155'
+        }
+      });
+    } else {
+      // Add to wishlist
+      const added = addToWishlist(book);
+      if (added) {
+        setIsLiked(true);
+        toast.success('Added to wishlist!', {
+          icon: '❤️',
+          style: {
+            background: '#1e293b',
+            color: '#fff',
+            border: '1px solid #334155'
+          }
+        });
+      }
+    }
   };
 
   if (loading) {
@@ -391,7 +433,7 @@ const ProductDetail = () => {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => setIsLiked(!isLiked)}
+                  onClick={handleAddToWishlist}
                   className={`w-full px-6 py-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all border backdrop-blur-sm ${
                     isLiked
                       ? 'bg-red-500/20 border-red-500/50 text-red-400'

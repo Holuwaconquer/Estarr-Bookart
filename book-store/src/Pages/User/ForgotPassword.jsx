@@ -15,7 +15,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      await authAPI.forgotPassword({ email });
+      await authAPI.forgotPassword(email);
       setSubmitted(true);
       toast.success('Check your email for reset link', {
         icon: '📧',

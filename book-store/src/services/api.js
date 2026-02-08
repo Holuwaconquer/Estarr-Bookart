@@ -9,25 +9,160 @@ const parseJSON = async (res) => {
 
 const request = async (path, options = {}) => {
   const url = API_BASE_URL + path;
-  const res = await fetch(url, options);
-  if (!res.ok) {
-    const body = await parseJSON(res);
-    const message = (body && body.message) || (typeof body === 'string' ? body : 'Request failed');
-    const error = new Error(message);
-    error.status = res.status;
-    error.body = body;
+  
+  // Ensure credentials are included for cookies
+  options.credentials = 'include';
+  
+  // Check if body is FormData (do NOT merge headers for FormData - let browser set Content-Type)
+  const isFormData = options.body instanceof FormData;
+  
+  if (!isFormData) {
+    // Only add default auth headers for non-FormData requests
+    const headers = authHeaders();
+    options.headers = { ...options.headers, ...headers };
+  } else {
+    // For FormData, only add Authorization header, not Content-Type
+    const token = getToken();
+    options.headers = { ...options.headers };
+    if (token) {
+      options.headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+  
+  console.log('🌐 Making request to:', url);
+  console.log('📤 Request headers:', options.headers);
+  console.log('📤 Request is FormData:', isFormData);
+  
+  try {
+    const res = await fetch(url, options);
+    
+    console.log('📥 Response status:', res.status, res.statusText);
+    
+    if (res.status === 403) {
+      const body = await parseJSON(res);
+      console.error('🚫 403 Forbidden - Access denied:', body);
+      
+      if (body.message && body.message.includes('Role undefined')) {
+        console.warn('⚠️ Token missing role information');
+        
+        // Try to get fresh user data
+        const user = getCurrentUser();
+        if (user) {
+          console.log('🔄 Attempting to refresh user role...');
+          
+          // Force refresh token by logging out and redirecting
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          localStorage.removeItem('accessToken');
+          
+          console.warn('Session expired. Redirecting to login.');
+          
+          setTimeout(() => {
+            if (window.location.pathname.includes('/admin')) {
+              window.location.href = '/admin/login';
+            } else {
+              window.location.href = '/login';
+            }
+          }, 2000);
+        }
+      }
+    }
+    
+    if (res.status === 401) {
+      console.warn('⚠️ 401 Unauthorized - Token might be invalid');
+      // ... existing 401 handling code ...
+    }
+    
+    if (!res.ok) {
+      const body = await parseJSON(res);
+      const message = (body && body.message) || (typeof body === 'string' ? body : 'Request failed');
+      const error = new Error(message);
+      error.status = res.status;
+      error.body = body;
+      throw error;
+    }
+    
+    const parsedResponse = await parseJSON(res);
+    
+    // Log orders endpoint responses with detailed info
+    if (path.includes('/orders')) {
+      console.log('📦 Orders endpoint response:', {
+        url: path,
+        success: parsedResponse.success,
+        dataType: typeof parsedResponse.data,
+        dataKeys: Object.keys(parsedResponse.data || {}),
+        ordersLength: parsedResponse.data?.orders?.length,
+        rawData: JSON.stringify(parsedResponse.data)
+      });
+    }
+    
+    // Log users endpoint responses with detailed info
+    if (path.includes('/users') && path === '/users') {
+      console.log('👥 Users endpoint response:', {
+        url: path,
+        status: parsedResponse.status,
+        dataType: typeof parsedResponse.data,
+        dataKeys: Object.keys(parsedResponse.data || {}),
+        usersLength: parsedResponse.data?.users?.length,
+        rawData: JSON.stringify(parsedResponse.data)
+      });
+    }
+    
+    return parsedResponse;
+  } catch (error) {
+    console.error('❌ Request failed:', error);
+    
     throw error;
   }
-  return parseJSON(res);
 };
 
 const getToken = () => {
-  return localStorage.getItem('token') || localStorage.getItem('accessToken') || null;
+  // Check multiple possible token locations
+  const tokenSources = [
+    // Check localStorage
+    localStorage.getItem('token'),
+    localStorage.getItem('accessToken'),
+    // Check sessionStorage
+    sessionStorage.getItem('token'),
+    sessionStorage.getItem('accessToken'),
+    // Check cookies
+    document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1],
+    document.cookie.split('; ').find(row => row.startsWith('accessToken='))?.split('=')[1],
+  ];
+
+  const token = tokenSources.find(t => t && t !== 'undefined' && t !== 'null');
+  
+  console.log('🔑 Token sources:', tokenSources);
+  console.log('🔑 Found token:', token ? 'Yes' : 'No');
+  
+  return token;
+};
+
+const getCurrentUser = () => {
+  try {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  } catch (error) {
+    console.error('Error parsing user from localStorage:', error);
+    return null;
+  }
 };
 
 const authHeaders = () => {
   const token = getToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  
+  console.log('🔑 Auth headers - Token:', token ? `Yes (${token.substring(0, 10)}...)` : 'No');
+  console.log('🔑 User from localStorage:', getCurrentUser()?.email);
+  
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
 };
 
 export const bookAPI = {
@@ -103,109 +238,120 @@ export const cartAPI = {
 
 export const userAPI = {
   login: async (credentials) => {
-    const res = await request('/auth/login', {
+    const res = await request('/users/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(credentials)
     });
-    // Save token and user
-    if (res && res.data && res.data.token) {
-      localStorage.setItem('token', res.data.token);
-    } else if (res && res.data && res.data.accessToken) {
-      localStorage.setItem('token', res.data.accessToken);
+    
+    // Save user data to localStorage (token is in cookies)
+    if (res && res.data) {
+      localStorage.setItem('user', JSON.stringify(res.data));
+    } else if (res && res.user) {
+      localStorage.setItem('user', JSON.stringify(res.user));
     }
-    if (res && res.data && res.data.user) localStorage.setItem('user', JSON.stringify(res.data.user));
     return res;
   },
 
   register: async (payload) => {
-    const res = await request('/auth/register', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const res = await request('/users/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(payload)
     });
+    
     if (res && res.data) {
-      if (res.data.token) localStorage.setItem('token', res.data.token);
-      else if (res.data.accessToken) localStorage.setItem('token', res.data.accessToken);
-      if (res.data.user) localStorage.setItem('user', JSON.stringify(res.data.user));
+      localStorage.setItem('user', JSON.stringify(res.data));
+    } else if (res && res.user) {
+      localStorage.setItem('user', JSON.stringify(res.user));
     }
     return res;
   },
 
   verifyResetCode: async (email, code) => {
-    return request('/auth/verify-reset-code', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    return request('/users/verify-reset-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ email, code })
     });
   },
 
-  oauthGoogle: async (idToken) => {
-    const res = await request('/auth/google', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken })
-    });
-    if (res && res.data) {
-      if (res.data.token) localStorage.setItem('token', res.data.token);
-      if (res.data.user) localStorage.setItem('user', JSON.stringify(res.data.user));
-    }
-    return res;
-  },
-
-  oauthFacebook: async (accessToken) => {
-    const res = await request('/auth/facebook', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken })
-    });
-    if (res && res.data) {
-      if (res.data.token) localStorage.setItem('token', res.data.token);
-      if (res.data.user) localStorage.setItem('user', JSON.stringify(res.data.user));
-    }
-    return res;
-  },
-
   forgotPassword: async (email) => {
-    return request('/auth/forgot-password', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    return request('/users/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ email })
     });
   },
 
-  resetPassword: async (token, password) => {
-    return request(`/auth/reset-password/${token}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
+  resetPassword: async (email, code, password) => {
+    return request('/users/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, code, password })
     });
   },
 
   logout: async () => {
-    localStorage.removeItem('token');
+    const res = await request('/users/logout', {
+      method: 'POST',
+      credentials: 'include'
+    });
+    
     localStorage.removeItem('user');
-    return { success: true };
+    return res;
   },
 
   getProfile: async () => {
-    return request('/auth/me', { headers: { ...authHeaders() } });
+    return request('/users/me', {
+      headers: authHeaders(),
+      credentials: 'include'
+    });
   },
 
   updateProfile: async (profileData) => {
-    return request('/auth/me', {
+    return request('/users/me', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         ...authHeaders()
       },
+      credentials: 'include',
       body: JSON.stringify(profileData)
     });
   },
 
   changePassword: async (currentPassword, newPassword) => {
-    return request('/auth/change-password', {
+    return request('/users/change-password', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...authHeaders()
       },
+      credentials: 'include',
       body: JSON.stringify({ currentPassword, newPassword })
     });
+  },
+
+  checkAuth: async () => {
+    try {
+      console.log('🔐 Checking auth with headers:', authHeaders());
+      const response = await request('/users/check-auth', {
+        method: 'GET',
+        credentials: 'include', // Important for cookies
+        headers: authHeaders()
+      });
+      console.log('✅ Check auth response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Check auth error:', error);
+      throw error;
+    }
   },
 
   // Admin user management endpoints
@@ -221,6 +367,14 @@ export const userAPI = {
     });
   },
 
+
+  deleteUser: async (userId) => {
+    return request(`/users/${userId}`, {
+      method: 'DELETE',
+      headers: { ...authHeaders() }
+    });
+  },
+
   updateUser: async (userId, userData) => {
     return request(`/users/${userId}`, {
       method: 'PUT',
@@ -229,13 +383,6 @@ export const userAPI = {
         ...authHeaders()
       },
       body: JSON.stringify(userData)
-    });
-  },
-
-  deleteUser: async (userId) => {
-    return request(`/users/${userId}`, {
-      method: 'DELETE',
-      headers: { ...authHeaders() }
     });
   },
 
@@ -250,7 +397,6 @@ export const userAPI = {
     });
   },
 
-  // Wishlist endpoints - using local storage since backend doesn't have wishlist API
   getWishlist: async () => {
     try {
       const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
@@ -351,12 +497,13 @@ export const authAPI = {
   login: userAPI.login,
   register: userAPI.register,
   verifyResetCode: userAPI.verifyResetCode,
-  oauthGoogle: userAPI.oauthGoogle,
-  oauthFacebook: userAPI.oauthFacebook,
   forgotPassword: userAPI.forgotPassword,
   resetPassword: userAPI.resetPassword,
   logout: userAPI.logout,
-  getProfile: userAPI.getProfile
+  getProfile: userAPI.getProfile,
+  updateProfile: userAPI.updateProfile,
+  changePassword: userAPI.changePassword,
+  checkAuth: userAPI.checkAuth
 };
 
 export const orderAPI = {
@@ -374,7 +521,8 @@ export const orderAPI = {
   getMyOrders: async (params = {}) => {
     const query = new URLSearchParams(params).toString();
     return request(`/orders/my-orders${query ? `?${query}` : ''}`, {
-      headers: { ...authHeaders() }
+      headers: authHeaders(),
+      credentials: 'include'
     });
   },
 
@@ -421,6 +569,15 @@ export const orderAPI = {
         ...authHeaders()
       },
       body: JSON.stringify({ reason })
+    });
+  },
+
+  uploadOrderProof: async (orderId, formData) => {
+    // For FormData, let the request function handle headers properly
+    // It will detect FormData and not override Content-Type
+    return request(`/orders/${orderId}/upload-proof`, {
+      method: 'POST',
+      body: formData
     });
   },
 

@@ -21,43 +21,83 @@ const AdminLogin = () => {
       [e.target.name]: e.target.value
     });
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Call backend login endpoint
       const response = await api.userAPI.login({
         email: formData.email,
         password: formData.password
       });
 
-      if (response && response.data) {
-        const { token, user } = response.data;
-        
-        // Check if user is admin
-        if (user.role !== 'admin') {
-          toast.error('This account is not authorized for admin access');
-          setLoading(false);
-          return;
-        }
+      console.log('Admin login response:', response);
 
-        // Store token and user data
-        localStorage.setItem('token', token);
-        localStorage.setItem('accessToken', token);
-        localStorage.setItem('user', JSON.stringify(user));
-
-        // Update auth context
-        setUser(user);
-        setAuthenticated(true);
-
-        toast.success('Admin login successful');
-        navigate('/admin/dashboard');
+      let userData, token;
+      
+      // Handle different response formats
+      if (response.data) {
+        userData = response.data;
+        token = userData.token || response.token;
+      } else if (response.user) {
+        userData = response.user;
+        token = userData.token || response.token;
       } else {
         toast.error('Login failed. Please try again.');
+        setLoading(false);
+        return;
       }
+      
+      // Debug logging
+      console.log('👤 User data:', userData);
+      console.log('🔐 Token:', token);
+      console.log('🎯 User role:', userData.role);
+      
+      // Check if user is admin
+      if (userData.role !== 'admin') {
+        console.warn('⚠️ Non-admin user attempted admin login');
+        toast.error('Unauthorized: This account does not have admin access');
+        
+        // Clear any auth data
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('accessToken');
+        
+        // Redirect to user login
+        setTimeout(() => {
+          navigate('/login', { replace: true });
+        }, 1500);
+        
+        setLoading(false);
+        return;
+      }
+
+      // Store token and user data
+      if (token) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('accessToken', token);
+      }
+      
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      console.log('✅ Auth data saved:');
+      console.log('  - Token saved:', !!localStorage.getItem('token'));
+      console.log('  - User saved:', !!localStorage.getItem('user'));
+      console.log('  - User role in localStorage:', userData.role);
+
+      // Update auth context
+      setUser(userData);
+      setAuthenticated(true);
+
+      toast.success('Admin login successful');
+      
+      // Navigate to admin dashboard with slight delay to ensure localStorage is updated
+      setTimeout(() => {
+        navigate('/admin/dashboard', { replace: true });
+      }, 500);
+      
     } catch (error) {
+      console.error('Admin login error:', error);
       toast.error(error.response?.data?.message || 'Invalid credentials');
     } finally {
       setLoading(false);

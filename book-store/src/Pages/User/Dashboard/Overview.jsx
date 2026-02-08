@@ -7,9 +7,11 @@ import {
   HiCloudDownload, HiCalendar, HiCurrencyDollar, HiCheckCircle 
 } from 'react-icons/hi';
 import toast from 'react-hot-toast';
+import { useWishlist } from '../../../contexts/WishlistContext';
 
 const Overview = () => {
   const { user } = useContext(AuthContext);
+  const { wishlist, getWishlistCount } = useWishlist();
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalSpent: 0,
@@ -31,15 +33,18 @@ const Overview = () => {
           ? Math.floor((Date.now() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)) 
           : 0;
 
+        const wishlistCount = getWishlistCount ? getWishlistCount() : wishlist?.length || 0;
+
         setStats({
           totalOrders: orders.length,
           totalSpent: totalSpent,
-          wishlistItems: user?.wishlist?.length || 0,
+          wishlistItems: wishlistCount,
           accountAge: accountAge
         });
 
         setRecentOrders(orders.slice(0, 3));
       } catch (error) {
+        console.error('Error fetching dashboard data:', error);
         toast.error('Failed to load dashboard data');
       } finally {
         setLoading(false);
@@ -47,7 +52,15 @@ const Overview = () => {
     };
 
     fetchDashboardData();
-  }, [user]);
+  }, [user, wishlist, getWishlistCount]);
+
+  useEffect(() => {
+    const wishlistCount = getWishlistCount ? getWishlistCount() : wishlist?.length || 0;
+    setStats(prev => ({
+      ...prev,
+      wishlistItems: wishlistCount
+    }));
+  }, [wishlist, getWishlistCount]);
 
   if (loading) {
     return (
@@ -114,7 +127,7 @@ const Overview = () => {
             <div>
               <p className="text-slate-600 text-sm font-medium mb-1">Wishlist Items</p>
               <p className="text-3xl font-bold text-slate-900">{stats.wishlistItems}</p>
-              <p className="text-xs text-slate-500 mt-2">Books saved</p>
+              <p className="text-xs text-slate-500 mt-2">{stats.wishlistItems > 0 ? 'Books saved' : 'Add some books!'}</p>
             </div>
             <div className="bg-rose-100 p-3 rounded-lg">
               <HiHeart className="w-6 h-6 text-rose-600" />
@@ -256,7 +269,7 @@ const Overview = () => {
           {/* Browse Books Action */}
           <motion.a
             whileHover={{ scale: 1.02, y: -2 }}
-            href="/shop"
+            href="category"
             className="block p-5 bg-white border border-slate-200 rounded-xl hover:border-cyan-300 hover:bg-cyan-50/50 transition-all shadow-sm"
           >
             <div className="flex items-center gap-3 mb-2">

@@ -15,6 +15,7 @@ import { useCart } from '../contexts/CartContext.jsx';
 import { HiSparkles } from 'react-icons/hi';
 import { categoryAPI } from '../services/api';
 import Estarr from '../assets/estarr.jpeg';
+import { AuthContext } from '../AuthContext.jsx';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -57,12 +58,20 @@ const Navbar = () => {
     fetchCategories();
   }, []);
 
+  const { user } = useContext(AuthContext);
+
   const navLinks = [
     { path: '/', label: 'Home' },
     { path: '/category', label: 'Collections' },
     { path: '/blog', label: 'Blog' },
-    { path: '/dashboard', label: 'Dashboard' }
+    // Conditionally show appropriate dashboard
+    { 
+      path: user?.role === 'admin' ? '/admin/dashboard' : '/dashboard', 
+      label: user?.role === 'admin' ? 'Admin Dashboard' : 'Dashboard' 
+    }
   ];
+
+  const isLoggedIn = !!user;
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -194,11 +203,20 @@ const Navbar = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => navigate('/login')}
+                onClick={() => navigate(isLoggedIn ? (user.role === 'admin' ? '/admin/dashboard' : '/dashboard') : '/login')}
                 className="hidden md:flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 group"
               >
-                <IoPersonOutline className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                <span>Sign In</span>
+                {isLoggedIn ? (
+                  <>
+                    <IoPersonOutline className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <span>My Profile</span>
+                  </>
+                ) : (
+                  <>
+                    <IoPersonOutline className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <span>Sign In</span>
+                  </>
+                )}
               </motion.button>
 
               {/* Mobile Menu Toggle */}

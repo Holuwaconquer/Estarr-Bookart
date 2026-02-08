@@ -35,8 +35,11 @@ const Shop = () => {
           maxPrice: priceRange[1]
         };
         
-        const booksRes = await bookAPI.searchBooks(params);
-        setBooks(booksRes.data || []);
+        // Call getAllBooks with the assembled params so `search` and `category` are passed as query params
+        const booksRes = await bookAPI.getAllBooks(params);
+        // API returns { data: { books, pagination } } or { data: books }
+        const booksData = booksRes.data?.books || booksRes.data || [];
+        setBooks(booksData || []);
       } catch (error) {
         toast.error('Failed to load books');
       } finally {
@@ -46,6 +49,18 @@ const Shop = () => {
 
     fetchData();
   }, [searchQuery, selectedCategory, sortBy, priceRange]);
+
+  // Sync local state when URL search params change (handles navigation from Navbar/Landingpage)
+  useEffect(() => {
+    const q = searchParams.get('q') || searchParams.get('search') || '';
+    const cat = searchParams.get('category') || '';
+    const sort = searchParams.get('sort') || 'newest';
+
+    // Only update if different to avoid infinite loops
+    if (q !== searchQuery) setSearchQuery(q);
+    if (cat !== selectedCategory) setSelectedCategory(cat);
+    if (sort !== sortBy) setSortBy(sort);
+  }, [searchParams]);
 
   const handleSearch = (e) => {
     e.preventDefault();

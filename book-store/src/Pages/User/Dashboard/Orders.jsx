@@ -109,7 +109,7 @@ const Orders = () => {
                       <div>
                         <p className="text-sm text-gray-600">Order #{order._id?.slice(-6).toUpperCase()}</p>
                         <p className="text-lg font-bold text-gray-900 mt-1">
-                          NGN {order.totalAmount?.toLocaleString()}
+                          NGN {order.total?.toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -152,6 +152,33 @@ const Orders = () => {
                             <span className="font-medium">NGN {(item.price * item.quantity).toLocaleString()}</span>
                           </div>
                         ))}
+                      </div>
+                    </div>
+
+                    {/* Order Summary Breakdown */}
+                    <div className="pt-4 border-t border-gray-200">
+                      <h4 className="font-semibold text-gray-900 mb-3">Order Summary</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between text-gray-700">
+                          <span>Subtotal</span>
+                          <span>NGN {order.subtotal?.toLocaleString() || '0'}</span>
+                        </div>
+                        {order.shippingFee > 0 && (
+                          <div className="flex justify-between text-gray-700">
+                            <span>Shipping Fee</span>
+                            <span>NGN {order.shippingFee?.toLocaleString() || '0'}</span>
+                          </div>
+                        )}
+                        {order.tax > 0 && (
+                          <div className="flex justify-between text-gray-700">
+                            <span>Tax</span>
+                            <span>NGN {order.tax?.toLocaleString() || '0'}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between font-semibold text-gray-900 pt-2 border-t border-gray-300">
+                          <span>Total</span>
+                          <span>NGN {order.total?.toLocaleString() || '0'}</span>
+                        </div>
                       </div>
                     </div>
 
@@ -222,7 +249,7 @@ const Orders = () => {
             <motion.a
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
-              href="/shop"
+              href="/category"
               className="inline-block px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
             >
               Start Shopping

@@ -1,22 +1,46 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../../../AuthContext';
 import { HiUser, HiMail, HiPhone, HiLocationMarker, HiCamera, HiSave, HiCheckCircle } from 'react-icons/hi';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import { authAPI } from '../../../services/api'; // Import your API
 
 const Profile = () => {
-  const { user } = useContext(AuthContext);
+  const { user, updateUser, refreshUser } = useContext(AuthContext); // Add updateUser if available
   const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || 'User Name',
-    email: user?.email || 'user@example.com',
-    phone: user?.phone || '+1 (555) 000-0000',
-    address: user?.address || 'Not provided',
-    city: user?.city || 'Not provided',
-    country: user?.country || 'Not provided',
-    bio: user?.bio || 'Welcome to your profile!',
-    joinedDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Recently'
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    country: '',
+    bio: '',
+    joinedDate: ''
   });
+
+  console.log(user);
+  
+  // Initialize form data from user context
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: `${user.name || user.firstname || ''} ${user.lastname || ''}`.trim() || 'User Name',
+        email: user.email || '',
+        phone: user.phone || user.phonenumber || '',
+        address: user.address || '',
+        city: user.city || '',
+        country: user.country || '',
+        bio: user.bio || 'Welcome to your profile!',
+        joinedDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }) : 'Recently'
+      });
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     setFormData({
@@ -25,10 +49,122 @@ const Profile = () => {
     });
   };
 
-  const handleSave = () => {
-    // Mock save
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      
+      // Prepare data for backend
+      const updateData = {
+        name: formData.name,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        country: formData.country,
+        bio: formData.bio
+      };
+
+      console.log('Sending update data:', updateData);  
+
+      // Call the API
+      const response = await authAPI.updateProfile(updateData);
+      
+      console.log('Update response:', response);
+      
+      if (response.status || response.success) {
+        if (response.data) {
+          console.log('Response data contains phone:', response.data.phone);
+          console.log('Response data contains phonenumber:', response.data.phonenumber);
+        }
+        
+        // Force a complete refresh of user data
+        if (refreshUser) {
+          console.log('Refreshing user data from server...');
+          await refreshUser();
+        } else if (updateUser && response.data) {
+          console.log('Updating user context directly...');
+          // Create a properly merged user object
+          const updatedUserData = {
+            ...response.data,
+            // Ensure both phone and phonenumber are set
+            phone: response.data.phone || response.data.phonenumber || formData.phone,
+            phonenumber: response.data.phonenumber || response.data.phone || formData.phone,
+            // Ensure name fields are properly set
+            firstname: response.data.firstname || user?.firstname || formData.name.split(' ')[0],
+            lastname: response.data.lastname || user?.lastname || formData.name.split(' ').slice(1).join(' ')
+          };
+          updateUser(updatedUserData);
+        }
+
+        setEditing(false);
+        
+        // Show success message
+        toast.success('Profile updated successfully!', {
+          duration: 3000,
+          position: 'top-right',
+          icon: '✅',
+          style: {
+            background: '#10B981',
+            color: '#fff',
+            border: '1px solid #059669'
+          }
+        });
+        
+        // Refresh the form data from updated user
+        if (user) {
+          setFormData({
+            name: `${user.name || user.firstname || ''} ${user.lastname || ''}`.trim() || 'User Name',
+            email: user.email || '',
+            phone: user.phone || user.phonenumber || '',
+            address: user.address || '',
+            city: user.city || '',
+            country: user.country || '',
+            bio: user.bio || 'Welcome to your profile!',
+            joinedDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }) : 'Recently'
+          });
+        }
+      } else {
+        console.error('Update failed:', response);
+        toast.error(response.message || 'Failed to update profile', {
+          duration: 4000,
+          position: 'top-right',
+          icon: '❌'
+        });
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error(error.message || 'Failed to update profile. Please try again.', {
+        duration: 4000,
+        position: 'top-right',
+        icon: '❌'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    // Reset form data to original user data
+    if (user) {
+      setFormData({
+        name: `${user.firstname || ''} ${user.lastname || ''}`.trim() || 'User Name',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || '',
+        city: user.city || '',
+        country: user.country || '',
+        bio: user.bio || 'Welcome to your profile!',
+        joinedDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }) : 'Recently'
+      });
+    }
     setEditing(false);
-    toast.success('Profile updated successfully!');
   };
 
   return (
@@ -73,31 +209,34 @@ const Profile = () => {
                 <span className="text-gray-600">Member Since</span>
                 <span className="font-medium">{formData.joinedDate}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Loyalty Points</span>
-                <span className="font-bold text-purple-600">1,250</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Total Orders</span>
-                <span className="font-medium">12</span>
-              </div>
             </div>
 
             {/* Action Buttons */}
             <div className="space-y-3">
               <button
-                onClick={() => setEditing(!editing)}
+                onClick={() => editing ? handleCancel() : setEditing(true)}
                 className="w-full bg-gradient-to-r from-purple-600 to-purple-500 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-shadow"
+                disabled={loading}
               >
                 {editing ? 'Cancel Editing' : 'Edit Profile'}
               </button>
               {editing && (
                 <button
                   onClick={handleSave}
-                  className="w-full bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                  disabled={loading}
+                  className="w-full bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <HiSave className="w-5 h-5" />
-                  Save Changes
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <HiSave className="w-5 h-5" />
+                      Save Changes
+                    </>
+                  )}
                 </button>
               )}
             </div>
@@ -150,10 +289,11 @@ const Profile = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      disabled={!editing}
-                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 disabled:bg-gray-50 disabled:text-gray-500"
+                      disabled={true} // Email should not be editable
+                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
                     />
                   </div>
+                  <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
                 </div>
 
                 <div>
@@ -233,6 +373,7 @@ const Profile = () => {
                     </label>
                     <input
                       type="text"
+                      name="zipCode"
                       disabled={!editing}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 disabled:bg-gray-50 disabled:text-gray-500"
                       placeholder="10001"
@@ -260,46 +401,6 @@ const Profile = () => {
                 <p className="mt-2 text-sm text-gray-500">
                   Tell us about your collecting interests and preferences
                 </p>
-              </div>
-            </div>
-
-            {/* Preferences */}
-            <div className="mt-10 pt-10 border-t">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Preferences</h3>
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="newsletter"
-                    disabled={!editing}
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="newsletter" className="ml-2 block text-sm text-gray-700">
-                    Receive newsletter with new arrivals and exclusive offers
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="notifications"
-                    disabled={!editing}
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="notifications" className="ml-2 block text-sm text-gray-700">
-                    Get notifications for wishlist items on sale
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="sms"
-                    disabled={!editing}
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="sms" className="ml-2 block text-sm text-gray-700">
-                    Receive SMS updates for order status
-                  </label>
-                </div>
               </div>
             </div>
           </div>

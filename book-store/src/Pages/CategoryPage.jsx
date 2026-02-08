@@ -21,7 +21,7 @@ import { bookAPI, categoryAPI } from '../services/api';
 const CategoryPage = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('featured');
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const [priceRange, setPriceRange] = useState([0, 100000]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [activeFilters, setActiveFilters] = useState([]);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -40,66 +40,170 @@ const CategoryPage = () => {
     { id: 'illustrated', name: 'Illustrated', count: 42, color: 'from-indigo-500 to-blue-500' },
   ];
 
-  // Fetch categories from API
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoadingCategories(true);
-        const response = await categoryAPI.getAllCategories();
-        const apiCategories = response.data?.categories || [];
+  const filterBooks = (booksArray) => {
+    return booksArray.filter((book) => {
+      // 1. Category filter
+      if (selectedCategories.length > 0) {
+        const bookCategory = book.category ? book.category.toLowerCase().trim() : '';
+        const normalizedBookCategory = bookCategory.replace(/\s+/g, '-');
         
-        if (apiCategories.length > 0) {
-          // Map API categories with styling
-          const styledCategories = apiCategories.map((cat, idx) => ({
-            id: (cat._id || cat.name || '').toLowerCase(),
-            name: cat.name || cat,
-            count: cat.count || Math.floor(Math.random() * 200) + 10,
-            color: defaultCategories[idx % defaultCategories.length].color
-          }));
-          setCategories(styledCategories);
-        } else {
-          setCategories(defaultCategories);
+        // Check if book category matches any selected category
+        const hasMatchingCategory = selectedCategories.some(catId => {
+          const normalizedCatId = catId.toLowerCase();
+          return normalizedBookCategory === normalizedCatId || 
+                bookCategory === normalizedCatId ||
+                bookCategory.includes(normalizedCatId) ||
+                normalizedCatId.includes(bookCategory);
+        });
+        
+        if (!hasMatchingCategory) {
+          return false;
         }
+      }
+
+      // 2. Price range filter
+      const bookPrice = book.price || 0;
+      const minPrice = priceRange[0];
+      const maxPrice = priceRange[1];
+      if (bookPrice < minPrice || bookPrice > maxPrice) {
+        return false;
+      }
+
+      // 3. Active filters
+      if (activeFilters.length > 0) {
+        if (activeFilters.includes('bestseller') && !book.isBestseller) {
+          return false;
+        }
+        if (activeFilters.includes('new') && book.condition !== 'new') {
+          return false;
+        }
+        if (activeFilters.includes('discount') && (!book.discount || book.discount <= 0)) {
+          return false;
+        }
+        if (activeFilters.includes('in-stock') && (!book.stock || book.stock <= 0)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  };
+
+  // Create filtered books
+  const filteredBooks = filterBooks(books);
+  
+  // Sort the filtered books
+  const sortedBooks = [...filteredBooks].sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0);
+      case 'price-low':
+        return (a.price || 0) - (b.price || 0);
+      case 'price-high':
+        return (b.price || 0) - (a.price || 0);
+      case 'rating':
+        return (b.rating || 0) - (a.rating || 0);
+      case 'featured':
+      default:
+        return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
+    }
+  });
+
+  // Fetch categories and books from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoadingBooks(true);
+        setLoadingCategories(true);
+        
+        // Fetch books
+        const booksResponse = await bookAPI.getAllBooks({ limit: 50 });
+        let fetchedBooks = [];
+        
+        // Handle different response formats
+        if (Array.isArray(booksResponse)) {
+          fetchedBooks = booksResponse;
+        } else if (booksResponse.data?.books && Array.isArray(booksResponse.data.books)) {
+          fetchedBooks = booksResponse.data.books;
+        } else if (booksResponse.data && Array.isArray(booksResponse.data)) {
+          fetchedBooks = booksResponse.data;
+        } else if (booksResponse.books && Array.isArray(booksResponse.books)) {
+          fetchedBooks = booksResponse.books;
+        }
+        
+        console.log('Fetched books:', fetchedBooks);
+        setBooks(fetchedBooks);
+        setLoadingBooks(false);
+        
+        // Fetch categories
+        try {
+          const categoriesResponse = await categoryAPI.getAllCategories();
+          const apiCategories = categoriesResponse.data || [];
+          
+          // Extract unique categories from books
+          const bookCategories = [...new Set(fetchedBooks
+            .filter(book => book.category)
+            .map(book => book.category.trim())
+          )];
+          
+          console.log('Book categories:', bookCategories);
+          
+          if (apiCategories.length > 0) {
+            // Use API categories first
+            const styledCategories = apiCategories.map((cat, idx) => ({
+              id: (cat._id || cat.name || '').toLowerCase().replace(/\s+/g, '-'),
+              name: cat.name || cat,
+              count: fetchedBooks.filter(book => 
+                book.category && book.category.toLowerCase() === (cat.name || cat).toLowerCase()
+              ).length,
+              color: defaultCategories[idx % defaultCategories.length].color
+            }));
+            setCategories(styledCategories);
+          } else if (bookCategories.length > 0) {
+            // Create categories from book data
+            const styledCategories = bookCategories.map((cat, idx) => ({
+              id: cat.toLowerCase().replace(/\s+/g, '-'),
+              name: cat,
+              count: fetchedBooks.filter(book => book.category === cat).length,
+              color: defaultCategories[idx % defaultCategories.length].color
+            }));
+            setCategories(styledCategories);
+          } else {
+            setCategories(defaultCategories);
+          }
+        } catch (categoryError) {
+          console.error('Failed to fetch categories:', categoryError);
+          // Create categories from book data as fallback
+          const bookCategories = [...new Set(fetchedBooks
+            .filter(book => book.category)
+            .map(book => book.category.trim())
+          )];
+          
+          if (bookCategories.length > 0) {
+            const styledCategories = bookCategories.map((cat, idx) => ({
+              id: cat.toLowerCase().replace(/\s+/g, '-'),
+              name: cat,
+              count: fetchedBooks.filter(book => book.category === cat).length,
+              color: defaultCategories[idx % defaultCategories.length].color
+            }));
+            setCategories(styledCategories);
+          } else {
+            setCategories(defaultCategories);
+          }
+        }
+        
+        setLoadingCategories(false);
+        
       } catch (error) {
-        console.error('Failed to fetch categories:', error);
+        console.error('Failed to fetch data:', error);
+        setBooks([]);
         setCategories(defaultCategories);
-      } finally {
+        setLoadingBooks(false);
         setLoadingCategories(false);
       }
     };
 
-    fetchCategories();
-  }, []);
-
-  // Fetch books from API
-  useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        setLoadingBooks(true);
-        const response = await bookAPI.getAllBooks({ limit: 50 });
-        
-        // Handle different API response formats
-        let fetchedBooks = [];
-        if (Array.isArray(response)) {
-          fetchedBooks = response;
-        } else if (response.data?.books && Array.isArray(response.data.books)) {
-          fetchedBooks = response.data.books;
-        } else if (response.data && Array.isArray(response.data)) {
-          fetchedBooks = response.data;
-        } else if (response.books && Array.isArray(response.books)) {
-          fetchedBooks = response.books;
-        }
-        
-        setBooks(fetchedBooks);
-      } catch (error) {
-        console.error('Failed to fetch books:', error);
-        setBooks([]);
-      } finally {
-        setLoadingBooks(false);
-      }
-    };
-
-    fetchBooks();
+    fetchData();
   }, []);
 
   const filters = [
@@ -136,7 +240,7 @@ const CategoryPage = () => {
   const clearAllFilters = () => {
     setSelectedCategories([]);
     setActiveFilters([]);
-    setPriceRange([0, 500]);
+    setPriceRange([0, 100000]);
   };
 
   return (
@@ -201,25 +305,37 @@ const CategoryPage = () => {
                   Categories
                 </h3>
                 <div className="space-y-3">
-                  {categories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => handleCategoryToggle(category.id)}
-                      className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-300 ${
-                        selectedCategories.includes(category.id)
-                          ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30'
-                          : 'bg-white/5 hover:bg-white/10 border border-transparent'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${category.color}`} />
-                        <span className="text-sm font-medium">{category.name}</span>
+                  {loadingCategories ? (
+                    [...Array(3)].map((_, idx) => (
+                      <div key={idx} className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 animate-pulse">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 rounded-full bg-gray-700" />
+                          <div className="h-4 bg-gray-700 rounded w-24"></div>
+                        </div>
+                        <div className="h-4 bg-gray-700 rounded w-8"></div>
                       </div>
-                      <span className="text-xs bg-gray-800/50 px-2 py-1 rounded-full">
-                        {category.count}
-                      </span>
-                    </button>
-                  ))}
+                    ))
+                  ) : (
+                    categories.map((category) => (
+                      <button
+                        key={category.id}
+                        onClick={() => handleCategoryToggle(category.id)}
+                        className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-300 ${
+                          selectedCategories.includes(category.id)
+                            ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30'
+                            : 'bg-white/5 hover:bg-white/10 border border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${category.color}`} />
+                          <span className="text-sm font-medium">{category.name}</span>
+                        </div>
+                        <span className="text-xs bg-gray-800/50 px-2 py-1 rounded-full">
+                          {category.count}
+                        </span>
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -228,14 +344,15 @@ const CategoryPage = () => {
                 <h3 className="text-lg font-bold text-white mb-4">Price Range</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between text-sm text-gray-400">
-                    <span>₦{(priceRange[0] * 1000).toLocaleString()}</span>
-                    <span>₦{(priceRange[1] * 1000).toLocaleString()}</span>
+                    <span>₦{priceRange[0].toLocaleString()}</span>
+                    <span>₦{priceRange[1].toLocaleString()}</span>
                   </div>
                   <div className="relative">
                     <input
                       type="range"
                       min="0"
-                      max="500"
+                      max="100000"
+                      step="1000"
                       value={priceRange[1]}
                       onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                       className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-cyan-500 [&::-webkit-slider-thumb]:to-blue-500"
@@ -284,7 +401,7 @@ const CategoryPage = () => {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-2xl font-bold text-white">All Collections</h2>
-                  <p className="text-gray-400 text-sm">Showing {books.length} premium book{books.length !== 1 ? 's' : ''}</p>
+                  <p className="text-gray-400 text-sm">Showing {sortedBooks.length} premium book{sortedBooks.length !== 1 ? 's' : ''}</p>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -393,14 +510,14 @@ const CategoryPage = () => {
                   </div>
                 ))}
               </div>
-            ) : books.length > 0 ? (
+            ) : sortedBooks.length > 0 ? (
               viewMode === 'grid' ? (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
                 >
-                  {books.map((book, index) => (
+                  {sortedBooks.map((book, index) => (
                     <motion.div
                       key={book._id || book.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -413,7 +530,7 @@ const CategoryPage = () => {
                 </motion.div>
               ) : (
                 <div className="space-y-4">
-                  {books.map((book, index) => (
+                  {sortedBooks.map((book, index) => (
                     <motion.div
                       key={book._id || book.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -442,10 +559,6 @@ const CategoryPage = () => {
                               <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full border border-blue-300 mb-2">
                                 {book.category || 'Fiction'}
                               </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <HiStar className="w-4 h-4 text-amber-400 fill-amber-400" />
-                              <span className="text-sm text-gray-700 font-semibold">{book.rating || 4.5}</span>
                             </div>
                           </div>
                           
@@ -485,44 +598,44 @@ const CategoryPage = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
                   <HiSparkles className="w-8 h-8 text-blue-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-100 mb-2">No Products Found                                                              </h3>
+                <h3 className="text-xl font-semibold text-gray-100 mb-2">No Products Found</h3>
                 <p className="text-gray-200">We're curating our collection. Check back soon for amazing books!</p>
               </div>
             )}
 
             {/* Pagination */}
-            {books.length > 6 && !loadingBooks && (
+            {sortedBooks.length > 6 && !loadingBooks && (
               <div className="mt-8 lg:mt-12 flex justify-center">
-              <nav className="flex items-center gap-2">
-                <button className="px-4 py-2 border border-gray-800 rounded-xl hover:bg-white/5 transition-colors text-sm">
-                  Previous
-                </button>
-                {[1, 2, 3].map((page) => (
-                  <button
-                    key={page}
-                    className={`px-4 py-2 rounded-xl transition-colors text-sm ${
-                      page === 1
-                        ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
-                        : 'border border-gray-800 hover:bg-white/5'
-                    }`}
-                  >
-                    {page}
+                <nav className="flex items-center gap-2">
+                  <button className="px-4 py-2 border border-gray-800 rounded-xl hover:bg-white/5 transition-colors text-sm">
+                    Previous
                   </button>
-                ))}
-                <span className="px-2 text-gray-500">...</span>
-                {[8, 9, 10].map((page) => (
-                  <button
-                    key={page}
-                    className="px-4 py-2 border border-gray-800 rounded-xl hover:bg-white/5 transition-colors text-sm"
-                  >
-                    {page}
+                  {[1, 2, 3].map((page) => (
+                    <button
+                      key={page}
+                      className={`px-4 py-2 rounded-xl transition-colors text-sm ${
+                        page === 1
+                          ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
+                          : 'border border-gray-800 hover:bg-white/5'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <span className="px-2 text-gray-500">...</span>
+                  {[8, 9, 10].map((page) => (
+                    <button
+                      key={page}
+                      className="px-4 py-2 border border-gray-800 rounded-xl hover:bg-white/5 transition-colors text-sm"
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button className="px-4 py-2 border border-gray-800 rounded-xl hover:bg-white/5 transition-colors text-sm">
+                    Next
                   </button>
-                ))}
-                <button className="px-4 py-2 border border-gray-800 rounded-xl hover:bg-white/5 transition-colors text-sm">
-                  Next
-                </button>
-              </nav>
-            </div>
+                </nav>
+              </div>
             )}
           </div>
         </div>
@@ -561,25 +674,37 @@ const CategoryPage = () => {
                 <div className="mb-8">
                   <h3 className="text-lg font-bold mb-4">Categories</h3>
                   <div className="space-y-3">
-                    {categories.map((category) => (
-                      <button
-                        key={category.id}
-                        onClick={() => handleCategoryToggle(category.id)}
-                        className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
-                          selectedCategories.includes(category.id)
-                            ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30'
-                            : 'bg-white/5 hover:bg-white/10'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${category.color}`} />
-                          <span className="text-sm font-medium">{category.name}</span>
+                    {loadingCategories ? (
+                      [...Array(3)].map((_, idx) => (
+                        <div key={idx} className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 animate-pulse">
+                          <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-gray-700" />
+                            <div className="h-4 bg-gray-700 rounded w-24"></div>
+                          </div>
+                          <div className="h-4 bg-gray-700 rounded w-8"></div>
                         </div>
-                        <span className="text-xs bg-gray-800/50 px-2 py-1 rounded-full">
-                          {category.count}
-                        </span>
-                      </button>
-                    ))}
+                      ))
+                    ) : (
+                      categories.map((category) => (
+                        <button
+                          key={category.id}
+                          onClick={() => handleCategoryToggle(category.id)}
+                          className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
+                            selectedCategories.includes(category.id)
+                              ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30'
+                              : 'bg-white/5 hover:bg-white/10'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${category.color}`} />
+                            <span className="text-sm font-medium">{category.name}</span>
+                          </div>
+                          <span className="text-xs bg-gray-800/50 px-2 py-1 rounded-full">
+                            {category.count}
+                          </span>
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -588,13 +713,14 @@ const CategoryPage = () => {
                   <h3 className="text-lg font-bold mb-4">Price Range</h3>
                   <div className="space-y-4">
                     <div className="flex justify-between text-sm text-gray-400">
-                      <span>₦{(priceRange[0] * 1000).toLocaleString()}</span>
-                      <span>₦{(priceRange[1] * 1000).toLocaleString()}</span>
+                      <span>₦{priceRange[0].toLocaleString()}</span>
+                      <span>₦{priceRange[1].toLocaleString()}</span>
                     </div>
                     <input
                       type="range"
                       min="0"
-                      max="500"
+                      max="100000"
+                      step="1000"
                       value={priceRange[1]}
                       onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                       className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-cyan-500 [&::-webkit-slider-thumb]:to-blue-500"

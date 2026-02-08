@@ -39,6 +39,7 @@ import AdminUsers from './Pages/Admin/AdminUsers'
 import ProtectedRoute from './components/ProtectedRoute'
 import ProtectedRouteForAuth from './components/ProtectedRouteForAuth'
 import AdminRoute from './components/AdminRoute'
+import UserRoleChecker from './components/UserRoleChecker'
 
 const App = () => {
   const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE || 'admin'
@@ -75,7 +76,11 @@ const App = () => {
       </Route>
 
       {/* Admin Routes */}
-      <Route path={`/${ADMIN_ROUTE}/login`} element={<AdminLogin />} />
+      <Route path={`/${ADMIN_ROUTE}/login`} element={
+        <ProtectedRouteForAuth>
+          <AdminLogin />
+        </ProtectedRouteForAuth>
+      } />
       <Route path={`/${ADMIN_ROUTE}/dashboard`} element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       <Route path={`/${ADMIN_ROUTE}/products`} element={<AdminRoute><AdminProducts /></AdminRoute>} />
       <Route path={`/${ADMIN_ROUTE}/categories`} element={<AdminRoute><AdminCategories /></AdminRoute>} />
@@ -84,6 +89,8 @@ const App = () => {
       <Route path={`/${ADMIN_ROUTE}/blog`} element={<AdminRoute><AdminBlog /></AdminRoute>} />
       <Route path={`/${ADMIN_ROUTE}/users`} element={<AdminRoute><AdminUsers /></AdminRoute>} />
       <Route path={`/${ADMIN_ROUTE}/bank-accounts`} element={<AdminRoute><AdminBankAccounts /></AdminRoute>} />
+
+      <Route path="*" element={<UserRoleChecker />} />
 
       {/* 404 */}
       <Route path='*' element={

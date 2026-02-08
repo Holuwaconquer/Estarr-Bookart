@@ -1,7 +1,7 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext.jsx';
-import { AuthContext } from '../AuthContext';
+import { AuthContext } from '../AuthContext.jsx';
 import { 
   HiTrash, 
   HiArrowLeft, 
@@ -20,12 +20,69 @@ const Cart = () => {
   const { items, removeFromCart, clearCart, totalItems, updateQuantity } = useCart();
   const { authenticated } = useContext(AuthContext);
 
-  const subtotal = items?.reduce((s, it) => {
-    const price = Number(it.price) || 0;
-    return s + (price * (it.quantity || 1));
+  // Debug: Log items whenever they change
+  useEffect(() => {
+    if (items && items.length > 0) {
+      console.log('📦 Cart items updated:', items.map(item => ({
+        id: item.id,
+        title: item.title,
+        author: item.author,
+        price: item.price,
+        quantity: item.quantity,
+        hasImage: !!item.image
+      })));
+    } else {
+      console.log('📦 Cart is empty');
+    }
+  }, [items]);
+
+  // Calculate discounted price for each item
+  const getDiscountedPrice = (item) => {
+    const price = Number(item.price) || 0;
+    const discount = Number(item.discount) || 0;
+    const finalPrice = Number(item.finalPrice) || 0;
+    
+    // Use finalPrice if available, otherwise calculate from discount
+    if (finalPrice > 0 && finalPrice < price) {
+      return finalPrice;
+    } else if (discount > 0) {
+      return price * (1 - discount / 100);
+    }
+    return price;
+  };
+
+  // Calculate item total with discount applied
+  const getItemTotal = (item) => {
+    const discountedPrice = getDiscountedPrice(item);
+    const quantity = item.quantity || 1;
+    return discountedPrice * quantity;
+  };
+
+  // Calculate subtotal with discounts
+  const subtotal = items?.reduce((s, item) => {
+    return s + getItemTotal(item);
   }, 0) || 0;
-  const shippingFee = subtotal > 5000 ? 0 : 1499;
+
+  // Calculate dynamic shipping cost - use highest shipping cost from all items (same shipping for all items)
+  const shippingFee = items && items.length > 0 
+    ? Math.max(...items.map(item => Number(item.shippingCost) || 0), 0)
+    : 0;
+  
+  console.log('📦 Cart items shipping costs:', items?.map(item => ({ title: item.title, shippingCost: item.shippingCost })));
+  console.log('💰 Final shipping fee:', shippingFee);
+  
   const total = subtotal + shippingFee;
+
+  // Calculate total savings from discounts
+  const totalSavings = items?.reduce((savings, item) => {
+    const originalPrice = Number(item.price) || 0;
+    const discountedPrice = getDiscountedPrice(item);
+    const quantity = item.quantity || 1;
+    if (originalPrice > discountedPrice) {
+      return savings + ((originalPrice - discountedPrice) * quantity);
+    }
+    return savings;
+  }, 0) || 0;
 
   const handleCheckout = () => {
     if (!authenticated) {
@@ -107,6 +164,10 @@ const Cart = () => {
               <div className="space-y-4">
                 {items?.map((item, index) => {
                   const itemKey = item._id || item.id || item.book || `cart-item-${index}`;
+                  const originalPrice = Number(item.price) || 0;
+                  const discountedPrice = getDiscountedPrice(item);
+                  const isDiscounted = originalPrice > discountedPrice;
+                  
                   return (
                     <motion.div
                       key={itemKey}
@@ -134,6 +195,13 @@ const Cart = () => {
                             <div className="absolute top-3 left-3">
                               <span className="px-2 py-1 bg-gradient-to-r from-cyan-500/90 to-blue-500/90 text-white text-xs font-semibold rounded-full">
                                 {item.edition}
+                              </span>
+                            </div>
+                          )}
+                          {isDiscounted && (
+                            <div className="absolute top-3 right-3">
+                              <span className="px-3 py-1.5 bg-gradient-to-r from-red-500/90 to-pink-500/90 text-white text-xs font-bold rounded-full shadow-lg">
+                                {item.discount}% OFF
                               </span>
                             </div>
                           )}
@@ -199,14 +267,34 @@ const Cart = () => {
 
                       {/* Price */}
                       <div className="md:w-1/4 text-right">
-                        <div className="text-2xl font-bold text-cyan-400 mb-1">
-                          ₦{(((Number(item.price) || 0) > 0 ? Number(item.price) : 0) * (item.quantity || 1)).toFixed(2)}
+                        <div className="space-y-2">
+                          {isDiscounted ? (
+                            <>
+                              <div className="text-3xl font-bold text-cyan-400">
+                                ₦{getItemTotal(item).toLocaleString()}
+                              </div>
+                              <div className="flex flex-col items-end">
+                                <div className="text-lg text-gray-400 line-through">
+                                  ₦{(originalPrice * (item.quantity || 1)).toLocaleString()}
+                                </div>
+                                <div className="text-sm text-green-400 font-semibold">
+                                  Save ₦{((originalPrice - discountedPrice) * (item.quantity || 1)).toLocaleString()}
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="text-3xl font-bold text-cyan-400">
+                                ₦{getItemTotal(item).toLocaleString()}
+                              </div>
+                              <p className="text-sm text-gray-400">
+                                ₦{discountedPrice.toLocaleString()} each
+                              </p>
+                            </>
+                          )}
                         </div>
-                        <p className="text-sm text-gray-400 mb-2">
-                          ₦{((Number(item.price) || 0) > 0 ? Number(item.price) : 0).toFixed(2)} each
-                        </p>
-                        {item.discount && (
-                          <div className="inline-block px-3 py-1 bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-400 text-xs font-semibold rounded-full border border-red-500/30">
+                        {isDiscounted && (
+                          <div className="mt-4 inline-block px-3 py-1 bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-400 text-xs font-semibold rounded-full border border-red-500/30">
                             {item.discount}% OFF
                           </div>
                         )}
@@ -231,8 +319,17 @@ const Cart = () => {
                   <div className="space-y-4 pb-6 border-b border-gray-800/50 mb-6">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-400">Subtotal</span>
-                      <span className="font-medium">₦{subtotal.toFixed(2)}</span>
+                      <span className="font-medium">₦{subtotal.toLocaleString()}</span>
                     </div>
+                    
+                    {totalSavings > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-400">Discounts</span>
+                        <span className="font-medium text-green-400">
+                          -₦{totalSavings.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
                     
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-400">Shipping</span>
@@ -243,14 +340,14 @@ const Cart = () => {
                             FREE
                           </span>
                         ) : (
-                          `₦${shippingFee.toFixed(2)}`
+                          `₦${shippingFee.toLocaleString()}`
                         )}
                       </span>
                     </div>
                     
                     {shippingFee > 0 && (
                       <p className="text-xs text-gray-500">
-                        Free shipping on orders over ₦5,000
+                        Shipping cost determined by selected products
                       </p>
                     )}
 
@@ -259,9 +356,20 @@ const Cart = () => {
                   <div className="flex justify-between items-center mb-8">
                     <span className="text-lg font-bold">Total</span>
                     <span className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                      ₦{total.toFixed(2)}
+                      ₦{total.toLocaleString()}
                     </span>
                   </div>
+
+                  {totalSavings > 0 && (
+                    <div className="mb-6 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <span className="text-green-400 font-semibold">Total Savings</span>
+                        <span className="text-xl font-bold text-green-400">
+                          ₦{totalSavings.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   <button
                     onClick={handleCheckout}

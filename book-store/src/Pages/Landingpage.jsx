@@ -54,8 +54,10 @@ const Landingpage = () => {
         setLoading(true);
         const response = await categoryAPI.getAllCategories();
         console.log('Categories response:', response);
-        // API returns data directly as an array
-        const fetchedCategories = response.data?.categories || [];
+        // API may return categories either as `data` array or under `data.categories`
+        const fetchedCategories = Array.isArray(response.data)
+          ? response.data
+          : (response.data?.categories || []);
         
         if (fetchedCategories.length > 0) {
           // Map API categories with default styling
@@ -118,6 +120,27 @@ const Landingpage = () => {
               setRecentlyViewed([]);
             }
           }
+          
+          // If categories from API were not available, derive categories from books
+          try {
+            const currentCats = categories || [];
+            const isShowingDefaults = currentCats.length === 0 || (currentCats[0] && currentCats[0].name === defaultCategories[0].name);
+            if (isShowingDefaults) {
+              const derived = Array.from(new Set(books.map(b => (b.category?.name || b.category || '').toString().trim()).filter(Boolean)));
+              if (derived.length > 0) {
+                const styled = derived.slice(0, 8).map((name, idx) => ({
+                  name,
+                  icon: defaultCategories[idx]?.icon || '📚',
+                  color: defaultCategories[idx]?.color || 'from-blue-500 to-cyan-500',
+                  bg: defaultCategories[idx]?.bg || 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10',
+                  count: Math.floor(Math.random() * 1000) + 50
+                }));
+                setCategories(styled);
+              }
+            }
+          } catch (e) {
+            // ignore derivation errors
+          }
         }
       } catch (error) {
         console.error('Failed to fetch books:', error);
@@ -133,7 +156,7 @@ const Landingpage = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/category?search=${encodeURIComponent(searchQuery)}`);
+      navigate(`/category?q=${encodeURIComponent(searchQuery)}`);
       setSearchQuery('');
     }
   };
@@ -323,15 +346,14 @@ const Landingpage = () => {
                   transition={{ delay: idx * 0.05 }}
                   whileHover={{ scale: 1.05, y: -5 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate(`/category?cat=${cat.name.toLowerCase()}`)}
+                  onClick={() => navigate(`/category?category=${cat.name.toLowerCase()}`)}
                   className={`${cat.bg} rounded-xl p-4 cursor-pointer hover:shadow-xl transition-all text-center group border border-gray-200 flex-shrink-0 w-40 snap-center md:w-auto md:snap-none`}
                   style={{ minWidth: '150px' }}
                 >
                   <div className={`inline-flex p-3 rounded-lg bg-gradient-to-r ${cat.color} text-white text-2xl mb-3 group-hover:scale-105 transition-transform duration-300`}>
                     {cat.icon}
                   </div>
-                  <p className="font-semibold text-gray-800 mb-1">{cat.name}</p>
-                  <p className="text-xs text-gray-500">{cat.count} items</p>
+                  <p className="font-semibold text-gray-800">{cat.name}</p>
                 </motion.div>
               ))}
           </div>
@@ -457,7 +479,7 @@ const Landingpage = () => {
                 Clear History
               </button>
             </div>
-            <div className="flex overflow-x-auto pb-4 snap-x snap-mandatory md:grid md:grid-cols-3 lg:grid-cols-8 gap-4 md:gap-[32px] md:overflow-visible">
+            <div className="flex overflow-x-auto pb-4 snap-x snap-mandatory md:grid md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-[32px] md:overflow-visible">
               {recentlyViewed.map((book, idx) => (
                 <div style={{ minWidth: '280px' }}>
                   <BookCard key={book._id} book={book} index={idx} />

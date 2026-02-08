@@ -1,67 +1,27 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../../AuthContext';
-import { userAPI, cartAPI, bookAPI } from '../../../services/api';
+import { useWishlist } from '../../../contexts/WishlistContext'; // Add this
+import { useCart } from '../../../contexts/CartContext'; // Add this
 import { motion } from 'framer-motion';
 import { HiHeart, HiShoppingBag, HiTrash, HiX } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
 const Wishlist = () => {
   const { user } = useContext(AuthContext);
-  const [wishlist, setWishlist] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { wishlist, removeFromWishlist } = useWishlist(); // Use context
+  const { addToCart } = useCart(); // Use cart context
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchWishlist = async () => {
-      try {
-        setLoading(true);
-        // Get wishlist IDs from localStorage
-        const response = await userAPI.getWishlist();
-        const bookIds = response.data || [];
-        
-        // Fetch book details for each ID
-        if (bookIds.length > 0) {
-          const booksData = await Promise.all(
-            bookIds.map(async (id) => {
-              try {
-                const book = await bookAPI.getBookById(id);
-                return book.data || book;
-              } catch (error) {
-                return null;
-              }
-            })
-          );
-          setWishlist(booksData.filter(book => book !== null));
-        } else {
-          setWishlist([]);
-        }
-      } catch (error) {
-        console.error('Failed to load wishlist:', error);
-        toast.error('Failed to load wishlist');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // No need for separate useEffect to fetch wishlist since context handles it
 
-    fetchWishlist();
-  }, []);
-
-  const removeFromWishlist = async (bookId) => {
-    try {
-      await userAPI.removeFromWishlist(bookId);
-      setWishlist(wishlist.filter(item => item._id !== bookId));
-      toast.success('Removed from wishlist');
-    } catch (error) {
-      toast.error('Failed to remove from wishlist');
-    }
+  const handleRemoveFromWishlist = (bookId) => {
+    removeFromWishlist(bookId);
+    toast.success('Removed from wishlist');
   };
 
-  const addToCart = async (book) => {
-    try {
-      await cartAPI.addToCart(book._id, 1);
-      toast.success(`${book.title} added to cart`);
-    } catch (error) {
-      toast.error('Failed to add to cart');
-    }
+  const handleAddToCart = (book) => {
+    addToCart(book);
+    toast.success(`${book.title} added to cart`);
   };
 
   const containerVariants = {
@@ -78,6 +38,7 @@ const Wishlist = () => {
     visible: { opacity: 1, scale: 1, transition: { duration: 0.4 } }
   };
 
+  // Add a loading state check
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -100,7 +61,7 @@ const Wishlist = () => {
         <motion.div className="mb-8">
           <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
             <HiHeart className="w-8 h-8 text-red-500" />
-            My Wishlist
+            My Wishlist ({wishlist.length})
           </h1>
           <p className="text-gray-600">Save your favorite books for later</p>
         </motion.div>
@@ -117,9 +78,9 @@ const Wishlist = () => {
               >
                 {/* Image Container */}
                 <div className="relative h-64 bg-gradient-to-br from-purple-100 to-blue-100 overflow-hidden">
-                  {book.coverImage ? (
+                  {book.image ? (
                     <img
-                      src={book.coverImage}
+                      src={book.image}
                       alt={book.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -153,27 +114,29 @@ const Wishlist = () => {
                   </h3>
 
                   <p className="text-sm text-gray-600 mb-2">
-                    {book.author?.name || 'Unknown Author'}
+                    {book.author || 'Unknown Author'}
                   </p>
 
                   {/* Rating */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="flex text-yellow-400">
-                      {'⭐'.repeat(Math.floor(book.rating || 0))}
+                  {book.rating && (
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="flex text-yellow-400">
+                        {'⭐'.repeat(Math.floor(book.rating || 0))}
+                      </div>
+                      <span className="text-sm text-gray-600">
+                        ({book.rating || 0}/5)
+                      </span>
                     </div>
-                    <span className="text-sm text-gray-600">
-                      ({book.reviews?.length || 0} reviews)
-                    </span>
-                  </div>
+                  )}
 
                   {/* Price */}
                   <div className="mb-4">
                     <p className="text-2xl font-bold text-purple-600">
-                      NGN {book.price?.toLocaleString()}
+                      ₦{new Intl.NumberFormat('en-NG').format(book.price || 0)}
                     </p>
                     {book.originalPrice && book.originalPrice > book.price && (
                       <p className="text-sm text-gray-500 line-through">
-                        NGN {book.originalPrice?.toLocaleString()}
+                        ₦{new Intl.NumberFormat('en-NG').format(book.originalPrice)}
                       </p>
                     )}
                   </div>
@@ -183,7 +146,7 @@ const Wishlist = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => addToCart(book)}
+                      onClick={() => handleAddToCart(book)}
                       disabled={book.stock === 0}
                       className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
@@ -193,7 +156,7 @@ const Wishlist = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => removeFromWishlist(book._id)}
+                      onClick={() => handleRemoveFromWishlist(book._id)}
                       className="px-4 py-2 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition-colors"
                     >
                       <HiTrash className="w-4 h-4" />
@@ -214,7 +177,7 @@ const Wishlist = () => {
             <motion.a
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
-              href="/shop"
+              href="/category"
               className="inline-block px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
             >
               Browse Books

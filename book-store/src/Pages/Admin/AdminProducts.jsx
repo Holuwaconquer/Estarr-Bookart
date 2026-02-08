@@ -24,6 +24,7 @@ const AdminProducts = () => {
     author: '',
     description: '',
     price: '',
+    shippingCost: 0,
     discount: 0,
     category: 'Fiction',
     stock: '',
@@ -89,6 +90,7 @@ const AdminProducts = () => {
       author: '',
       description: '',
       price: '',
+      shippingCost: 0,
       discount: 0,
       category: 'Fiction',
       stock: '',
@@ -404,6 +406,19 @@ const AdminProducts = () => {
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     required
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+                  />
+                </div>
+
+                {/* Shipping Cost */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Shipping Cost (₦)</label>
+                  <input
+                    type="number"
+                    value={formData.shippingCost}
+                    onChange={(e) => setFormData({ ...formData, shippingCost: e.target.value })}
+                    placeholder="Leave blank for free shipping"
+                    min="0"
                     className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
                   />
                 </div>

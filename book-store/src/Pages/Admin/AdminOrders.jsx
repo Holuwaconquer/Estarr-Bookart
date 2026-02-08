@@ -31,16 +31,30 @@ const AdminOrders = () => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
+        console.log('📦 Fetching orders with params:', { page, limit: 20, status: statusFilter });
         const response = await orderAPI.getAllOrders({ 
           page, 
           limit: 20,
           status: statusFilter || undefined
         });
-        setOrders(response.data?.orders || []);
-        setTotalPages(response.data?.pagination?.pages || 1);
+        console.log('✅ Orders response:', response);
+        
+        const ordersData = response.data?.orders || response.orders || [];
+        const pagesData = response.data?.pagination?.pages || response.pagination?.pages || 1;
+        
+        console.log('📋 Orders fetched:', ordersData.length);
+        console.log('📄 Total pages:', pagesData);
+        
+        setOrders(ordersData);
+        setTotalPages(pagesData);
+        
+        if (ordersData.length === 0) {
+          console.warn('⚠️ No orders found');
+        }
       } catch (error) {
-        toast.error('Failed to fetch orders');
-        console.error(error);
+        console.error('❌ Failed to fetch orders:', error);
+        console.error('Error details:', error.message, error.status, error.body);
+        toast.error('Failed to fetch orders: ' + (error.message || 'Unknown error'));
       } finally {
         setLoading(false);
       }
@@ -295,6 +309,43 @@ const AdminOrders = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Shipping Address */}
+              <div>
+                <h3 className="text-lg font-bold text-white mb-3">📍 Shipping Address</h3>
+                <div className="bg-gray-800/50 rounded-lg p-4">
+                  <p className="text-white">{selectedOrder.shippingAddress?.street}</p>
+                  <p className="text-white">{selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state}</p>
+                  <p className="text-white">{selectedOrder.shippingAddress?.zipCode}, {selectedOrder.shippingAddress?.country}</p>
+                  <p className="text-gray-400 text-sm mt-2">📞 {selectedOrder.shippingAddress?.phone}</p>
+                </div>
+              </div>
+
+              {/* Proof of Payment (if available) */}
+              {selectedOrder.proofOfPayment && (
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-3">📄 Proof of Payment</h3>
+                  <div className="bg-gray-800/50 rounded-lg p-4">
+                    {selectedOrder.proofOfPayment.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                      <img src={selectedOrder.proofOfPayment} alt="Proof of Payment" className="w-full rounded max-h-96 object-contain" />
+                    ) : selectedOrder.proofOfPayment.match(/\.pdf$/i) ? (
+                      <div className="flex items-center justify-between p-4 bg-gray-700 rounded">
+                        <div>
+                          <p className="text-white font-medium">Payment Proof (PDF)</p>
+                          <p className="text-gray-400 text-sm">{selectedOrder.proofOfPayment.split('/').pop()}</p>
+                        </div>
+                        <a href={selectedOrder.proofOfPayment} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300">
+                          View
+                        </a>
+                      </div>
+                    ) : (
+                      <a href={selectedOrder.proofOfPayment} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 break-all">
+                        {selectedOrder.proofOfPayment}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Totals */}
               <div className="bg-gray-800/50 rounded-lg p-4 space-y-2">

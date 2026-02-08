@@ -37,9 +37,17 @@ const AdminUsers = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log('👥 Fetching users...');
       const response = await userAPI.getAllUsers();
-      setUsers(response.data || []);
+      console.log('👥 Users response:', response);
+      
+      // Handle both response formats
+      const userData = response.data?.users || response.data || [];
+      console.log('👥 Extracted users:', userData);
+      
+      setUsers(Array.isArray(userData) ? userData : []);
     } catch (error) {
+      console.error('❌ Failed to fetch users:', error);
       toast.error('Failed to fetch users');
     } finally {
       setLoading(false);

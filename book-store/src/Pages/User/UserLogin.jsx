@@ -1,21 +1,52 @@
-import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useContext, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../AuthContext';
-import { authAPI } from '../../services/api';
 import { motion } from 'framer-motion';
-import { HiMail, HiLockClosed, HiEye, HiEyeOff, HiArrowRight, HiSparkles, HiUser } from 'react-icons/hi';
+import { HiMail, HiLockClosed, HiEye, HiEyeOff, HiArrowRight } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import AuthLayout from '../../components/AuthLayout';
 
 const UserLogin = () => {
   const navigate = useNavigate();
-  const { setUser, setAuthenticated } = useContext(AuthContext);
+  const location = useLocation();
+  const { login, authenticated, user, authLoading, isInitialized } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Show loading while auth is initializing
+  if (authLoading || !isInitialized) {
+    return (
+      <AuthLayout
+        title="Welcome Back"
+        subtitle="Sign in to your Estarr BookArt account"
+      >
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin">
+            <div className="w-12 h-12 border-4 border-cyan-200 border-t-cyan-600 rounded-full"></div>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  // Handle redirect if already authenticated
+  useEffect(() => {
+    // This component is wrapped in ProtectedRouteForAuth, so this shouldn't happen
+    // But keep it as a safety check
+    if (authenticated && user) {
+      console.log('User already authenticated, redirecting...');
+      const redirectPath = user?.role === 'admin' ? '/admin/dashboard' : '/dashboard';
+      const timer = setTimeout(() => {
+        navigate(redirectPath, { replace: true });
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [authenticated, user, navigate]);
 
   const handleChange = (e) => {
     setFormData(prev => ({
@@ -28,33 +59,40 @@ const UserLogin = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const response = await authAPI.login(formData);
       
-      if (response && response.data) {
-        const token = response.data.token || response.data.accessToken;
-        if (token) {
-          localStorage.setItem('token', token);
-          localStorage.setItem('accessToken', token);
+      const result = await login(formData);
+      
+      if (result.success) {
+        // Save token if present
+        if (result.data?.token) {
+          localStorage.setItem('token', result.data.token);
+          localStorage.setItem('accessToken', result.data.token);
         }
         
-        if (response.data.user) {
-          setUser(response.data.user);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
-          setAuthenticated(true);
+        // Make sure user object is saved with role
+        if (result.data) {
+          localStorage.setItem('user', JSON.stringify(result.data));
+          console.log('✅ User saved to localStorage with role:', result.data.role);
         }
         
-        toast.success('Welcome back!', {
-          icon: '📚',
-          style: {
-            background: '#1e293b',
-            color: '#fff',
-            border: '1px solid #334155'
-          }
-        });
-        navigate(response.data.user?.role === 'admin' ? '/admin/dashboard' : '/dashboard');
+        // Check user role and redirect accordingly
+        if (result.data?.role === 'admin') {
+          toast.success('Redirecting to admin dashboard...');
+          console.log('🔄 Admin logged in via user login, redirecting to:', '/admin/dashboard');
+          setTimeout(() => {
+            navigate('/admin/dashboard', { replace: true });
+          }, 500);
+        } else {
+          toast.success('Welcome back!');
+          console.log('🔄 User logged in, redirecting to:', '/dashboard');
+          setTimeout(() => {
+            navigate('/dashboard', { replace: true });
+          }, 500);
+        }
       }
     } catch (error) {
-      toast.error(error.message || 'Login failed. Please check your credentials.');
+      console.error('Login error:', error);
+      toast.error(error.message || 'Login failed.');
     } finally {
       setLoading(false);
     }

@@ -26,6 +26,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [proofFile, setProofFile] = useState(null);
+  const [currentOrderId, setCurrentOrderId] = useState(null);
 
   const [formData, setFormData] = useState({
     street: '',
@@ -36,10 +37,51 @@ const Checkout = () => {
     phone: ''
   });
 
-  // Calculate totals
-  const subtotal = items?.reduce((sum, item) => sum + (parseFloat(item.price) * (item.quantity || 1)), 0) || 0;
-  const shippingFee = subtotal > 100 ? 0 : 9.99;
+  // Helper function to calculate discounted price (same as Cart page)
+  const getDiscountedPrice = (item) => {
+    const price = Number(item.price) || 0;
+    const discount = Number(item.discount) || 0;
+    const finalPrice = Number(item.finalPrice) || 0;
+    
+    // Use finalPrice if available, otherwise calculate from discount
+    if (finalPrice > 0 && finalPrice < price) {
+      return finalPrice;
+    } else if (discount > 0) {
+      return price * (1 - discount / 100);
+    }
+    return price;
+  };
+
+  // Calculate item total with discount
+  const getItemTotal = (item) => {
+    const discountedPrice = getDiscountedPrice(item);
+    const quantity = item.quantity || 1;
+    return discountedPrice * quantity;
+  };
+
+  // Calculate totals with discounts applied
+  const subtotal = items?.reduce((sum, item) => sum + getItemTotal(item), 0) || 0;
+  
+  // Calculate dynamic shipping cost - use highest shipping cost from all items (same shipping for all items)
+  const shippingFee = items && items.length > 0 
+    ? Math.max(...items.map(item => Number(item.shippingCost) || 0), 0)
+    : 0;
+  
+  console.log('📦 Checkout cart items shipping costs:', items?.map(item => ({ title: item.title, shippingCost: item.shippingCost })));
+  console.log('💰 Checkout final shipping fee:', shippingFee);
+  
   const total = subtotal + shippingFee;
+
+  // Calculate total savings from discounts
+  const totalSavings = items?.reduce((savings, item) => {
+    const originalPrice = Number(item.price) || 0;
+    const discountedPrice = getDiscountedPrice(item);
+    const quantity = item.quantity || 1;
+    if (originalPrice > discountedPrice) {
+      return savings + ((originalPrice - discountedPrice) * quantity);
+    }
+    return savings;
+  }, 0) || 0;
 
   // Fetch bank accounts on mount
   useEffect(() => {
@@ -83,13 +125,20 @@ const Checkout = () => {
     try {
       setLoading(true);
 
+      // Create order with discounted prices
       const orderPayload = {
         items: items.map(item => ({
           book: item.book || item._id || item.id,
-          quantity: item.quantity || 1
+          quantity: item.quantity || 1,
+          price: getDiscountedPrice(item), // Send discounted price
+          discount: item.discount || 0
         })),
         shippingAddress: formData,
-        paymentMethod: paymentMethod
+        paymentMethod: paymentMethod,
+        subtotal: subtotal,
+        shippingFee: shippingFee,
+        total: total,
+        discountSavings: totalSavings
       };
 
       const orderRes = await api.cartAPI.createOrder(orderPayload);
@@ -97,13 +146,11 @@ const Checkout = () => {
       if (orderRes?.data?._id) {
         toast.success('Order created successfully!');
         
-        if (paymentMethod === 'korapay') {
-          // Proceed to Korapay payment
-          await handleKorapayPayment(orderRes.data._id);
-        } else {
-          // Proceed to manual payment
-          setStep(4);
-        }
+        // Store the order ID for proof upload
+        setCurrentOrderId(orderRes.data._id);
+        
+        // Proceed to manual payment
+        setStep(4);
       } else {
         throw new Error('Failed to create order');
       }
@@ -114,25 +161,6 @@ const Checkout = () => {
     }
   };
 
-  const handleKorapayPayment = async (orderId) => {
-    try {
-      setLoading(true);
-
-      // Initialize payment with Korapay
-      const paymentRes = await api.userAPI.initializeKorapayPayment?.(orderId);
-
-      if (paymentRes?.data?.checkout_url) {
-        // Redirect to Korapay checkout
-        window.location.href = paymentRes.data.checkout_url;
-      } else {
-        throw new Error('Failed to initialize payment');
-      }
-    } catch (error) {
-      toast.error(error.message || 'Payment initialization failed');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -157,22 +185,37 @@ const Checkout = () => {
         return;
       }
 
+      if (!currentOrderId) {
+        toast.error('Order ID not found. Please create order first.');
+        return;
+      }
+
       setLoading(true);
+      console.log('📤 Uploading proof of payment:', { orderId: currentOrderId, fileName: proofFile.name });
 
       const formDataObj = new FormData();
       formDataObj.append('proof', proofFile);
 
-      // This would be the payment ID - you'd need to pass it from previous step
-      // For now, we'll need to update the API structure
-      // const uploadRes = await api.userAPI.uploadProofOfPayment?.(paymentId, formDataObj);
-
-      toast.success('Proof of payment uploaded successfully!');
-      toast.success('Your payment is awaiting admin verification');
+      // Upload proof of payment to backend
+      const uploadRes = await orderAPI.uploadOrderProof(currentOrderId, formDataObj);
       
-      clearCart();
-      setTimeout(() => navigate('/dashboard/orders'), 2000);
+      console.log('📥 Upload response:', uploadRes);
+
+      if (uploadRes?.data?._id) {
+        console.log('✅ Proof uploaded successfully');
+        toast.success('Proof of payment uploaded successfully!');
+        toast.success('Your payment is awaiting admin verification');
+        
+        setProofFile(null);
+        clearCart();
+        setTimeout(() => navigate('/dashboard/orders'), 2000);
+      } else {
+        throw new Error(uploadRes?.message || 'Failed to upload proof');
+      }
     } catch (error) {
-      toast.error(error.message || 'Failed to upload proof');
+      console.error('❌ Proof upload error:', error);
+      const errorMsg = error.message || 'Failed to upload proof';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -221,25 +264,52 @@ const Checkout = () => {
                 <div className="bg-white rounded-lg shadow p-6">
                   <h2 className="text-xl font-bold mb-4">Order Review</h2>
                   <div className="space-y-4">
-                    {items?.map((item) => (
-                      <div key={item.id || item._id} className="flex gap-4 pb-4 border-b">
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className="w-20 h-24 object-cover rounded"
-                        />
-                        <div className="flex-1">
-                          <h3 className="font-bold">{item.title}</h3>
-                          <p className="text-sm text-gray-600">{item.author}</p>
-                          <div className="flex justify-between mt-2">
-                            <span>Qty: {item.quantity || 1}</span>
-                            <span className="font-bold">
-                              ₦{(parseFloat(item.price) * (item.quantity || 1)).toFixed(2)}
-                            </span>
+                    {items?.map((item) => {
+                      const discountedPrice = getDiscountedPrice(item);
+                      const itemTotal = getItemTotal(item);
+                      const isDiscounted = Number(item.price) > discountedPrice;
+                      
+                      return (
+                        <div key={item.id || item._id} className="flex gap-4 pb-4 border-b">
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            className="w-20 h-24 object-cover rounded"
+                          />
+                          <div className="flex-1">
+                            <h3 className="font-bold">{item.title}</h3>
+                            <p className="text-sm text-gray-600">{item.author}</p>
+                            
+                            {isDiscounted && (
+                              <div className="mt-1">
+                                <span className="inline-block px-2 py-1 bg-red-100 text-red-800 text-xs font-bold rounded mr-2">
+                                  {item.discount}% OFF
+                                </span>
+                                {item.finalPrice && (
+                                  <span className="text-xs text-gray-500">
+                                    Final Price: ₦{item.finalPrice}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            
+                            <div className="flex justify-between mt-2">
+                              <span>Qty: {item.quantity || 1}</span>
+                              <div className="text-right">
+                                <div className="font-bold text-lg text-green-600">
+                                  ₦{itemTotal.toLocaleString()}
+                                </div>
+                                {isDiscounted && (
+                                  <div className="text-sm text-gray-500 line-through">
+                                    ₦{(Number(item.price) * (item.quantity || 1)).toLocaleString()}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   <button
                     onClick={() => setStep(2)}
@@ -336,30 +406,6 @@ const Checkout = () => {
                 <div className="bg-white rounded-lg shadow p-6">
                   <h2 className="text-xl font-bold mb-4">Select Payment Method</h2>
                   <div className="space-y-4">
-                    {/* Korapay Option */}
-                    <motion.div
-                      onClick={() => setPaymentMethod('korapay')}
-                      whileHover={{ scale: 1.02 }}
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                        paymentMethod === 'korapay'
-                          ? 'border-purple-600 bg-purple-50'
-                          : 'border-gray-300 hover:border-purple-600'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          paymentMethod === 'korapay' ? 'border-purple-600' : 'border-gray-300'
-                        }`}>
-                          {paymentMethod === 'korapay' && <HiCheck className="w-3 h-3 text-purple-600" />}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-bold">Card Payment (Korapay)</h3>
-                          <p className="text-sm text-gray-600">Pay securely with your credit/debit card</p>
-                        </div>
-                        <HiCreditCard className="w-6 h-6 text-purple-600" />
-                      </div>
-                    </motion.div>
-
                     {/* Manual Bank Transfer Option */}
                     <motion.div
                       onClick={() => setPaymentMethod('manual')}
@@ -567,17 +613,47 @@ const Checkout = () => {
               <div className="space-y-3 pb-4 border-b">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal</span>
-                  <span>₦{subtotal.toFixed(2)}</span>
+                  <span>₦{subtotal.toLocaleString()}</span>
                 </div>
+                
+                {totalSavings > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-600">Discounts Applied</span>
+                    <span className="text-green-600 font-bold">
+                      -₦{totalSavings.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                
                 <div className="flex justify-between text-sm">
                   <span>Shipping</span>
-                  <span>{shippingFee === 0 ? 'Free' : `₦${shippingFee.toFixed(2)}`}</span>
+                  <span className={shippingFee === 0 ? 'text-green-600 font-bold' : ''}>
+                    {shippingFee === 0 ? 'FREE' : `₦${shippingFee.toLocaleString()}`}
+                  </span>
                 </div>
+                
+                {shippingFee > 0 && (
+                  <p className="text-xs text-gray-500">
+                    Free shipping on orders over ₦100
+                  </p>
+                )}
               </div>
+              
               <div className="flex justify-between font-bold text-lg mt-4">
                 <span>Total</span>
-                <span>₦{total.toFixed(2)}</span>
+                <span className="text-blue-600">₦{total.toLocaleString()}</span>
               </div>
+              
+              {totalSavings > 0 && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-green-800">You save</span>
+                    <span className="text-lg font-bold text-green-600">
+                      ₦{totalSavings.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
