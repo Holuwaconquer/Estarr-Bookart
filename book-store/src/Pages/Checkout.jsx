@@ -26,6 +26,8 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [proofFile, setProofFile] = useState(null);
+  const [proofPreview, setProofPreview] = useState(null); // Preview of selected file
+  const [uploadComplete, setUploadComplete] = useState(false); // Track actual upload completion
   const [currentOrderId, setCurrentOrderId] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -175,6 +177,17 @@ const Checkout = () => {
         return;
       }
       setProofFile(file);
+      
+      // Generate preview for image/PDF
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setProofPreview(event.target.result);
+        };
+        reader.readAsDataURL(file);
+      } else if (file.type === 'application/pdf') {
+        setProofPreview('PDF');
+      }
     }
   };
 
@@ -206,9 +219,8 @@ const Checkout = () => {
         toast.success('Proof of payment uploaded successfully!');
         toast.success('Your payment is awaiting admin verification');
         
-        setProofFile(null);
-        clearCart();
-        setTimeout(() => navigate('/dashboard/orders'), 2000);
+        // Mark upload as complete to show success screen
+        setUploadComplete(true);
       } else {
         throw new Error(uploadRes?.message || 'Failed to upload proof');
       }
@@ -449,7 +461,7 @@ const Checkout = () => {
               )}
 
               {/* Step 4: Manual Payment or Success */}
-              {step === 4 && paymentMethod === 'manual' && !proofFile && (
+              {step === 4 && paymentMethod === 'manual' && !uploadComplete && (
                 <div className="bg-white rounded-lg shadow p-6">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                     <div className="flex gap-3">
@@ -505,33 +517,55 @@ const Checkout = () => {
                   {/* File Upload */}
                   <div className="mb-6">
                     <p className="text-sm font-bold text-gray-900 mb-3">📤 Upload Proof of Payment</p>
-                    <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50 hover:bg-blue-100 transition-colors">
-                      <label className="cursor-pointer block">
-                        <HiUpload className="w-12 h-12 mx-auto text-blue-500 mb-2" />
-                        <p className="text-sm font-medium text-gray-800">
-                          Click to upload or drag and drop
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1">PNG, JPG, GIF or PDF (Max. 5MB)</p>
-                        <input
-                          type="file"
-                          onChange={handleFileUpload}
-                          accept="image/jpeg,image/png,image/gif,application/pdf"
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-                    {proofFile && (
-                      <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-bold text-green-900">✓ File selected</p>
-                          <p className="text-xs text-green-700">{proofFile.name}</p>
+                    
+                    {!proofFile ? (
+                      <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50 hover:bg-blue-100 transition-colors">
+                        <label className="cursor-pointer block">
+                          <HiUpload className="w-12 h-12 mx-auto text-blue-500 mb-2" />
+                          <p className="text-sm font-medium text-gray-800">
+                            Click to upload or drag and drop
+                          </p>
+                          <p className="text-xs text-gray-600 mt-1">PNG, JPG, GIF or PDF (Max. 5MB)</p>
+                          <input
+                            type="file"
+                            onChange={handleFileUpload}
+                            accept="image/jpeg,image/png,image/gif,application/pdf"
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    ) : (
+                      <div>
+                        {/* File Preview */}
+                        <div className="bg-gray-100 rounded-lg p-4 mb-4 border border-gray-300">
+                          {proofPreview === 'PDF' ? (
+                            <div className="flex items-center justify-center h-48">
+                              <div className="text-center">
+                                <p className="text-gray-600 font-bold text-lg">📄 PDF File</p>
+                                <p className="text-sm text-gray-500">{proofFile.name}</p>
+                              </div>
+                            </div>
+                          ) : proofPreview ? (
+                            <img src={proofPreview} alt="Preview" className="w-full rounded max-h-64 object-contain" />
+                          ) : null}
                         </div>
-                        <button
-                          onClick={() => setProofFile(null)}
-                          className="text-green-600 hover:text-green-700 font-bold"
-                        >
-                          Change
-                        </button>
+                        
+                        {/* File Info */}
+                        <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-bold text-green-900">✓ File selected</p>
+                            <p className="text-xs text-green-700">{proofFile.name}</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setProofFile(null);
+                              setProofPreview(null);
+                            }}
+                            className="text-green-600 hover:text-green-700 font-bold"
+                          >
+                            Change
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -555,7 +589,7 @@ const Checkout = () => {
               )}
 
               {/* Step 4: Success Message */}
-              {step === 4 && proofFile && (
+              {step === 4 && uploadComplete && (
                 <div className="bg-white rounded-lg shadow p-8 text-center">
                   <motion.div
                     initial={{ scale: 0 }}
@@ -589,7 +623,10 @@ const Checkout = () => {
                   </div>
 
                   <button
-                    onClick={() => navigate('/dashboard/orders')}
+                    onClick={() => {
+                      clearCart();
+                      navigate('/dashboard/orders');
+                    }}
                     className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 mb-3"
                   >
                     View Order Status

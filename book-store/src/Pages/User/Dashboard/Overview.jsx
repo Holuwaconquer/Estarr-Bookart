@@ -28,7 +28,7 @@ const Overview = () => {
         const ordersResponse = await orderAPI.getMyOrders();
         const orders = ordersResponse.data || [];
         
-        const totalSpent = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+        const totalSpent = orders.reduce((sum, order) => sum + (order.total || 0), 0);
         const accountAge = user?.createdAt 
           ? Math.floor((Date.now() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)) 
           : 0;
@@ -179,8 +179,12 @@ const Overview = () => {
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg flex items-center justify-center">
-                          <HiCheckCircle className="w-6 h-6 text-blue-600" />
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {order.items?.[0]?.image ? (
+                            <img src={order.items[0].image} alt="Book" className="w-full h-full object-cover" />
+                          ) : (
+                            <HiCheckCircle className="w-6 h-6 text-blue-600" />
+                          )}
                         </div>
                         <div>
                           <p className="font-semibold text-slate-900">
@@ -192,7 +196,7 @@ const Overview = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-slate-900">₦{order.totalAmount?.toLocaleString()}</p>
+                        <p className="font-bold text-slate-900">₦{order.total?.toLocaleString()}</p>
                         <span className="text-xs font-medium px-3 py-1 rounded-full inline-block mt-1 bg-green-100 text-green-800">
                           {order.status?.charAt(0).toUpperCase() + (order.status?.slice(1) || 'Pending')}
                         </span>

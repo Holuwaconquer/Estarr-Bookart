@@ -16,6 +16,7 @@ const AdminOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(null);
+  const [proofImageDataUrl, setProofImageDataUrl] = useState(null);
 
   const statusOptions = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
   const statusColors = {
@@ -83,7 +84,49 @@ const AdminOrders = () => {
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
     setShowDetails(true);
+    setProofImageDataUrl(null); // Reset proof image
   };
+
+  // Fetch proof image when order is selected
+  useEffect(() => {
+    const fetchProofImage = async () => {
+      if (!selectedOrder?.proofOfPayment || !selectedOrder?._id) {
+        setProofImageDataUrl(null);
+        return;
+      }
+
+      try {
+        // Check if it's an image file
+        if (!selectedOrder.proofOfPayment.match(/\.(jpg|jpeg|png|gif)$/i)) {
+          setProofImageDataUrl(null);
+          return;
+        }
+
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/orders/${selectedOrder._id}/proof`,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const dataUrl = URL.createObjectURL(blob);
+          setProofImageDataUrl(dataUrl);
+        } else {
+          console.error('Failed to fetch proof image:', response.status);
+          setProofImageDataUrl(null);
+        }
+      } catch (error) {
+        console.error('Error fetching proof image:', error);
+        setProofImageDataUrl(null);
+      }
+    };
+
+    fetchProofImage();
+  }, [selectedOrder]);
 
   return (
     <div className="flex h-screen bg-gray-950">
@@ -327,21 +370,36 @@ const AdminOrders = () => {
                   <h3 className="text-lg font-bold text-white mb-3">📄 Proof of Payment</h3>
                   <div className="bg-gray-800/50 rounded-lg p-4">
                     {selectedOrder.proofOfPayment.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                      <img src={selectedOrder.proofOfPayment} alt="Proof of Payment" className="w-full rounded max-h-96 object-contain" />
+                      proofImageDataUrl ? (
+                        <img 
+                          src={proofImageDataUrl}
+                          alt="Proof of Payment" 
+                          className="w-full rounded max-h-96 object-contain" 
+                        />
+                      ) : (
+                        <div className="w-full h-48 bg-gray-700 rounded flex items-center justify-center">
+                          <p className="text-gray-400">Loading image...</p>
+                        </div>
+                      )
                     ) : selectedOrder.proofOfPayment.match(/\.pdf$/i) ? (
                       <div className="flex items-center justify-between p-4 bg-gray-700 rounded">
                         <div>
                           <p className="text-white font-medium">Payment Proof (PDF)</p>
                           <p className="text-gray-400 text-sm">{selectedOrder.proofOfPayment.split('/').pop()}</p>
                         </div>
-                        <a href={selectedOrder.proofOfPayment} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300">
-                          View
+                        <a 
+                          href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/orders/${selectedOrder._id}/proof`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-cyan-400 hover:text-cyan-300"
+                        >
+                          View PDF
                         </a>
                       </div>
                     ) : (
-                      <a href={selectedOrder.proofOfPayment} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 break-all">
-                        {selectedOrder.proofOfPayment}
-                      </a>
+                      <p className="text-gray-400">
+                        Proof: {selectedOrder.proofOfPayment}
+                      </p>
                     )}
                   </div>
                 </div>
