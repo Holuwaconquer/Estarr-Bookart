@@ -30,10 +30,11 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'", "https://api.korapay.com", "https://api-sandbox.korapay.com"],
+      imgSrc: ["'self'", "data:", "https:", "blob:", "http:", "https:"],
+      connectSrc: ["'self'", "https://api.korapay.com", "https://api-sandbox.korapay.com", "http:"],
       frameSrc: ["'self'"],
       objectSrc: ["'none'"],
+      mediaSrc: ["'self'", "http:", "https:"],
     },
   },
   hsts: {
@@ -92,8 +93,18 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static files for uploads
-app.use('/uploads', express.static('public/uploads'));
+// Static files for uploads - with explicit CORS middleware
+app.use('/uploads', cors({
+  origin: '*',
+  credentials: false,
+  methods: ['GET', 'OPTIONS'],
+  allowedHeaders: ['Content-Type']
+}), express.static('public/uploads', {
+  setHeaders: (res, path) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cache-Control', 'public, max-age=3600');
+  }
+}));
 
 // Request ID middleware for logging
 app.use((req, res, next) => {

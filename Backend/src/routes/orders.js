@@ -11,7 +11,8 @@ const {
   updateOrderStatus,
   updatePaymentStatus,
   cancelOrder,
-  uploadOrderProof
+  uploadOrderProof,
+  getOrderProof
 } = require('../controllers/order.controller');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -72,6 +73,7 @@ router.post('/:id/upload-proof', protect, (req, res, next) => {
     handleMulterError(err, req, res, next);
   });
 }, uploadOrderProof);
+router.get('/:id/proof', protect, getOrderProof);
 router.put('/:id/cancel', protect, cancelOrder);
 router.put('/:id/payment-status', protect, updatePaymentStatus);
 router.get('/:id', protect, getOrderById);

@@ -425,3 +425,45 @@ exports.uploadOrderProof = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get proof of payment for an order
+// @route   GET /api/orders/:id/proof
+// @access  Private
+exports.getOrderProof = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const order = await Order.findById(id).select('proofOfPayment user');
+
+    if (!order) {
+      return ApiResponse.error(res, 'Order not found', 404);
+    }
+
+    // Check authorization
+    if (order.user.toString() !== req.userId && req.userRole !== 'admin') {
+      return ApiResponse.error(res, 'Not authorized', 403);
+    }
+
+    if (!order.proofOfPayment) {
+      return ApiResponse.error(res, 'No proof of payment found', 404);
+    }
+
+    // Extract filename from the path
+    const fileName = order.proofOfPayment.split('/').pop();
+    const filePath = `public/uploads/payments/${fileName}`;
+
+    // Check if file exists
+    const fs = require('fs');
+    if (!fs.existsSync(filePath)) {
+      console.error('File not found:', filePath);
+      return ApiResponse.error(res, 'Proof file not found', 404);
+    }
+
+    // Send the file
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.sendFile(filePath, { root: process.cwd() });
+  } catch (error) {
+    console.error('❌ Error getting proof:', error);
+    next(error);
+  }
+};
