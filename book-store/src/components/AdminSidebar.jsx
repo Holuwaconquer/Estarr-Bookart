@@ -19,7 +19,10 @@ import {
 } from 'react-icons/hi';
 import { AuthContext } from '../AuthContext';
 
-const AdminSidebar = ({ isOpen, setIsOpen }) => {
+const AdminSidebar = (props) => {
+  // Support multiple prop namings used across pages: `isOpen/setIsOpen` and `open/setOpen`
+  const isOpen = typeof props.isOpen !== 'undefined' ? props.isOpen : props.open;
+  const setIsOpen = props.setIsOpen || props.setOpen || (() => {});
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
@@ -190,13 +193,120 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
       </motion.div>
 
       {/* Mobile Overlay */}
+      {/* Mobile Sidebar Panel */}
+      {isOpen && (
+        <motion.aside
+          initial={{ x: -300, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -300, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          className="fixed top-0 left-0 bottom-0 w-64 bg-white text-gray-900 z-50 md:hidden shadow-lg border-r border-gray-200 overflow-y-auto"
+        >
+          {/* Logo Section */}
+          <div className="p-6 border-b border-gray-200">
+            <Link to="/admin/dashboard" className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
+                <HiBookOpen className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                  Estarr BookArt
+                </h1>
+                <p className="text-xs text-gray-400">Admin Panel</p>
+              </div>
+            </Link>
+          </div>
+
+          {/* User Info */}
+          <div className="p-4 border-b border-gray-200 mx-4 mt-4 rounded-lg bg-gray-100/50">
+            <p className="text-xs text-gray-600">Logged in as</p>
+            <p className="font-semibold text-gray-900 text-sm truncate">{user?.name}</p>
+            <p className="text-xs text-cyan-600 uppercase tracking-wider font-bold">Admin</p>
+          </div>
+
+          {/* Menu Items (mobile) */}
+          <nav className="mt-8 px-4 space-y-2 pb-24">
+            {menuItems.map((item) => (
+              <div key={item.label}>
+                {item.submenu ? (
+                  <>
+                    <motion.button
+                      onClick={() => setExpandedMenu(expandedMenu === item.label ? null : item.label)}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
+                        isSubmenuActive(item.submenu)
+                          ? 'bg-cyan-100 text-cyan-700 border border-cyan-300'
+                          : 'text-gray-700 hover:bg-gray-100/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon className="w-5 h-5" />
+                        <span className="font-medium">{item.label}</span>
+                      </div>
+                      <HiChevronDown
+                        className={`w-4 h-4 transition-transform ${
+                          expandedMenu === item.label ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </motion.button>
+
+                    {expandedMenu === item.label && (
+                      <motion.div className="ml-4 mt-2 space-y-1">
+                        {item.submenu.map((subitem) => (
+                          <Link
+                            key={subitem.label}
+                            to={subitem.path}
+                            onClick={() => setIsOpen(false)}
+                            className={`block px-4 py-2 rounded-lg text-sm transition-all ${
+                              isActive(subitem.path)
+                                ? 'bg-cyan-100 text-cyan-700 border-l-2 border-cyan-700'
+                                : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            {subitem.label}
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    to={item.path}
+                    onClick={() => setIsOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                      isActive(item.path)
+                        ? 'bg-cyan-100 text-cyan-700 border border-cyan-300'
+                        : 'text-gray-700 hover:bg-gray-100/50'
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                )}
+              </div>
+            ))}
+          </nav>
+
+          {/* Logout Button (mobile) */}
+          <motion.button
+            onClick={() => { handleLogout(); setIsOpen(false); }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="absolute bottom-6 left-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg bg-red-100/50 text-red-700 hover:bg-red-100 transition-all border border-red-300"
+          >
+            <HiLogout className="w-5 h-5" />
+            <span className="font-medium">Logout</span>
+          </motion.button>
+        </motion.aside>
+      )}
+
+      {/* Mobile Overlay */}
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={() => setIsOpen(false)}
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
         />
       )}
     </>

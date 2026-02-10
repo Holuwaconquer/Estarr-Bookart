@@ -12,7 +12,7 @@ import {
 } from 'react-icons/hi';
 import { AuthContext } from '../AuthContext';
 
-const AdminHeader = ({ isOpen, setIsOpen }) => {
+const AdminHeader = ({ isOpen, setIsOpen, onMenuClick }) => {
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -39,7 +39,10 @@ const AdminHeader = ({ isOpen, setIsOpen }) => {
         <div className="md:hidden">
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => {
+              if (typeof onMenuClick === 'function') return onMenuClick();
+              if (typeof setIsOpen === 'function') return setIsOpen(!isOpen);
+            }}
             className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
           >
             {isOpen ? (

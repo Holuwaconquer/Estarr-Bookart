@@ -379,9 +379,17 @@ const getMe = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, phone, address, city, state, zipCode, country } = req.body;
+    const { name, email, phone, address, city, state, zipCode, country, role } = req.body;
 
     console.log('📝 Updating user:', { id, ...req.body });
+
+    // Validate role if provided
+    if (role && !['user', 'admin'].includes(role)) {
+      return res.status(400).json({
+        status: false,
+        message: 'Invalid role. Must be "user" or "admin"'
+      });
+    }
 
     // Find user and update
     const user = await userModel.findByIdAndUpdate(
@@ -395,7 +403,8 @@ const updateUser = async (req, res) => {
         city,
         state,
         zipCode,
-        country
+        country,
+        ...(role && { role })
       },
       { new: true }
     ).select('-password');
@@ -422,6 +431,7 @@ const updateUser = async (req, res) => {
     });
   }
 };
+
 
 // @desc    Delete a user (Admin only)
 // @route   DELETE /api/users/:id
@@ -521,6 +531,53 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+// @desc    Update user role (Admin only)
+// @route   PATCH /api/users/:id/role
+// @access  Private/Admin
+const updateUserRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    // Validate role
+    if (!role || !['user', 'admin'].includes(role)) {
+      return res.status(400).json({
+        status: false,
+        message: 'Invalid role. Must be "user" or "admin"'
+      });
+    }
+
+    console.log(`🔐 Updating user role: ${id} -> ${role}`);
+
+    const user = await userModel.findByIdAndUpdate(
+      id,
+      { role },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: 'User not found'
+      });
+    }
+
+    console.log('✅ User role updated:', user._id, 'Role:', user.role);
+
+    res.status(200).json({
+      status: true,
+      message: `User role updated to ${role}`,
+      data: user
+    });
+  } catch (error) {
+    console.error('❌ Error updating user role:', error);
+    res.status(500).json({
+      status: false,
+      message: 'Server error while updating user role'
+    });
+  }
+};
+
 module.exports = {
   userSignUp,
   userLogin,
@@ -532,5 +589,6 @@ module.exports = {
   getMe,
   getAllUsers,
   updateUser,
+  updateUserRole,
   deleteUser
 };

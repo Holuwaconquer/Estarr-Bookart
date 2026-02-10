@@ -10,6 +10,7 @@ const {
   changePassword,
   getAllUsers,
   updateUser,
+  updateUserRole,
   deleteUser
 } = require('../controllers/user.controller');
 const { authenticateToken } = require('../controllers/check-auth');
@@ -36,6 +37,7 @@ router.get('/check-auth', authenticateToken, (req, res) => {
 // Admin routes
 router.get('/', protect, authorize('admin'), getAllUsers);
 router.put('/:id', protect, authorize('admin'), updateUser);
+router.patch('/:id/role', protect, authorize('admin'), updateUserRole);
 router.delete('/:id', protect, authorize('admin'), deleteUser);
 
 router.get('/me', authenticateToken, getMe);
