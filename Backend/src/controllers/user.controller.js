@@ -6,7 +6,7 @@ const userSignUp = async (req, res) => {
   const { name, email, password, phonenumber } = req.body;
 
   try {
-    const user = new userModel({ name, lastname, email, phonenumber, password });
+    const user = new userModel({ name, email, phonenumber, password });
     await user.save();
     
     if (!user) {
