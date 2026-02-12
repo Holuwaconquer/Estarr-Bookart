@@ -100,7 +100,7 @@ const AdminSidebar = (props) => {
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                Estarr BookArt
+                EStarr Bookart
               </h1>
               <p className="text-xs text-gray-400">Admin Panel</p>
             </div>
@@ -210,7 +210,7 @@ const AdminSidebar = (props) => {
               </div>
               <div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                  Estarr BookArt
+                  EStarr Bookart
                 </h1>
                 <p className="text-xs text-gray-400">Admin Panel</p>
               </div>

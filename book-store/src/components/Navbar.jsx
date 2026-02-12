@@ -102,7 +102,7 @@ const Navbar = () => {
                   <img 
                     src={Estarr} 
                     className='w-full h-full object-contain drop-shadow-lg' 
-                    alt="Estarr BookArt Logo" 
+                    alt="EStarr Bookart Logo" 
                   />
                 </div>
                 <div className="absolute -inset-3 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -112,7 +112,7 @@ const Navbar = () => {
                   className="md:text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
                   whileHover={{ scale: 1.02 }}
                 >
-                  Estarr BookArt
+                  EStarr Bookart
                 </motion.h1>
               </div>
             </Link>

@@ -22,7 +22,7 @@ const UserLogin = () => {
     return (
       <AuthLayout
         title="Welcome Back"
-        subtitle="Sign in to your Estarr BookArt account"
+        subtitle="Sign in to your EStarr Bookart account"
       >
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin">
@@ -101,7 +101,7 @@ const UserLogin = () => {
   return (
     <AuthLayout
       title="Welcome Back"
-      subtitle="Sign in to your Estarr BookArt account"
+      subtitle="Sign in to your EStarr Bookart account"
     >
       <motion.form
         initial={{ opacity: 0, y: 20 }}
@@ -194,16 +194,16 @@ const UserLogin = () => {
         </motion.button>
 
         {/* Divider */}
-        <div className="my-6">
+        {/* <div className="my-6">
           <div className="flex items-center">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent to-gray-700/50" />
             <span className="px-4 text-sm text-gray-500">or continue with</span>
             <div className="flex-1 h-px bg-gradient-to-r from-gray-700/50 to-transparent" />
           </div>
-        </div>
+        </div> */}
 
         {/* Social Login */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        {/* <div className="grid grid-cols-2 gap-3 mb-6">
           <button
             type="button"
             className="px-4 py-3 bg-white/5 hover:bg-white/10 border border-gray-700/50 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2"
@@ -225,10 +225,10 @@ const UserLogin = () => {
             </svg>
             Facebook
           </button>
-        </div>
+        </div> */}
 
         {/* Sign Up Link */}
-        <p className="text-center text-gray-400">
+        <p className="text-center text-gray-400 mt-3">
           Don't have an account?{' '}
           <Link to="/register" className="text-cyan-400 font-semibold hover:text-cyan-300 transition-colors">
             Create one

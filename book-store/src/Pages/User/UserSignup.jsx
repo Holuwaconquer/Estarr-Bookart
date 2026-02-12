@@ -73,7 +73,7 @@ const UserSignup = () => {
 
   return (
     <AuthLayout
-      title="Join Estarr BookArt"
+      title="Join EStarr Bookart"
       subtitle="Create your premium bookstore account"
     >
       <motion.form

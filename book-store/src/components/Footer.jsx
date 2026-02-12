@@ -25,7 +25,7 @@ const Footer = () => {
               <div className="w-15 h-15 rounded-xl p-1 bg-white flex items-center justify-center">
                 <img src={Estarr} className='w-full h-full object-contain' alt="logo" />
               </div>
-              <span className="text-xl font-bold">Estarr BookArt</span>
+              <span className="text-xl font-bold">EStarr Bookart</span>
             </Link>
             
             <p className="text-gray-300 mb-6 text-sm leading-relaxed">
@@ -54,7 +54,7 @@ const Footer = () => {
                 <IoMailOutline className="w-5 h-5 text-purple-400 flex-shrink-0" />
                 <div>
                   <p className="font-medium text-sm">Email</p>
-                  <p className="text-gray-400 text-sm">contact@estarrbookart.com.ng</p>
+                  <p className="text-gray-400 text-sm">estheribukunoluwa100@gmail.com</p>
                 </div>
               </div>
             </div>
@@ -132,14 +132,15 @@ const Footer = () => {
               <h4 className="font-semibold mb-4 text-sm">Follow Us</h4>
               <div className="flex gap-3">
                 {[
-                  { icon: IoLogoFacebook, label: 'Facebook' },
-                  { icon: IoLogoTwitter, label: 'Twitter' },
-                  { icon: IoLogoInstagram, label: 'Instagram' },
-                  { icon: IoLogoYoutube, label: 'YouTube' },
+                  { icon: IoLogoFacebook, label: 'Facebook', href: 'https://facebook.com/profile.php?id=106649471876343&hr=1&wtsid=rdr_0FVnp4LBcywmjNrf5'},
+                  { icon: IoLogoTwitter, label: 'Twitter',  href: '#'},
+                  { icon: IoLogoInstagram, label: 'Instagram',  href: 'https://instagram.com/theestheradesina' },
+                  { icon: IoLogoYoutube, label: 'YouTube',  href: '#' },
                 ].map((social) => (
                   <a
                     key={social.label}
-                    href="#"
+                    href={social.href}
+                    target='_blank'
                     className="w-10 h-10 rounded-lg bg-gray-800 hover:bg-purple-600 transition-colors flex items-center justify-center group"
                     aria-label={social.label}
                   >
