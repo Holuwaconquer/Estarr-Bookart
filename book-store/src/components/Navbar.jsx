@@ -170,29 +170,27 @@ const Navbar = () => {
             <div className="flex items-center md:gap-2">
               {/* Search */}
               <motion.button
-                whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsSearchOpen(true)}
-                className="p-2 rounded-xl hover:bg-gray-800/50 transition-all duration-300 group"
+                className=" transition-all duration-300 group"
                 aria-label="Search"
               >
-                <IoSearchOutline className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+                <IoSearchOutline className="w-5 h-5 text-gray-400  transition-colors" />
               </motion.button>
 
               {/* Cart */}
               <Link to="/cart" className="relative group" aria-label="Cart">
                 <motion.button
-                  whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                  className="p-2 rounded-xl hover:bg-gray-800/50 transition-all duration-300"
+                  className="p-2 rounded-xl transition-all duration-300"
                 >
-                  <IoCartOutline className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+                  <IoCartOutline className="w-5 h-5 text-gray-400 transition-colors" />
                 </motion.button>
                 {totalItems > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg"
+                    className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg"
                   >
                     {totalItems}
                   </motion.span>
@@ -221,10 +219,9 @@ const Navbar = () => {
 
               {/* Mobile Menu Toggle */}
               <motion.button
-                whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden p-2 rounded-xl hover:bg-gray-800/50 transition-all duration-300"
+                className="lg:hidden hover:bg-gray-800/50 transition-all duration-300"
                 aria-label="Menu"
               >
                 {isMobileMenuOpen ? (

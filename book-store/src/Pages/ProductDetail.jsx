@@ -66,11 +66,6 @@ const ProductDetail = () => {
             features: ["Gold Foiling", "Hand-Stitched", "Signed Copy"]
           });
         }
-        
-        setReviews([
-          { _id: "1", user: { name: "Sarah" }, rating: 5, comment: "Amazing book! Absolutely loved it.", createdAt: new Date() },
-          { _id: "2", user: { name: "John" }, rating: 4, comment: "Great read, highly recommended.", createdAt: new Date() }
-        ]);
 
         // Track recently viewed products
         const viewed = localStorage.getItem('recentlyViewed');

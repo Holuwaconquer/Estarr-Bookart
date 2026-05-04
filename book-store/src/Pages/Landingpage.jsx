@@ -238,13 +238,13 @@ const Landingpage = () => {
         className="group bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200 relative"
       >
         {/* New Badge */}
-        {showBadge && (
+        {/* {showBadge && (
           <div className="absolute top-3 right-3 z-10">
             <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
               {badgeText}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Wishlist Button */}
         <button
@@ -259,7 +259,7 @@ const Landingpage = () => {
         </button>
 
         {/* Book Image */}
-        <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 h-64 flex items-center justify-center overflow-hidden">
+        <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 h-[180px] flex items-center justify-center overflow-hidden">
           <motion.img
             src={book?.image || book?.coverImage || `https://via.placeholder.com/250x300?text=${encodeURIComponent(book?.title || 'Book')}`}
             alt={book?.title}
@@ -287,7 +287,7 @@ const Landingpage = () => {
         
         {/* Book Info */}
         <div className="p-4">
-          <h3 className="font-semibold text-gray-800 truncate hover:text-blue-600 cursor-pointer text-lg">
+          <h3 className="font-semibold text-gray-800 hover:text-blue-600 cursor-pointer text-lg">
             {book?.title || 'Unknown'}
           </h3>
           <p className="text-sm text-gray-500 truncate mb-3">{book?.author || 'Unknown Author'}</p>
@@ -300,11 +300,11 @@ const Landingpage = () => {
                 <p className="text-sm text-gray-400 line-through">₦{book.originalPrice.toLocaleString()}</p>
               )}
             </div>
-            {book?.stock && (
+            {/* {book?.stock && (
               <span className={`text-xs px-2 py-1 rounded-full ${book.stock > 10 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                 {book.stock > 5 ? 'In Stock' : 'Low Stock'}
               </span>
-            )}
+            )} */}
           </div>
 
           {/* Action Buttons - Now shows Remove when in cart */}

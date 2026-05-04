@@ -144,7 +144,8 @@ app.get('/health', (req, res) => {
     status: 'OK', 
     timestamp: new Date(),
     uptime: process.uptime(),
-    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    environment: process.env.NODE_ENV
   });
 });
 
@@ -178,69 +179,68 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 // ============ KEEP-ALIVE MECHANISM ============
-// This prevents the server from sleeping on free tiers
+// Only external pings - no self-pinging to avoid timeouts on Render
 
 let keepAliveInterval = null;
 let consecutiveFailures = 0;
 const MAX_FAILURES = 3;
 
-const performKeepAlive = () => {
-  // Options for the keep-alive request
-  const options = {
-    hostname: 'localhost',
-    port: PORT,
-    path: '/keep-alive',
-    method: 'GET',
-    timeout: 5000 // 5 second timeout
-  };
+// Only ping external URLs (don't ping localhost - causes timeouts on Render)
+const performExternalKeepAlive = () => {
+  const externalUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL;
+  
+  if (!externalUrl) {
+    // No external URL configured - skip keep-alive
+    if (process.env.NODE_ENV === 'production') {
+      console.log('⚠️ No PUBLIC_URL or RENDER_EXTERNAL_URL configured. Keep-alive disabled.');
+      console.log('💡 Set RENDER_EXTERNAL_URL environment variable or use UptimeRobot for keep-alive');
+    }
+    return;
+  }
 
-  const req = http.request(options, (res) => {
-    // Reset failure counter on success
-    consecutiveFailures = 0;
-    console.log(`💓 Keep-alive ping successful at ${new Date().toISOString()}`);
+  const url = `${externalUrl}/keep-alive`;
+  const protocol = url.startsWith('https') ? https : http;
+  
+  console.log(`💓 Sending keep-alive ping to ${url}`);
+  
+  const req = protocol.request(url, { 
+    timeout: 10000,
+    headers: {
+      'User-Agent': 'Keep-Alive-Client/1.0',
+      'Accept': 'application/json'
+    }
+  }, (res) => {
+    let data = '';
+    res.on('data', chunk => data += chunk);
+    res.on('end', () => {
+      if (res.statusCode === 200) {
+        consecutiveFailures = 0;
+        console.log(`✅ Keep-alive ping successful at ${new Date().toISOString()}`);
+      } else {
+        consecutiveFailures++;
+        console.log(`⚠️ Keep-alive returned ${res.statusCode} (${consecutiveFailures}/${MAX_FAILURES})`);
+        
+        if (consecutiveFailures >= MAX_FAILURES) {
+          console.error('🚨 Multiple keep-alive failures! Check if server is healthy.');
+        }
+      }
+    });
   });
 
   req.on('error', (err) => {
     consecutiveFailures++;
-    console.error(`⚠️ Keep-alive ping failed (${consecutiveFailures}/${MAX_FAILURES}):`, err.message);
+    console.error(`❌ Keep-alive failed (${consecutiveFailures}/${MAX_FAILURES}):`, err.message);
     
-    // If we have too many failures, restart the keep-alive interval
     if (consecutiveFailures >= MAX_FAILURES) {
       console.error('🚨 Too many keep-alive failures. Server might be unresponsive!');
-      // Don't crash the server, just log the error
+      console.log('💡 Consider using UptimeRobot (free) for more reliable monitoring');
     }
   });
 
   req.on('timeout', () => {
     req.destroy();
-    console.error('❌ Keep-alive request timeout');
-  });
-
-  req.end();
-};
-
-// Also ping external URLs if you have a public URL (for Render/Heroku)
-const performExternalKeepAlive = () => {
-  const externalUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL;
-  
-  if (!externalUrl) {
-    // If no external URL is set, only ping locally
-    return;
-  }
-
-  const url = `${externalUrl}/keep-alive`;
-  
-  const req = https.request(url, { timeout: 10000 }, (res) => {
-    console.log(`🌐 External keep-alive ping to ${externalUrl} successful`);
-  });
-
-  req.on('error', (err) => {
-    console.error(`⚠️ External keep-alive failed:`, err.message);
-  });
-
-  req.on('timeout', () => {
-    req.destroy();
-    console.error('❌ External keep-alive timeout');
+    consecutiveFailures++;
+    console.error(`❌ Keep-alive timeout (${consecutiveFailures}/${MAX_FAILURES})`);
   });
 
   req.end();
@@ -253,17 +253,26 @@ const startKeepAlive = () => {
     clearInterval(keepAliveInterval);
   }
   
-  // Ping every 4 minutes (240,000 ms) - Render free tier sleep after 15 minutes of inactivity
-  keepAliveInterval = setInterval(() => {
-    performKeepAlive();
-    
-    // Also ping external URL if available (for cloud platforms)
-    if (process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL) {
-      performExternalKeepAlive();
-    }
-  }, 4 * 60 * 1000); // 4 minutes
+  const externalUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL;
   
-  console.log('⏰ Keep-alive service started (every 4 minutes)');
+  if (!externalUrl) {
+    console.log('⚠️ Keep-alive disabled: No external URL configured');
+    console.log('💡 To enable keep-alive, set RENDER_EXTERNAL_URL or PUBLIC_URL environment variable');
+    console.log('💡 Or use UptimeRobot (free) to ping your /health endpoint');
+    return;
+  }
+  
+  console.log(`🔋 Keep-alive service configured for: ${externalUrl}`);
+  console.log(`⏰ Pinging every 4 minutes (will prevent Render from sleeping)`);
+  
+  // Wait 1 minute before first ping to let server fully initialize
+  setTimeout(() => {
+    console.log('🚀 Starting keep-alive pings...');
+    performExternalKeepAlive();
+  }, 60 * 1000);
+  
+  // Then ping every 4 minutes (Render sleeps after 15 minutes of inactivity)
+  keepAliveInterval = setInterval(performExternalKeepAlive, 4 * 60 * 1000);
 };
 
 // Graceful shutdown - clean up keep-alive interval
@@ -284,16 +293,30 @@ const gracefulShutdown = () => {
 // Start server only after DB connection
 connectDB().then(() => {
   const server = app.listen(PORT, () => {
+    console.log(`\n========================================`);
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
-    console.log(`💻 Host: ${process.env.HOST || 'localhost'}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`💻 Host: localhost:${PORT}`);
     
-    // Start keep-alive mechanism (only in production)
+    // Log available URLs
+    if (process.env.RENDER_EXTERNAL_URL) {
+      console.log(`🌐 Render URL: ${process.env.RENDER_EXTERNAL_URL}`);
+    }
+    if (process.env.PUBLIC_URL) {
+      console.log(`🌐 Public URL: ${process.env.PUBLIC_URL}`);
+    }
+    
+    console.log(`📡 Health check: /health`);
+    console.log(`💓 Keep-alive: /keep-alive`);
+    console.log(`========================================\n`);
+    
+    // Start keep-alive mechanism (only in production with external URL)
     if (process.env.NODE_ENV === 'production') {
       startKeepAlive();
       console.log('🔋 Keep-alive mechanism enabled for production');
     } else {
       console.log('🔋 Keep-alive mechanism disabled in development');
+      console.log('💡 For local testing, use: curl http://localhost:5000/health');
     }
   });
   
@@ -318,6 +341,7 @@ process.on('SIGINT', gracefulShutdown);
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   console.error('💥 Uncaught Exception:', error);
+  // Don't exit immediately, try to close gracefully
   gracefulShutdown();
 });
 
