@@ -248,6 +248,9 @@ export const userAPI = {
     // Save user data to localStorage (token is in cookies)
     if (res && res.data) {
       localStorage.setItem('user', JSON.stringify(res.data));
+      if (res.data.token) {
+        localStorage.setItem('token', res.data.token);
+      }
     } else if (res && res.user) {
       localStorage.setItem('user', JSON.stringify(res.user));
     }
@@ -270,7 +273,29 @@ export const userAPI = {
     return res;
   },
 
+  // NEW: Verify reset token (for link-based reset)
+  verifyResetToken: async (token, email) => {
+    const query = new URLSearchParams({ token, email }).toString();
+    return request(`/users/verify-reset-token?${query}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+  },
+
+  // NEW: Reset password with token (for link-based reset)
+  resetPasswordWithToken: async (token, email, password) => {
+    return request('/users/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ token, email, password })
+    });
+  },
+
+  // DEPRECATED: Keep for backward compatibility but mark as deprecated
   verifyResetCode: async (email, code) => {
+    console.warn('⚠️ verifyResetCode is deprecated. Use verifyResetToken instead.');
     return request('/users/verify-reset-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -288,7 +313,9 @@ export const userAPI = {
     });
   },
 
+  // DEPRECATED: Keep for backward compatibility
   resetPassword: async (email, code, password) => {
+    console.warn('⚠️ resetPassword (with code) is deprecated. Use resetPasswordWithToken instead.');
     return request('/users/reset-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -304,6 +331,8 @@ export const userAPI = {
     });
     
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
     return res;
   },
 
@@ -366,7 +395,6 @@ export const userAPI = {
       headers: { ...authHeaders() }
     });
   },
-
 
   deleteUser: async (userId) => {
     return request(`/users/${userId}`, {
@@ -497,8 +525,10 @@ export const authAPI = {
   login: userAPI.login,
   register: userAPI.register,
   verifyResetCode: userAPI.verifyResetCode,
+  verifyResetToken: userAPI.verifyResetToken,
   forgotPassword: userAPI.forgotPassword,
   resetPassword: userAPI.resetPassword,
+  resetPasswordWithToken: userAPI.resetPasswordWithToken,
   logout: userAPI.logout,
   getProfile: userAPI.getProfile,
   updateProfile: userAPI.updateProfile,
@@ -573,8 +603,6 @@ export const orderAPI = {
   },
 
   uploadOrderProof: async (orderId, formData) => {
-    // For FormData, let the request function handle headers properly
-    // It will detect FormData and not override Content-Type
     return request(`/orders/${orderId}/upload-proof`, {
       method: 'POST',
       body: formData

@@ -11,7 +11,9 @@ const {
   getAllUsers,
   updateUser,
   updateUserRole,
-  deleteUser
+  deleteUser,
+  verifyResetToken,
+  resetPassword
 } = require('../controllers/user.controller');
 const { authenticateToken } = require('../controllers/check-auth');
 const { protect, authorize } = require('../middleware/auth');
@@ -21,8 +23,8 @@ const router = express.Router();
 router.post('/signup', userSignUp);
 router.post('/login', userLogin);
 router.post('/forgot-password', ForgotPassword);
-router.post('/verify-reset-code', VerifyCode);
-router.post('/reset-password', resetPasswordWithCode);
+router.get('/verify-reset-token', verifyResetToken);
+router.post('/reset-password', resetPassword);
 
 // Protected routes
 router.get('/check-auth', authenticateToken, (req, res) => {

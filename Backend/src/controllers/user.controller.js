@@ -1,6 +1,9 @@
 const userModel = require("../models/User");
-const jwt = require('jsonwebtoken')
-const nodemailer = require('nodemailer');
+const jwt = require('jsonwebtoken');
+const { Resend } = require('resend');
+
+// Initialize Resend with your API key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const userSignUp = async (req, res) => {
   const { name, email, password, phonenumber } = req.body;
@@ -118,8 +121,8 @@ const updateProfile = async (req, res) => {
     // Return updated user without sensitive information
     const userResponse = user.toObject();
     delete userResponse.password;
-    delete userResponse.resetCode;
-    delete userResponse.resetCodeExpires;
+    delete userResponse.resetToken;
+    delete userResponse.resetTokenExpires;
     
     // Add phone and name fields for frontend compatibility
     userResponse.phone = userResponse.phonenumber;
@@ -182,7 +185,7 @@ const changePassword = async (req, res) => {
           return res.status(500).json({
             status: false,
             message: 'Error validating password',
-            error: err.message // Include error message for debugging
+            error: err.message
           });
         }
 
@@ -244,95 +247,213 @@ const ForgotPassword = async (req, res) => {
   }
 
   console.log('Final email value after normalization:', emailValue);
-  console.log('Type of emailValue:', typeof emailValue);
 
   try {
     const user = await userModel.findOne({ email: emailValue });
-    console.log('ForgotPassword payload:', req.body, 'using email:', emailValue);
     
     if (!user) {
-      console.log("No user find with the email");
       return res.status(404).json({ message: "Email is not registered", status: false });
     }
     
-    // Generate 6 digit code
-    const code = Math.floor(100000 + Math.random() * 900000);
-    const expiry = new Date(Date.now() + 15 * 60 * 1000);
+    // Generate reset token (JWT that expires in 1 hour)
+    const resetToken = jwt.sign(
+      { userId: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
     
-    // Save code to user model
-    user.resetCode = code.toString();
-    user.resetCodeExpires = expiry;
+    const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    
+    // Save token to user model
+    user.resetToken = resetToken;
+    user.resetTokenExpires = expiry;
     await user.save();
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_ADDRESS_TO_SEND_CODE,
-        pass: process.env.PASSWORD_TO_EMAIL_ADDRESS_TO_SEND_CODE
-      }
-    });
-
-    const mailOptions = {
-      from: `"Estarr BookArts" <${process.env.EMAIL_ADDRESS_TO_SEND_CODE}>`,
-      to: email,
-      subject: 'Password Reset Request',
-      html: `<p>Use this code to reset your password: <strong>${code}</strong></p>
-           <p>This code will expire in 15 minutes.</p>`,
-    };
+    // Get frontend URL from environment or use default
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetLink = `${frontendUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
 
     try {
-      await transporter.sendMail(mailOptions);
+      // Send email using Resend
+      const { data, error } = await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || 'Estarr BookArts <noreply@yourdomain.com>',
+        to: email,
+        subject: 'Password Reset Request',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Reset Your Password</title>
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f5; line-height: 1.6;">
+            <div style="max-width: 560px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+              
+              <!-- Header -->
+              <div style="background: linear-gradient(135deg, #06b6d4, #3b82f6); padding: 32px 24px; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">Estarr BookArts</h1>
+                <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 16px;">Password Reset Request</p>
+              </div>
+              
+              <!-- Content -->
+              <div style="padding: 40px 32px;">
+                <p style="color: #1f2937; font-size: 18px; margin-top: 0;">Hello,</p>
+                <p style="color: #4b5563; font-size: 16px; margin-bottom: 24px;">
+                  We received a request to reset your password for your Estarr BookArts account. Click the button below to create a new password.
+                </p>
+                
+                <!-- Button -->
+                <div style="text-align: center; margin: 32px 0;">
+                  <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #06b6d4, #3b82f6); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                    Reset Password →
+                  </a>
+                </div>
+                
+                <!-- Fallback Link -->
+                <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 24px 0; text-align: center;">
+                  <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px 0;">
+                    If the button doesn't work, copy and paste this link into your browser:
+                  </p>
+                  <p style="color: #3b82f6; font-size: 12px; word-break: break-all; margin: 0; font-family: monospace;">
+                    ${resetLink}
+                  </p>
+                </div>
+                
+                <p style="color: #6b7280; font-size: 14px; margin: 24px 0 0 0;">
+                  This link will expire in <strong>1 hour</strong>.
+                </p>
+                
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0 24px;">
+                
+                <p style="color: #9ca3af; font-size: 13px; margin: 0; text-align: center;">
+                  If you didn't request this, please ignore this email. Your password won't change unless you click the link above.
+                </p>
+              </div>
+              
+              <!-- Footer -->
+              <div style="background-color: #f9fafb; padding: 20px 32px; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="color: #6b7280; font-size: 12px; margin: 0;">
+                  © ${new Date().getFullYear()} Estarr BookArts. All rights reserved.
+                </p>
+                <p style="color: #9ca3af; font-size: 11px; margin: 8px 0 0;">
+                  Your trusted bookstore in Nigeria
+                </p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `,
+      });
+
+      if (error) {
+        console.error("Resend email error:", error);
+        return res.status(500).json({ 
+          status: false,
+          message: "Failed to send reset email",
+          error: error.message 
+        });
+      }
+
+      console.log("Reset link email sent successfully:", data);
     } catch (emailErr) {
-      console.error("Error sending email:", emailErr);
-      return res.status(500).json({ message: "Failed to send reset email" });
+      console.error("Error sending email with Resend:", emailErr);
+      return res.status(500).json({ 
+        status: false,
+        message: "Failed to send reset email",
+        error: emailErr.message 
+      });
     }
 
     res.status(200).json({
       status: true,
-      message: "Reset code sent to email",
+      message: "Password reset link sent to email",
     });
   } catch (err) {
     console.error("Forgot password error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ 
+      status: false,
+      message: "Server error",
+      error: err.message 
+    });
   }
 }
 
-const VerifyCode = async (req, res) => {
-  const { email, code } = req.body;
+// Verify reset token
+const verifyResetToken = async (req, res) => {
+  const { token, email } = req.query;
 
-  const user = await userModel.findOne({ email });
-  
-  if (!user || !user.resetCode || !user.resetCodeExpires) {
-    return res.status(400).json({ message: 'Invalid request' });
+  try {
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Find user with matching token and not expired
+    const user = await userModel.findOne({ 
+      email: email || decoded.email,
+      resetToken: token,
+      resetTokenExpires: { $gt: new Date() }
+    });
+    
+    if (!user) {
+      return res.status(400).json({ 
+        status: false,
+        message: 'Invalid or expired reset link. Please request a new one.' 
+      });
+    }
+    
+    return res.status(200).json({ 
+      status: true,
+      message: 'Token is valid',
+      email: user.email
+    });
+  } catch (err) {
+    console.error('Token verification error:', err);
+    return res.status(400).json({ 
+      status: false,
+      message: 'Invalid or expired reset link. Please request a new one.' 
+    });
   }
-  
-  if (user.resetCode !== code) {
-    return res.status(404).json({ message: 'Invalid code' });
-  }
-  
-  if (user.resetCodeExpires < new Date()) {
-    return res.status(400).json({ message: 'Code has expired' });
-  }
-  
-  return res.status(200).json({ message: 'Code verified', status: true });
 }
 
-const resetPasswordWithCode = async (req, res) => {
-  const { email, code, password } = req.body;
+// Reset password with token
+const resetPassword = async (req, res) => {
+  const { token, email, password } = req.body;
 
-  const user = await userModel.findOne({ email });
-  
-  if (!user || user.resetCode !== code || user.resetCodeExpires < new Date()) {
-    return res.status(400).json({ message: 'Invalid or expired code' });
+  try {
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Find user with matching token and not expired
+    const user = await userModel.findOne({ 
+      email: email || decoded.email,
+      resetToken: token,
+      resetTokenExpires: { $gt: new Date() }
+    });
+    
+    if (!user) {
+      return res.status(400).json({ 
+        status: false,
+        message: 'Invalid or expired reset link. Please request a new one.' 
+      });
+    }
+
+    // Update password
+    user.password = password;
+    user.resetToken = null;
+    user.resetTokenExpires = null;
+    await user.save();
+
+    return res.status(200).json({ 
+      status: true,
+      message: 'Password reset successfully' 
+    });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    return res.status(400).json({ 
+      status: false,
+      message: 'Invalid or expired reset link. Please request a new one.' 
+    });
   }
-
-  user.password = password;
-  user.resetCode = null;
-  user.resetCodeExpires = null;
-
-  await user.save();
-
-  return res.status(200).json({ message: 'Password reset successfully' });
 };
 
 // Add this function to user.controller.js
@@ -341,7 +462,7 @@ const getMe = async (req, res) => {
     const userId = req.user.id;
     
     // Make sure to include all fields including phonenumber
-    const user = await userModel.findById(userId).select('-password -resetCode -resetCodeExpires');
+    const user = await userModel.findById(userId).select('-password -resetToken -resetTokenExpires');
     
     if (!user) {
       return res.status(404).json({ 
@@ -432,7 +553,6 @@ const updateUser = async (req, res) => {
   }
 };
 
-
 // @desc    Delete a user (Admin only)
 // @route   DELETE /api/users/:id
 // @access  Private/Admin
@@ -491,7 +611,7 @@ const getAllUsers = async (req, res) => {
 
     const users = await userModel
       .find(query)
-      .select('-password')
+      .select('-password -resetToken -resetTokenExpires')
       .limit(parseInt(limit))
       .skip(skip)
       .sort({ createdAt: -1 });
@@ -553,7 +673,7 @@ const updateUserRole = async (req, res) => {
       id,
       { role },
       { new: true }
-    ).select('-password');
+    ).select('-password -resetToken -resetTokenExpires');
 
     if (!user) {
       return res.status(404).json({
@@ -578,17 +698,60 @@ const updateUserRole = async (req, res) => {
   }
 };
 
+// Optional: Add a function to send a test email
+const sendTestEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    const { data, error } = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'Estarr BookArts <noreply@yourdomain.com>',
+      to: email || 'test@example.com',
+      subject: 'Test Email from Estarr BookArts',
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h1>Test Email</h1>
+          <p>This is a test email to confirm Resend is working properly.</p>
+          <p>Best regards,<br>Estarr BookArts Team</p>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error('Test email error:', error);
+      return res.status(500).json({ 
+        status: false, 
+        message: 'Failed to send test email',
+        error: error.message 
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: 'Test email sent successfully',
+      data
+    });
+  } catch (error) {
+    console.error('Test email error:', error);
+    res.status(500).json({
+      status: false,
+      message: 'Failed to send test email',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   userSignUp,
   userLogin,
   updateProfile,
   changePassword,
   ForgotPassword,
-  VerifyCode,
-  resetPasswordWithCode,
+  verifyResetToken,
+  resetPassword,
   getMe,
   getAllUsers,
   updateUser,
   updateUserRole,
-  deleteUser
+  deleteUser,
+  sendTestEmail
 };

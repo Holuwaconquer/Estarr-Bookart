@@ -172,12 +172,6 @@ const Orders = () => {
                             <span>NGN {order.shippingFee?.toLocaleString() || '0'}</span>
                           </div>
                         )}
-                        {order.tax > 0 && (
-                          <div className="flex justify-between text-gray-700">
-                            <span>Tax</span>
-                            <span>NGN {order.tax?.toLocaleString() || '0'}</span>
-                          </div>
-                        )}
                         <div className="flex justify-between font-semibold text-gray-900 pt-2 border-t border-gray-300">
                           <span>Total</span>
                           <span>NGN {order.total?.toLocaleString() || '0'}</span>

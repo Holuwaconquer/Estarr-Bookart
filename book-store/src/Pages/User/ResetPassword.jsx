@@ -1,122 +1,210 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { useFormik } from 'formik'
-import * as yup from 'yup'
-import api from '../../services/api'
-import { IoBook } from "react-icons/io5";
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import {toast, ToastContainer} from 'react-toastify'
-import { AuthContext } from '../../AuthContext';
-import OAuthComponent from '../../components/OAuthComponent';
-import { IoIosArrowBack } from "react-icons/io";
-import { useNavigate } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { authAPI } from '../../services/api';
+import { motion } from 'framer-motion';
+import { HiLockClosed, HiEye, HiEyeOff, HiCheckCircle, HiArrowLeft } from 'react-icons/hi';
+import toast from 'react-hot-toast';
+import AuthLayout from '../../components/AuthLayout';
 
+const ResetPassword = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
+  const email = searchParams.get('email');
+  console.log('Reset token and email received:', token, email);
+  
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-const ResetPassword = () => { 
-  const { authenticated, user, setAuthenticated, authLoading } = useContext(AuthContext)
-  const [loginProcessing, setloginProcessing] = useState(false)
-  const location = useLocation()
-  const { email } = location.state || {};
   useEffect(() => {
-    if (!authLoading && authenticated) {
-      window.location.assign('/')
-    }
-  }, [authenticated, authLoading])
-  const navigate = useNavigate()
-  const formik = useFormik({
-    initialValues: { code: '' },
-    validationSchema: yup.object().shape({
-      code: yup.string()
-        .required('Reset code is required')
-        .matches(/^\d{6}$/, 'Code must be exactly 6 digits')
-    }),
-    onSubmit: async (values) => {
-      console.log(values.code, email);
-      setloginProcessing(true);
-      if (!email) {
-        toast.error('No email provided for verification');
-        setTimeout(() => navigate('/account/forgot-password'), 2000);
-        setloginProcessing(false);
+    const verifyToken = async () => {
+      if (!token) {
+        toast.error('Invalid reset link');
+        navigate('/forgot-password');
         return;
       }
+
       try {
-        const res = await api.userAPI.verifyResetCode(email, values.code);
-        if (res && (res.data || res.success)) {
-          toast.success('Code verified! You can now reset your password.');
-          setTimeout(() => {
-            navigate('/account/reset-password', { state: { email, code: values.code } });
-          }, 1500);
-        }
-      } catch (err) {
-        if (err && err.status === 400) {
-          toast.error('Invalid request, please go back and try again!');
-        } else if (err && err.status === 404) {
-          toast.error('Invalid code, please input the correct code!');
-        } else {
-          toast.error('Verification failed');
-        }
-        console.log(err);
+        await authAPI.verifyResetToken(token, email);
+        setTokenValid(true);
+      } catch (error) {
+        toast.error(error.message || 'Invalid or expired reset link');
+        navigate('/forgot-password');
       } finally {
-        setloginProcessing(false);
+        setVerifying(false);
       }
+    };
+
+    verifyToken();
+  }, [token, email, navigate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
     }
-  });
-  return (
-    <div className='w-full h-full flex flex-col'>
-        {/* for logo */}
-      <div className='w-full flex justify-start px-[7%] py-[40px]'>
-        <div onClick={() => window.location.href='/'} className='flex items-center gap-2 text-[#515DEF] cursor-pointer'>
-          <IoBook size={25}/>
-          <h1 className='text-[25px] leading-7 font-extrabold'>Estarr BookArt</h1>
+
+    if (password.length < 8) {
+      toast.error('Password must be at least 8 characters long');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await authAPI.resetPasswordWithToken(token, email, password);
+      setSubmitted(true);
+      toast.success('Password reset successfully!');
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
+    } catch (error) {
+      toast.error(error.message || 'Failed to reset password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (verifying) {
+    return (
+      <AuthLayout title="Verifying..." subtitle="Please wait while we verify your reset link">
+        <div className="flex justify-center py-12">
+          <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
         </div>
-      </div>
-      <div className='w-full h-full py-[20px] px-[10%] flex flex-col gap-8'>
-        <div className='w-full grid md:grid-cols-[50%_50%] items-center justify-center gap-[4rem]'>
-          <div className='w-full flex flex-col gap-4 justify-self-end'>
-            {/* form */}
-            <div className='w-full flex flex-col gap-4'>
-              <div>
-                <div onClick={() => window.location.href='/login'} className='text-[#313131] flex items-center cursor-pointer'>
-                  <IoIosArrowBack size={24}/>
-                  <p className='text-[14px] font-medium'>Back to login</p>
-                </div>
-                <h1 className='text-[40px] text-[#313131] font-semibold'>Verify Code</h1>
-                <p className='text-[16px] text-[#313131]'>An authentication code has been sent to your email.</p>
-              </div>
-              <form onSubmit={formik.handleSubmit} className='w-full flex flex-col gap-4'>
-                {/* for email */}
-                <div className='relative'>
-                  <label className='bg-white absolute top-[-10px] left-5 px-2 text-[16px] text-[#1C1B1F] font-medium' htmlFor="email">Enter Code</label>
-                  <input type="tel" onBlur={formik.handleBlur} onChange={formik.handleChange} name='code' placeholder='Enter your six digit code' className='w-full border border-[#79747E] rounded-[4px] p-4 text-[#1C1B1F] outline-0'/>
-                  <small className='text-red-600'>{formik.touched.code && formik.errors.code}</small>
-                </div>
-                <div>
-                  <button type='submit' disabled={ !formik.isValid || !formik.dirty || loginProcessing } className={`w-full rounded-[4px] py-[10px] bg-[#515DEF] text-[#F3F3F3] cursor-pointer ${( !formik.isValid || !formik.dirty || loginProcessing ) ? 'cursor-not-allowed opacity-50 pointer-events-none' : ''}`}>{ loginProcessing ? 'verifying..' : 'Verify' }</button>
-                </div>
-              </form>
-              <div className='w-full flex flex-col gap-8'>
-                <div className='w-full flex items-center gap-4'>
-                  <span className='h-[0.5px] w-[40%] bg-[#313131]'></span>
-                  <span className='w-auto text-center'>Or Sign up with</span>
-                  <span className='h-[0.5px] w-[40%] bg-[#313131]'></span>
-                </div>
-                <OAuthComponent />
-              </div>
+      </AuthLayout>
+    );
+  }
+
+  return (
+    <AuthLayout
+      title={submitted ? "Password Reset Successful" : "Create New Password"}
+      subtitle={submitted ? "Your password has been reset" : "Enter your new password below"}
+    >
+      {!submitted ? (
+        <motion.form
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          onSubmit={handleSubmit}
+          className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-xl border border-gray-800/50 rounded-2xl p-8 shadow-2xl"
+        >
+          <div className="mb-6">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-3">
+              <HiLockClosed className="w-4 h-4 text-cyan-400" />
+              New Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your new password"
+                required
+                className="w-full px-4 py-3 bg-white/5 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+              >
+                {showPassword ? <HiEyeOff className="w-5 h-5" /> : <HiEye className="w-5 h-5" />}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Password must be at least 8 characters long
+            </p>
+          </div>
+
+          <div className="mb-8">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-3">
+              <HiLockClosed className="w-4 h-4 text-cyan-400" />
+              Confirm New Password
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm your new password"
+                required
+                className="w-full px-4 py-3 bg-white/5 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+              >
+                {showConfirmPassword ? <HiEyeOff className="w-5 h-5" /> : <HiEye className="w-5 h-5" />}
+              </button>
             </div>
           </div>
-          <div className='w-full h-full hidden rounded-[30px] bg-[#D9D9D9] md:flex flex-col items-center justify-center'>
-            <DotLottieReact
-              src="https://lottie.host/cf8f94bf-4913-4654-9f10-283bf544782e/Xvpqa4Sop5.lottie"
-              loop
-              autoplay
-            />
-          </div>
-          
-        </div>
-        <ToastContainer />
-      </div>
-    </div>
-  )
-}
 
-export default ResetPassword
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="submit"
+            disabled={loading}
+            className="w-full px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-bold hover:shadow-lg hover:shadow-cyan-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Resetting...
+              </>
+            ) : (
+              "Reset Password"
+            )}
+          </motion.button>
+
+          <div className="mt-6">
+            <Link
+              to="/login"
+              className="flex items-center justify-center gap-2 text-cyan-400 hover:text-cyan-300 font-semibold transition-colors"
+            >
+              <HiArrowLeft className="w-4 h-4" />
+              Back to Login
+            </Link>
+          </div>
+        </motion.form>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-xl border border-gray-800/50 rounded-2xl p-8 shadow-2xl text-center"
+        >
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="w-16 h-16 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6"
+          >
+            <HiCheckCircle className="w-8 h-8 text-white" />
+          </motion.div>
+
+          <h3 className="text-2xl font-bold text-white mb-3">
+            Password Reset Successful!
+          </h3>
+
+          <p className="text-gray-400 mb-6">
+            Your password has been successfully reset. You can now log in with your new password.
+          </p>
+
+          <Link
+            to="/login"
+            className="inline-block px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-bold hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
+          >
+            Go to Login
+          </Link>
+        </motion.div>
+      )}
+    </AuthLayout>
+  );
+};
+
+export default ResetPassword;

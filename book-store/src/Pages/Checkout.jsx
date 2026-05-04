@@ -623,10 +623,7 @@ const Checkout = () => {
                   </div>
 
                   <button
-                    onClick={() => {
-                      clearCart();
-                      navigate('/dashboard/orders');
-                    }}
+                    onClick={() => navigate('/dashboard/orders')}
                     className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 mb-3"
                   >
                     View Order Status

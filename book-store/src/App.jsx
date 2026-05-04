@@ -65,9 +65,7 @@ const App = () => {
       <Route path='/login' element={<ProtectedRouteForAuth><UserLogin /></ProtectedRouteForAuth>} />
       <Route path='/register' element={<ProtectedRouteForAuth><UserSignup /></ProtectedRouteForAuth>} />
       <Route path='/account/forgot-password' element={<ProtectedRouteForAuth><ForgotPassword /></ProtectedRouteForAuth>} />
-      <Route path='/account/verify-code' element={<ProtectedRouteForAuth><ResetPassword /></ProtectedRouteForAuth>} />
-      <Route path='/account/reset-password' element={<ProtectedRouteForAuth><PasswordReset /></ProtectedRouteForAuth>} />
-
+      <Route path="/reset-password" element={<ProtectedRouteForAuth><ResetPassword /></ProtectedRouteForAuth>} />
       {/* User Dashboard (protected) */}
       <Route path='/dashboard' element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
         <Route index element={<Overview />} />

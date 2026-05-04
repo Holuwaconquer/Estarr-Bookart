@@ -61,11 +61,6 @@ const orderSchema = new mongoose.Schema({
     default: 0,
     min: 0
   },
-  tax: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
   total: {
     type: Number,
     required: true,
@@ -92,6 +87,20 @@ const orderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Review'
   }],
+  proofOfPayment: {
+    type: String,
+    default: null
+  },
+  proofOfPaymentPublicId: {
+    type: String,
+    default: null
+  },
+  proofOfPaymentMetadata: {
+    format: { type: String },
+    size: { type: Number },
+    originalName: { type: String },
+    uploadedAt: { type: Date }
+  },
   createdAt: {
     type: Date,
     default: Date.now

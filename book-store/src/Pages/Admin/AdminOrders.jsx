@@ -445,7 +445,7 @@ const AdminOrders = () => {
                     {selectedOrder.proofOfPayment.match(/\.(jpg|jpeg|png|gif)$/i) ? (
                       proofImageDataUrl ? (
                         <img 
-                          src={proofImageDataUrl}
+                          src={selectedOrder.proofOfPayment}
                           alt="Proof of Payment" 
                           className="w-full rounded max-h-96 object-contain" 
                         />
@@ -491,10 +491,6 @@ const AdminOrders = () => {
                 <div className="flex justify-between text-gray-400">
                   <span>Shipping</span>
                   <span>₦{selectedOrder.shippingFee?.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-gray-400">
-                  <span>Tax</span>
-                  <span>₦{selectedOrder.tax?.toLocaleString()}</span>
                 </div>
                 <div className="border-t border-gray-700 pt-2 flex justify-between text-white font-bold text-lg">
                   <span>Total</span>

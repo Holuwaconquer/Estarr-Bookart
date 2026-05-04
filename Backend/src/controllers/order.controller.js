@@ -1,6 +1,39 @@
 const Order = require('../models/Order');
 const Book = require('../models/Book');
 const ApiResponse = require('../utils/apiResponse');
+const cloudinary = require('../config/cloudinary');
+
+// Helper function to upload file to Cloudinary
+const uploadToCloudinary = async (file, folder = 'order-proofs') => {
+  // Convert buffer to base64 for Cloudinary upload
+  const base64String = file.buffer.toString('base64');
+  const dataURI = `data:${file.mimetype};base64,${base64String}`;
+  
+  const result = await cloudinary.uploader.upload(dataURI, {
+    folder: folder,
+    resource_type: 'auto', // Auto-detect file type (image, pdf, etc.)
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'pdf']
+  });
+  
+  return {
+    url: result.secure_url,
+    publicId: result.public_id,
+    format: result.format,
+    size: result.bytes,
+    originalName: file.originalname
+  };
+};
+
+// Helper function to delete from Cloudinary
+const deleteFromCloudinary = async (publicId) => {
+  if (!publicId) return;
+  try {
+    await cloudinary.uploader.destroy(publicId);
+    console.log('✅ Deleted from Cloudinary:', publicId);
+  } catch (error) {
+    console.error('❌ Error deleting from Cloudinary:', error);
+  }
+};
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -53,9 +86,8 @@ exports.createOrder = async (req, res, next) => {
     // Calculate totals - use frontend shipping fee if provided, otherwise calculate
     const shippingFee = incomingShippingFee !== undefined && incomingShippingFee !== null 
       ? Number(incomingShippingFee) 
-      : (subtotal > 100 ? 0 : 9.99); // Fallback to old logic
-    const tax = subtotal * 0.1; // 10% tax
-    const total = subtotal + shippingFee + tax;
+      : (subtotal > 100 ? 0 : 9.99);
+    const total = subtotal + shippingFee;
 
     console.log('📦 Order creation - Shipping fee:', { 
       incoming: incomingShippingFee, 
@@ -72,7 +104,6 @@ exports.createOrder = async (req, res, next) => {
       paymentMethod,
       subtotal,
       shippingFee,
-      tax,
       total,
       status: 'pending',
       paymentStatus: 'pending'
@@ -80,6 +111,104 @@ exports.createOrder = async (req, res, next) => {
 
     return ApiResponse.success(res, 'Order created successfully', order, 201);
   } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Upload proof of payment for an order to Cloudinary
+// @route   POST /api/orders/:id/upload-proof
+// @access  Private
+exports.uploadOrderProof = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId;
+
+    console.log('📤 Upload proof request:', { orderId: id, userId, file: req.file?.originalname });
+
+    // Check if file is provided
+    if (!req.file) {
+      console.error('❌ No file provided in upload');
+      return ApiResponse.error(res, 'No file provided', 400);
+    }
+
+    const order = await Order.findById(id);
+    if (!order) {
+      console.error('❌ Order not found:', id);
+      return ApiResponse.error(res, 'Order not found', 404);
+    }
+
+    // Check if user is owner of order
+    if (order.user.toString() !== userId) {
+      console.error('❌ Unauthorized: User mismatch', { orderUser: order.user.toString(), userId });
+      return ApiResponse.error(res, 'Unauthorized', 403);
+    }
+
+    // Delete old proof from Cloudinary if exists
+    if (order.proofOfPaymentPublicId) {
+      await deleteFromCloudinary(order.proofOfPaymentPublicId);
+    }
+
+    // Upload to Cloudinary
+    const uploadResult = await uploadToCloudinary(req.file, 'order-proofs');
+    
+    console.log('✅ Uploaded to Cloudinary:', uploadResult);
+
+    // Store both URL and public ID for future deletion
+    order.proofOfPayment = uploadResult.url;
+    order.proofOfPaymentPublicId = uploadResult.publicId;
+    order.proofOfPaymentMetadata = {
+      format: uploadResult.format,
+      size: uploadResult.size,
+      originalName: uploadResult.originalName,
+      uploadedAt: new Date()
+    };
+    order.paymentStatus = 'processing'; // Update status to show proof is received
+    await order.save();
+
+    console.log('✅ Proof of payment uploaded for order:', { orderId: id, proofUrl: uploadResult.url });
+
+    return ApiResponse.success(res, 'Proof of payment uploaded successfully', order);
+  } catch (error) {
+    console.error('❌ Error uploading proof:', error);
+    next(error);
+  }
+};
+
+// @desc    Get proof of payment for an order from Cloudinary
+// @route   GET /api/orders/:id/proof
+// @access  Private
+exports.getOrderProof = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId;
+    const isAdmin = req.userRole === 'admin';
+
+    console.log('📥 Get proof request:', { orderId: id, userId, isAdmin });
+
+    const order = await Order.findById(id);
+    if (!order) {
+      console.error('❌ Order not found:', id);
+      return ApiResponse.error(res, 'Order not found', 404);
+    }
+
+    // Check authorization - user can view own proof, admin can view any
+    if (!isAdmin && order.user.toString() !== userId) {
+      console.error('❌ Unauthorized: User mismatch', { orderUser: order.user.toString(), userId });
+      return ApiResponse.error(res, 'Unauthorized', 403);
+    }
+
+    if (!order.proofOfPayment) {
+      console.error('❌ No proof found for order:', id);
+      return ApiResponse.error(res, 'No proof found for this order', 404);
+    }
+
+    // Return the Cloudinary URL
+    return ApiResponse.success(res, 'Proof of payment retrieved', {
+      url: order.proofOfPayment,
+      metadata: order.proofOfPaymentMetadata
+    });
+  } catch (error) {
+    console.error('❌ Error getting proof:', error);
     next(error);
   }
 };
@@ -195,7 +324,7 @@ exports.updateOrderStatus = async (req, res, next) => {
   try {
     const { status, adminNotes } = req.body;
 
-    if (!['received', 'processing', 'shipped', 'delivered', 'cancelled'].includes(status)) {
+    if (!['pending', 'received', 'processing', 'shipped', 'delivered', 'cancelled'].includes(status)) {
       return ApiResponse.error(res, 'Invalid status', 400);
     }
 
@@ -266,7 +395,7 @@ exports.cancelOrder = async (req, res, next) => {
     }
 
     // Check if order can be cancelled
-    if (!['received', 'processing'].includes(order.status)) {
+    if (!['pending', 'received', 'processing'].includes(order.status)) {
       return ApiResponse.error(res, 'Order cannot be cancelled at this stage', 400);
     }
 
@@ -289,181 +418,34 @@ exports.cancelOrder = async (req, res, next) => {
   }
 };
 
-// @desc    Admin cancel order
-// @route   PUT /api/orders/:id/admin-cancel
+// @desc    Delete proof from Cloudinary (Admin utility)
+// @route   DELETE /api/orders/:id/proof
 // @access  Private/Admin
-exports.adminCancelOrder = async (req, res, next) => {
-  try {
-    const { reason } = req.body;
-    const order = await Order.findById(req.params.id);
-    
-    if (!order) {
-      return ApiResponse.error(res, 'Order not found', 404);
-    }
-
-    // Check if order can be cancelled
-    if (['delivered', 'cancelled'].includes(order.status)) {
-      return ApiResponse.error(res, 'Order cannot be cancelled at this stage', 400);
-    }
-
-    // Restore stock
-    for (const item of order.items) {
-      const book = await Book.findById(item.book);
-      if (book) {
-        book.stock += item.quantity;
-        await book.save();
-      }
-    }
-
-    order.status = 'cancelled';
-    order.cancellationReason = reason || 'Cancelled by admin';
-    order.adminNotes = `Cancelled by admin - ${reason || 'No reason provided'}`;
-    await order.save();
-
-    return ApiResponse.success(res, 'Order cancelled successfully', order);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Request refund
-// @route   POST /api/orders/:id/request-refund
-// @access  Private
-exports.requestRefund = async (req, res, next) => {
-  try {
-    const order = await Order.findById(req.params.id);
-    
-    if (!order) {
-      return ApiResponse.error(res, 'Order not found', 404);
-    }
-
-    // Check if user owns the order
-    if (order.user.toString() !== req.userId) {
-      return ApiResponse.error(res, 'Not authorized', 403);
-    }
-
-    // Check if order can be refunded
-    if (!['received', 'processing', 'shipped', 'cancelled'].includes(order.status)) {
-      return ApiResponse.error(res, 'Order cannot be refunded at this stage', 400);
-    }
-
-    order.refundRequested = true;
-    await order.save();
-
-    return ApiResponse.success(res, 'Refund requested successfully. Admin will review and process.', order);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Approve refund (Admin)
-// @route   PUT /api/orders/:id/approve-refund
-// @access  Private/Admin
-exports.approveRefund = async (req, res, next) => {
-  try {
-    const order = await Order.findById(req.params.id);
-    
-    if (!order) {
-      return ApiResponse.error(res, 'Order not found', 404);
-    }
-
-    if (!order.refundRequested) {
-      return ApiResponse.error(res, 'No refund request for this order', 400);
-    }
-
-    order.refundApproved = true;
-    order.paymentStatus = 'refunded';
-    await order.save();
-
-    return ApiResponse.success(res, 'Refund approved successfully', order);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Upload proof of payment for an order
-// @route   POST /api/orders/:id/upload-proof
-// @access  Private
-exports.uploadOrderProof = async (req, res, next) => {
+exports.deleteOrderProof = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const userId = req.userId;
-
-    console.log('📤 Upload proof request:', { orderId: id, userId, file: req.file?.filename });
-
-    // Check if file is provided
-    if (!req.file) {
-      console.error('❌ No file provided in upload');
-      return ApiResponse.error(res, 'No file provided', 400);
-    }
 
     const order = await Order.findById(id);
     if (!order) {
-      console.error('❌ Order not found:', id);
       return ApiResponse.error(res, 'Order not found', 404);
     }
 
-    // Check if user is owner of order
-    if (order.user.toString() !== userId) {
-      console.error('❌ Unauthorized: User mismatch', { orderUser: order.user.toString(), userId });
-      return ApiResponse.error(res, 'Unauthorized', 403);
+    if (!order.proofOfPaymentPublicId) {
+      return ApiResponse.error(res, 'No proof found for this order', 404);
     }
 
-    // Construct the file URL - will be accessible at /uploads/payments/filename
-    const fileName = req.file.filename;
-    const proofUrl = `/uploads/payments/${fileName}`;
+    // Delete from Cloudinary
+    await deleteFromCloudinary(order.proofOfPaymentPublicId);
 
-    order.proofOfPayment = proofUrl;
-    order.paymentStatus = 'processing'; // Update status to show proof is received
+    // Clear proof fields
+    order.proofOfPayment = null;
+    order.proofOfPaymentPublicId = null;
+    order.proofOfPaymentMetadata = null;
     await order.save();
 
-    console.log('✅ Proof of payment uploaded for order:', { orderId: id, proofUrl, fileName });
-
-    return ApiResponse.success(res, 'Proof of payment uploaded successfully', order);
+    return ApiResponse.success(res, 'Proof of payment deleted successfully', order);
   } catch (error) {
-    console.error('❌ Error uploading proof:', error);
-    next(error);
-  }
-};
-
-// @desc    Get proof of payment for an order
-// @route   GET /api/orders/:id/proof
-// @access  Private
-exports.getOrderProof = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const order = await Order.findById(id).select('proofOfPayment user');
-
-    if (!order) {
-      return ApiResponse.error(res, 'Order not found', 404);
-    }
-
-    // Check authorization
-    if (order.user.toString() !== req.userId && req.userRole !== 'admin') {
-      return ApiResponse.error(res, 'Not authorized', 403);
-    }
-
-    if (!order.proofOfPayment) {
-      return ApiResponse.error(res, 'No proof of payment found', 404);
-    }
-
-    // Extract filename from the path
-    const fileName = order.proofOfPayment.split('/').pop();
-    const filePath = `public/uploads/payments/${fileName}`;
-
-    // Check if file exists
-    const fs = require('fs');
-    if (!fs.existsSync(filePath)) {
-      console.error('File not found:', filePath);
-      return ApiResponse.error(res, 'Proof file not found', 404);
-    }
-
-    // Send the file
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    res.sendFile(filePath, { root: process.cwd() });
-  } catch (error) {
-    console.error('❌ Error getting proof:', error);
+    console.error('❌ Error deleting proof:', error);
     next(error);
   }
 };
