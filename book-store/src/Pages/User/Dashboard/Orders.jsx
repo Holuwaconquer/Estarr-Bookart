@@ -145,10 +145,13 @@ const Orders = () => {
                       <h4 className="font-semibold text-gray-900 mb-3">Order Items</h4>
                       <div className="space-y-2">
                         {order.items?.map((item, i) => (
-                          <div key={i} className="flex justify-between text-sm">
-                            <span className="text-gray-700">
-                              {item.book?.title || 'Book'} x{item.quantity}
-                            </span>
+                          <div key={i} className="flex justify-between flex-wrap text-sm">
+                            <div className='flex items-center gap-2'>
+                              <img src={item.book?.image} alt={item.book?.title || 'Book'} className="w-10 h-10 object-cover rounded-lg" />
+                              <span className="text-gray-700">
+                                {item.book?.title || 'Book'} x{item.quantity}
+                              </span>
+                            </div>
                             <span className="font-medium">NGN {(item.price * item.quantity).toLocaleString()}</span>
                           </div>
                         ))}
@@ -217,13 +220,13 @@ const Orders = () => {
 
                     {/* Action Buttons */}
                     <div className="pt-4 border-t border-gray-200 flex gap-3">
-                      <motion.button
+                      {/* <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.98 }}
                         className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
                       >
                         Track Order
-                      </motion.button>
+                      </motion.button> */}
                       {order.status === 'delivered' && (
                         <motion.button
                           whileHover={{ scale: 1.05 }}

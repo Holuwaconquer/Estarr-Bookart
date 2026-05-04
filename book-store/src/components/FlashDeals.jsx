@@ -158,28 +158,28 @@ const FlashDeals = () => {
                 <p className="md:text-2xl text-white/90">Ends In:</p>
                 <div className="flex gap-2">
                   <div className="">
-                    <span className="text-[18px] md:text-2xl font-bold text-white">{formatTime(timeLeft.hours)}h :</span>
+                    <span className="text-[14px] md:text-2xl font-bold text-white">{formatTime(timeLeft.hours)}h :</span>
                   </div>
                   <div className="">
-                    <span className="text-[18px] md:text-2xl font-bold text-white">{formatTime(timeLeft.minutes)}m :</span>
+                    <span className="text-[14px] md:text-2xl font-bold text-white">{formatTime(timeLeft.minutes)}m :</span>
                   </div>
                   <div className="">
-                    <span className="text-[18px] md:text-2xl font-bold text-white">{formatTime(timeLeft.seconds)}s</span>
+                    <span className="text-[14px] md:text-2xl font-bold text-white">{formatTime(timeLeft.seconds)}s</span>
                   </div>
                 </div>
               </div>
             </div>
-
+{/* 
             <Link 
               to="/category?filter=discount" 
-              className="bg-white py-2 px-4 text-red-600 rounded-[4px] font-bold hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl whitespace-nowrap"
+              className="bg-white text-[12px] py-2 px-4 text-red-600 rounded-[4px] font-bold hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl whitespace-nowrap"
             >
               View All
-            </Link>
+            </Link> */}
           </div>
 
           {/* Deal Cards */}
-          <div className="flex overflow-x-auto pb-4 snap-x snap-mandatory md:grid md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-[32px] md:overflow-visible">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-[32px] md:overflow-visible">
             {deals.map((deal) => (
               <motion.div
                 key={deal.id}

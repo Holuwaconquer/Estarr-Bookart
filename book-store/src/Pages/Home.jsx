@@ -14,8 +14,26 @@ const Home = () => {
         {/* Your existing Navbar component */}
         <Navbar />
 
-        <div className='md:hidden flex bg-gradient-to-r py-2 px-4 from-red-500 to-orange-500 md:flex-row flex-wrap items-center justify-center mb-2'>
-          <p className='text-white text-[14px] font-bold text-center'>CALL TO ORDER: +234 814 515 7410</p>
+        <div className='flex flex-col text-white py-6 px-4 md:flex-row flex-wrap items-center justify-center relative overflow-hidden'>
+          {/* Background Image */}
+          <div 
+            className="absolute inset-0 z-0"
+            style={{
+              backgroundImage: `url('/estarr.jpeg')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            }}
+          />
+          
+          {/* Gradient Overlay (combining your original gradient with the image) */}
+          <div className="absolute inset-0 z-1 bg-gradient-to-r from-red-500/80 to-orange-500/80" />
+          
+          {/* Content */}
+          <div className="relative z-10 text-center">
+            <h1 className='text-2xl font-bold'>Building readers</h1>
+            <p className='font-semibold text-[18px]'>Estarr BookArt Online Store</p>
+          </div>
         </div>
         {/* Main content area */}
         <main>

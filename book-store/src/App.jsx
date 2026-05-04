@@ -40,6 +40,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import ProtectedRouteForAuth from './components/ProtectedRouteForAuth'
 import AdminRoute from './components/AdminRoute'
 import UserRoleChecker from './components/UserRoleChecker'
+import AboutUs from './Pages/AboutUs'
 
 const App = () => {
   const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE || 'admin'
@@ -57,6 +58,7 @@ const App = () => {
         <Route path='blog' element={<BlogPage />} />
         <Route path='blog/:slug' element={<BlogDetail />} />
         <Route path='blog/post/:id' element={<BlogDetail />} />
+        <Route path="/about" element={<AboutUs />} />
       </Route>
 
       {/* Authentication - Only for unauthenticated users */}

@@ -60,17 +60,17 @@ const AdminSidebar = (props) => {
       path: '/admin/users', 
       icon: HiUsers 
     },
-    { 
-      label: 'Analytics', 
-      path: '/admin/analytics', 
-      icon: HiChartBar 
-    },
+    // { 
+    //   label: 'Analytics', 
+    //   path: '/admin/analytics', 
+    //   icon: HiChartBar 
+    // },
     { 
       label: 'Settings', 
       icon: HiCog,
       submenu: [
         { label: 'Bank Accounts', path: '/admin/bank-accounts' },
-        { label: 'Settings', path: '/admin/settings' }
+        // { label: 'Settings', path: '/admin/settings' }
       ]
     }
   ];

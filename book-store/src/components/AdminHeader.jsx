@@ -105,7 +105,7 @@ const AdminHeader = ({ isOpen, setIsOpen, onMenuClick }) => {
               >
                 <div className="px-4 py-3 border-b border-gray-800">
                   <p className="text-sm text-gray-400">Signed in as</p>
-                  <p className="font-semibold text-white text-sm">{user?.email}</p>
+                  <p className="font-semibold text-white text-sm truncate">{user?.email}</p>
                 </div>
 
                 <nav className="py-2">

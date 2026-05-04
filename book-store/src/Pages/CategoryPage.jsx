@@ -12,13 +12,17 @@ import {
   HiTag,
   HiShieldCheck,
   HiTruck,
-  HiSparkles
+  HiSparkles,
+  HiTrash
 } from 'react-icons/hi';
 import { motion, AnimatePresence } from 'framer-motion';
 import BookCard from '../components/Bookcard.jsx';
 import { bookAPI, categoryAPI } from '../services/api';
+import { useCart } from '../contexts/CartContext.jsx';
+import toast from 'react-hot-toast';
 
 const CategoryPage = () => {
+  const { addToCart, removeFromCart, cart } = useCart();
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('featured');
   const [priceRange, setPriceRange] = useState([0, 100000]);
@@ -29,6 +33,41 @@ const CategoryPage = () => {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [books, setBooks] = useState([]);
   const [loadingBooks, setLoadingBooks] = useState(true);
+  const [addingToCart, setAddingToCart] = useState({});
+
+  // Helper function to check if a book is in cart
+  const isBookInCart = (bookId) => {
+    return cart.some(item => (item.id === bookId || item._id === bookId || item.book === bookId));
+  };
+
+  // Handle add to cart
+  const handleAddToCart = async (book, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const bookId = book._id || book.id;
+    setAddingToCart(prev => ({ ...prev, [bookId]: 'adding' }));
+    
+    await addToCart(book);
+    
+    setTimeout(() => {
+      setAddingToCart(prev => ({ ...prev, [bookId]: false }));
+    }, 800);
+  };
+
+  // Handle remove from cart
+  const handleRemoveFromCart = async (bookId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setAddingToCart(prev => ({ ...prev, [bookId]: 'removing' }));
+    
+    await removeFromCart(bookId);
+    
+    setTimeout(() => {
+      setAddingToCart(prev => ({ ...prev, [bookId]: false }));
+    }, 800);
+  };
 
   // Fallback categories
   const defaultCategories = [
@@ -242,40 +281,61 @@ const CategoryPage = () => {
     setActiveFilters([]);
     setPriceRange([0, 100000]);
   };
+  
+  // Render list item buttons
+  const renderListButtons = (book) => {
+    const bookId = book._id || book.id;
+    const inCart = isBookInCart(bookId);
+    const isProcessing = addingToCart[bookId];
+
+    if (inCart) {
+      return (
+        <button 
+          onClick={(e) => handleRemoveFromCart(bookId, e)}
+          disabled={isProcessing === 'removing'}
+          className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-red-500/25 transition-all flex items-center gap-2 text-sm whitespace-nowrap"
+        >
+          {isProcessing === 'removing' ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Removing...
+            </>
+          ) : (
+            <>
+              <HiTrash className="w-4 h-4" />
+              Remove
+            </>
+          )}
+        </button>
+      );
+    }
+
+    return (
+      <button 
+        onClick={(e) => handleAddToCart(book, e)}
+        disabled={isProcessing === 'adding'}
+        className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2 text-sm whitespace-nowrap"
+      >
+        {isProcessing === 'adding' ? (
+          <>
+            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            Adding...
+          </>
+        ) : (
+          <>
+            <HiShoppingBag className="w-4 h-4" />
+            Add to Cart
+          </>
+        )}
+      </button>
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-indigo-950 text-white">
-      {/* Hero Banner */}
-      <div className="relative overflow-hidden py-16 lg:py-20">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10" />
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=2067')] opacity-10 bg-cover bg-center" />
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-4xl lg:text-5xl font-bold mb-4"
-            >
-              <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Premium Collections
-              </span>
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="text-lg text-gray-300 max-w-3xl mx-auto"
-            >
-              Discover rare editions, signed copies, and luxury bindings for the discerning collector
-            </motion.p>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-white ">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Mobile Filter Button */}
-        <div className="lg:hidden mb-6">
+        <div className="lg:hidden mb-6 text-white">
           <button
             onClick={() => setIsMobileFilterOpen(true)}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-gray-900 to-gray-800 border border-gray-800 rounded-xl hover:border-cyan-500/30 transition-all"
@@ -290,18 +350,18 @@ const CategoryPage = () => {
           </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 text-white">
           {/* Desktop Sidebar */}
           <div className="hidden lg:block lg:w-1/4">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-xl border border-gray-800/50 rounded-2xl p-6 sticky top-6"
+              className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-800/50 rounded-2xl p-6 sticky top-6"
             >
               {/* Categories */}
               <div className="mb-8">
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                  <HiFilter className="w-5 h-5 text-cyan-400" />
+                  <HiFilter className="w-5 h-5 " />
                   Categories
                 </h3>
                 <div className="space-y-3">
@@ -387,7 +447,7 @@ const CategoryPage = () => {
               {/* Clear Filters */}
               <button
                 onClick={clearAllFilters}
-                className="w-full py-3 border-2 border-cyan-500/30 text-cyan-400 rounded-xl font-semibold hover:bg-cyan-500/10 transition-all"
+                className="w-full py-3 border-2 border-cyan-500/30 text-white rounded-xl font-semibold hover:bg-cyan-500/10 transition-all"
               >
                 Clear All Filters
               </button>
@@ -397,7 +457,7 @@ const CategoryPage = () => {
           {/* Main Content */}
           <div className="lg:w-3/4">
             {/* Toolbar */}
-            <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-xl border border-gray-800/50 rounded-2xl p-6 mb-6">
+            <div className="bg-gradient-to-br from-gray-900 to-gray-800 backdrop-blur-xl border border-gray-800/50 rounded-2xl p-6 mb-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-2xl font-bold text-white">All Collections</h2>
@@ -498,7 +558,7 @@ const CategoryPage = () => {
 
             {/* Books Grid/List */}
             {loadingBooks ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, idx) => (
                   <div key={idx} className="bg-white rounded-xl p-4 shadow-lg animate-pulse">
                     <div className="bg-gray-200 h-64 rounded-lg mb-4"></div>
@@ -515,7 +575,7 @@ const CategoryPage = () => {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                  className="grid grid-cols-2 lg:grid-cols-3 gap-4"
                 >
                   {sortedBooks.map((book, index) => (
                     <motion.div
@@ -530,67 +590,109 @@ const CategoryPage = () => {
                 </motion.div>
               ) : (
                 <div className="space-y-4">
-                  {sortedBooks.map((book, index) => (
-                    <motion.div
-                      key={book._id || book.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="bg-white backdrop-blur-xl border border-gray-200 rounded-2xl overflow-hidden shadow-lg"
-                    >
-                      <div className="flex flex-col md:flex-row p-6">
-                        {/* Book Image */}
-                        <div className="md:w-1/4 mb-4 md:mb-0">
-                          <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
-                            {book.image ? (
-                              <img src={book.image} alt={book.title} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-24 h-32 bg-gradient-to-br from-gray-300 to-gray-400 rounded-lg shadow-lg" />
-                              </div>
-                            )}
+                  {sortedBooks.map((book, index) => {
+                    const bookId = book._id || book.id;
+                    const inCart = isBookInCart(bookId);
+                    const isProcessing = addingToCart[bookId];
+                    
+                    return (
+                      <motion.div
+                        key={bookId}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-white backdrop-blur-xl border border-gray-200 rounded-2xl overflow-hidden shadow-lg"
+                      >
+                        <div className="flex flex-col md:flex-row p-6">
+                          {/* Book Image */}
+                          <div className="md:w-1/4 mb-4 md:mb-0">
+                            <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                              {book.image ? (
+                                <img src={book.image} alt={book.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-24 h-32 bg-gradient-to-br from-gray-300 to-gray-400 rounded-lg shadow-lg" />
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Book Info */}
-                        <div className="md:w-3/4 md:pl-6">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full border border-blue-300 mb-2">
-                                {book.category || 'Fiction'}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <h3 className="text-2xl font-bold text-gray-900 mb-1">{book.title}</h3>
-                          <p className="text-gray-600 text-sm mb-2">by {book.author}</p>
-                          <p className="text-gray-700 text-sm mb-4 line-clamp-2">{book.description}</p>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
+                          {/* Book Info */}
+                          <div className="md:w-3/4 md:pl-6">
+                            <div className="flex items-start justify-between mb-3">
                               <div>
-                                <span className="text-3xl font-bold text-cyan-600">₦{Math.round(book.price).toLocaleString()}</span>
-                                {book.discount && (
-                                  <div className="text-sm text-red-600 font-semibold">
-                                    Save {book.discount}%
-                                  </div>
-                                )}
+                                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full border border-blue-300 mb-2">
+                                  {book.category || 'Fiction'}
+                                </span>
                               </div>
                             </div>
-                            <div className="space-y-2">
-                              <button className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2 text-sm whitespace-nowrap">
-                                <HiShoppingBag className="w-4 h-4" />
-                                Add to Cart
-                              </button>
-                              <button className="px-4 py-2 border border-cyan-500/30 text-cyan-600 rounded-lg font-semibold hover:bg-cyan-500/10 transition-all text-sm whitespace-nowrap">
-                                View Details
-                              </button>
+                            
+                            <h3 className="text-2xl font-bold text-gray-900 mb-1">{book.title}</h3>
+                            <p className="text-gray-600 text-sm mb-2">by {book.author}</p>
+                            <p className="text-gray-700 text-sm mb-4 line-clamp-2">{book.description}</p>
+                            
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div>
+                                  <span className="text-3xl font-bold text-cyan-600">₦{Math.round(book.price).toLocaleString()}</span>
+                                  {book.discount && (
+                                    <div className="text-sm text-red-600 font-semibold">
+                                      Save {book.discount}%
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                {inCart ? (
+                                  <button 
+                                    onClick={(e) => handleRemoveFromCart(bookId, e)}
+                                    disabled={isProcessing === 'removing'}
+                                    className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-red-500/25 transition-all flex items-center gap-2 text-sm whitespace-nowrap"
+                                  >
+                                    {isProcessing === 'removing' ? (
+                                      <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Removing...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <HiTrash className="w-4 h-4" />
+                                        Remove
+                                      </>
+                                    )}
+                                  </button>
+                                ) : (
+                                  <button 
+                                    onClick={(e) => handleAddToCart(book, e)}
+                                    disabled={isProcessing === 'adding'}
+                                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2 text-sm whitespace-nowrap"
+                                  >
+                                    {isProcessing === 'adding' ? (
+                                      <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Adding...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <HiShoppingBag className="w-4 h-4" />
+                                        Add to Cart
+                                      </>
+                                    )}
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={() => window.location.href = `/product/${bookId}`}
+                                  className="px-4 py-2 border border-cyan-500/30 text-cyan-600 rounded-lg font-semibold hover:bg-cyan-500/10 transition-all text-sm whitespace-nowrap w-full"
+                                >
+                                  View Details
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )
             ) : (

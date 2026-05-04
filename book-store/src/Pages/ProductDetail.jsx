@@ -3,14 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { bookAPI, reviewAPI, cartAPI } from '../services/api';
 import { useCart } from '../contexts/CartContext';
 import { motion } from 'framer-motion';
-import { HiHeart, HiShoppingBag, HiStar, HiArrowLeft, HiCheckCircle, HiTruck, HiShieldCheck, HiFire, HiPlus, HiMinus } from 'react-icons/hi';
+import { HiHeart, HiShoppingBag, HiStar, HiArrowLeft, HiCheckCircle, HiTruck, HiShieldCheck, HiFire, HiPlus, HiMinus, HiTrash } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import { useWishlist } from '../contexts/WishlistContext';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, removeFromCart, cart } = useCart();
   const [book, setBook] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,8 +18,17 @@ const ProductDetail = () => {
   const [addingToCart, setAddingToCart] = useState(false);
   const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+
+  // Check if book is in cart
+  useEffect(() => {
+    if (id && cart) {
+      const inCart = cart.some(item => (item.id === id || item._id === id || item.book === id));
+      setIsInCart(inCart);
+    }
+  }, [id, cart]);
 
   useEffect(() => {
     if (book && id) {
@@ -31,7 +40,6 @@ const ProductDetail = () => {
     const fetchBook = async () => {
       try {
         setLoading(true);
-        // Fetch real book data from API
         const allBooks = await bookAPI.getAllBooks({ limit: 100 });
         const books = allBooks.data?.books || allBooks.data || [];
         
@@ -40,7 +48,6 @@ const ProductDetail = () => {
         if (foundBook) {
           setBook(foundBook);
         } else {
-          // Fallback to mock data if book not found
           setBook({
             _id: id,
             title: "The Silent Sea",
@@ -74,16 +81,13 @@ const ProductDetail = () => {
           viewedList = [];
         }
 
-        // Add current product to recently viewed if not already there
         if (!viewedList.includes(id)) {
           viewedList.unshift(id);
         } else {
-          // Move to front if already exists
           viewedList = viewedList.filter(item => item !== id);
           viewedList.unshift(id);
         }
 
-        // Keep only last 10 viewed products
         viewedList = viewedList.slice(0, 10);
         localStorage.setItem('recentlyViewed', JSON.stringify(viewedList));
       } catch (error) {
@@ -98,19 +102,21 @@ const ProductDetail = () => {
     fetchBook();
   }, [id, navigate]);
 
-
-
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
+    if (!book) return;
+    
     setAddingToCart(true);
-    addToCart(book);
-    toast.success(`${book.title} added to cart!`, {
-      icon: '🛒',
-      style: {
-        background: '#1e293b',
-        color: '#fff',
-        border: '1px solid #334155'
-      }
-    });
+    await addToCart(book, quantity);
+    
+    setTimeout(() => setAddingToCart(false), 800);
+  };
+
+  const handleRemoveFromCart = async () => {
+    if (!id) return;
+    
+    setAddingToCart(true);
+    await removeFromCart(id);
+    
     setTimeout(() => setAddingToCart(false), 800);
   };
 
@@ -118,7 +124,6 @@ const ProductDetail = () => {
     if (!book) return;
     
     if (isLiked) {
-      // Remove from wishlist
       removeFromWishlist(id);
       setIsLiked(false);
       toast.success('Removed from wishlist', {
@@ -130,7 +135,6 @@ const ProductDetail = () => {
         }
       });
     } else {
-      // Add to wishlist
       const added = addToWishlist(book);
       if (added) {
         setIsLiked(true);
@@ -170,14 +174,12 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-indigo-950 text-white pt-10 pb-16">
-      {/* Background Effects */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/3 -left-64 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/3 -right-64 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Back Button */}
         <motion.button
           whileHover={{ x: -5 }}
           onClick={() => navigate(-1)}
@@ -187,7 +189,6 @@ const ProductDetail = () => {
           Back to Shopping
         </motion.button>
 
-        {/* Product Container */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Left - Book Showcase */}
           <motion.div
@@ -196,23 +197,19 @@ const ProductDetail = () => {
             transition={{ duration: 0.6 }}
             className="flex flex-col justify-center"
           >
-            {/* Book Cover */}
             <div className="relative md:aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-cyan-500/20 to-blue-500/20 backdrop-blur-xl border border-cyan-500/30 mb-6 flex items-center justify-center p-4">
-              {/* 3D Book Effect or Image Gallery */}
               <motion.div
                 whileHover={{ scale: 1.05, rotateY: 10 }}
                 transition={{ duration: 0.3 }}
                 className="relative w-48 h-64"
               >
                 {book.images && book.images.length > 0 ? (
-                  // Display actual images
                   <div className="relative w-full h-full">
                     <img
                       src={book.images[selectedImageIndex]?.url || book.images[selectedImageIndex]}
                       alt={book.title}
                       className="w-full h-full object-cover rounded-lg shadow-2xl"
                     />
-                    {/* Image Counter */}
                     {book.images.length > 1 && (
                       <div className="absolute bottom-2 right-2 bg-black/80 px-3 py-1 rounded-full text-sm text-white">
                         {selectedImageIndex + 1}/{book.images.length}
@@ -220,7 +217,6 @@ const ProductDetail = () => {
                     )}
                   </div>
                 ) : book.image ? (
-                  // Fallback to single image
                   <div className="relative w-full h-full">
                     <img
                       src={book.image}
@@ -229,7 +225,6 @@ const ProductDetail = () => {
                     />
                   </div>
                 ) : (
-                  // Placeholder 3D book effect
                   <>
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-700 to-blue-700 rounded-lg shadow-2xl transform rotate-1" />
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
@@ -247,7 +242,6 @@ const ProductDetail = () => {
               </motion.div>
             </div>
 
-            {/* Image Thumbnails */}
             {book.images && book.images.length > 1 && (
               <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
                 {book.images.map((img, idx) => (
@@ -272,7 +266,6 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {/* Book Info Badges */}
             <div className="flex flex-wrap gap-2">
               {book.discount && (
                 <motion.div
@@ -308,7 +301,6 @@ const ProductDetail = () => {
             transition={{ duration: 0.6 }}
             className="flex flex-col justify-between"
           >
-            {/* Title Section */}
             <div>
               <div className="mb-4">
                 <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/40 rounded-full text-sm text-cyan-300">
@@ -324,7 +316,6 @@ const ProductDetail = () => {
                 by <span className="text-cyan-400 font-semibold">{book.author}</span>
               </p>
 
-              {/* Rating */}
               <div className="flex items-center gap-4 mb-8">
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
@@ -338,12 +329,10 @@ const ProductDetail = () => {
                 <span className="text-gray-400">({reviews.length} reviews)</span>
               </div>
 
-              {/* Description */}
               <p className="text-gray-300 leading-relaxed mb-8">
                 {book.description}
               </p>
 
-              {/* Features */}
               {book.features && book.features.length > 0 && (
                 <div className="mb-8">
                   <p className="text-sm text-gray-400 mb-3">Special Features</p>
@@ -362,9 +351,7 @@ const ProductDetail = () => {
               )}
             </div>
 
-            {/* Pricing & Purchase Section */}
             <div className="space-y-6">
-              {/* Price */}
               <div>
                 <div className="flex items-baseline gap-4 mb-2">
                   <span className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
@@ -382,53 +369,76 @@ const ProductDetail = () => {
                 </p>
               </div>
 
-              {/* Quantity Selector */}
-              <div className="flex items-center gap-4">
-                <span className="text-gray-300 font-medium">Quantity:</span>
-                <div className="flex items-center gap-2 bg-gray-900/50 border border-gray-800/50 rounded-lg p-2">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-2 text-cyan-400 hover:bg-gray-800/50 rounded transition-colors"
-                  >
-                    <HiMinus className="w-5 h-5" />
-                  </motion.button>
-                  <span className="px-6 py-2 text-lg font-semibold text-white min-w-[60px] text-center">
-                    {quantity}
-                  </span>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setQuantity(Math.min(book.stock || 10, quantity + 1))}
-                    className="p-2 text-cyan-400 hover:bg-gray-800/50 rounded transition-colors"
-                  >
-                    <HiPlus className="w-5 h-5" />
-                  </motion.button>
+              {/* Only show quantity selector if item is NOT in cart */}
+              {!isInCart && (
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-300 font-medium">Quantity:</span>
+                  <div className="flex items-center gap-2 bg-gray-900/50 border border-gray-800/50 rounded-lg p-2">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="p-2 text-cyan-400 hover:bg-gray-800/50 rounded transition-colors"
+                    >
+                      <HiMinus className="w-5 h-5" />
+                    </motion.button>
+                    <span className="px-6 py-2 text-lg font-semibold text-white min-w-[60px] text-center">
+                      {quantity}
+                    </span>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setQuantity(Math.min(book.stock || 10, quantity + 1))}
+                      className="p-2 text-cyan-400 hover:bg-gray-800/50 rounded transition-colors"
+                    >
+                      <HiPlus className="w-5 h-5" />
+                    </motion.button>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Action Buttons */}
               <div className="space-y-3 pt-4">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleAddToCart}
-                  disabled={addingToCart}
-                  className="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/50"
-                >
-                  {addingToCart ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <HiShoppingBag className="w-5 h-5" />
-                      Add to Cart
-                    </>
-                  )}
-                </motion.button>
+                {isInCart ? (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleRemoveFromCart}
+                    disabled={addingToCart}
+                    className="w-full px-6 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-red-500/25 hover:shadow-red-500/50"
+                  >
+                    {addingToCart ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Removing...
+                      </>
+                    ) : (
+                      <>
+                        <HiTrash className="w-5 h-5" />
+                        Remove from Cart
+                      </>
+                    )}
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleAddToCart}
+                    disabled={addingToCart}
+                    className="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/50"
+                  >
+                    {addingToCart ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      <>
+                        <HiShoppingBag className="w-5 h-5" />
+                        Add to Cart
+                      </>
+                    )}
+                  </motion.button>
+                )}
 
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -445,7 +455,6 @@ const ProductDetail = () => {
                 </motion.button>
               </div>
 
-              {/* Shipping Info */}
               <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-800/50">
                 <motion.div
                   whileHover={{ y: -2 }}
@@ -468,7 +477,6 @@ const ProductDetail = () => {
           </motion.div>
         </div>
 
-        {/* Reviews Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

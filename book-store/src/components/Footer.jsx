@@ -66,7 +66,7 @@ const Footer = () => {
             <ul className="space-y-3">
               {[
                 { path: '/about', label: 'About Us' },
-                { path: '/collections', label: 'Collections' },
+                { path: '/category', label: 'Collections' },
                 { path: '/limited-editions', label: 'Limited Editions' },
                 { path: '/signed-books', label: 'Signed Copies' },
                 { path: '/concierge', label: 'Concierge Service' },
@@ -81,74 +81,6 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </div>
-
-          {/* Customer Support */}
-          <div>
-            <h3 className="text-lg font-semibold mb-6 pb-2 border-b border-gray-700">Support</h3>
-            <ul className="space-y-3">
-              {[
-                { path: '/help', label: 'Help Center' },
-                { path: '/shipping', label: 'Shipping Policy' },
-                { path: '/returns', label: 'Returns & Exchanges' },
-                { path: '/authenticity', label: 'Authenticity Guarantee' },
-                { path: '/contact', label: 'Contact Us' },
-              ].map((link) => (
-                <li key={link.path}>
-                  <Link 
-                    to={link.path}
-                    className="text-gray-400 hover:text-white transition-colors text-sm hover:underline"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Legal & Social */}
-          <div>
-            <h3 className="text-lg font-semibold mb-6 pb-2 border-b border-gray-700">Legal</h3>
-            <ul className="space-y-3 mb-8">
-              {[
-                { path: '/privacy', label: 'Privacy Policy' },
-                { path: '/terms', label: 'Terms of Service' },
-                { path: '/cookies', label: 'Cookie Policy' },
-                { path: '/accessibility', label: 'Accessibility' },
-              ].map((link) => (
-                <li key={link.path}>
-                  <Link 
-                    to={link.path}
-                    className="text-gray-400 hover:text-white transition-colors text-sm hover:underline"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            {/* Social Media */}
-            <div>
-              <h4 className="font-semibold mb-4 text-sm">Follow Us</h4>
-              <div className="flex gap-3">
-                {[
-                  { icon: IoLogoFacebook, label: 'Facebook', href: 'https://facebook.com/profile.php?id=106649471876343&hr=1&wtsid=rdr_0FVnp4LBcywmjNrf5'},
-                  { icon: IoLogoTwitter, label: 'Twitter',  href: '#'},
-                  { icon: IoLogoInstagram, label: 'Instagram',  href: 'https://instagram.com/theestheradesina' },
-                  { icon: IoLogoYoutube, label: 'YouTube',  href: '#' },
-                ].map((social) => (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    target='_blank'
-                    className="w-10 h-10 rounded-lg bg-gray-800 hover:bg-purple-600 transition-colors flex items-center justify-center group"
-                    aria-label={social.label}
-                  >
-                    <social.icon className="w-5 h-5 text-gray-300 group-hover:text-white" />
-                  </a>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>

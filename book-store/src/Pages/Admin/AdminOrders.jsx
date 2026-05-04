@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { HiSearch, HiFilter, HiPencil, HiEye, HiX } from 'react-icons/hi';
+import { HiSearch, HiFilter, HiPencil, HiEye, HiX, HiCheckCircle } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import AdminSidebar from '../../components/AdminSidebar';
 import AdminHeader from '../../components/AdminHeader';
@@ -28,54 +28,67 @@ const AdminOrders = () => {
   };
 
   // Fetch orders
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        console.log('📦 Fetching orders with params:', { page, limit: 20, status: statusFilter });
-        const response = await orderAPI.getAllOrders({ 
-          page, 
-          limit: 20,
-          status: statusFilter || undefined
-        });
-        console.log('✅ Orders response:', response);
-        
-        const ordersData = response.data?.orders || response.orders || [];
-        const pagesData = response.data?.pagination?.pages || response.pagination?.pages || 1;
-        
-        console.log('📋 Orders fetched:', ordersData.length);
-        console.log('📄 Total pages:', pagesData);
-        
-        setOrders(ordersData);
-        setTotalPages(pagesData);
-        
-        if (ordersData.length === 0) {
-          console.warn('⚠️ No orders found');
-        }
-      } catch (error) {
-        console.error('❌ Failed to fetch orders:', error);
-        console.error('Error details:', error.message, error.status, error.body);
-        toast.error('Failed to fetch orders: ' + (error.message || 'Unknown error'));
-      } finally {
-        setLoading(false);
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      console.log('📦 Fetching orders with params:', { page, limit: 20, status: statusFilter });
+      const response = await orderAPI.getAllOrders({ 
+        page, 
+        limit: 20,
+        status: statusFilter || undefined
+      });
+      console.log('✅ Orders response:', response);
+      
+      const ordersData = response.data?.orders || response.orders || [];
+      const pagesData = response.data?.pagination?.pages || response.pagination?.pages || 1;
+      
+      console.log('📋 Orders fetched:', ordersData.length);
+      console.log('📄 Total pages:', pagesData);
+      
+      setOrders(ordersData);
+      setTotalPages(pagesData);
+      
+      if (ordersData.length === 0) {
+        console.warn('⚠️ No orders found');
       }
-    };
+    } catch (error) {
+      console.error('❌ Failed to fetch orders:', error);
+      console.error('Error details:', error.message, error.status, error.body);
+      toast.error('Failed to fetch orders: ' + (error.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchOrders();
   }, [page, statusFilter]);
 
   const handleStatusChange = async (orderId, newStatus) => {
+    const previousStatus = orders.find(o => o._id === orderId)?.status;
+    
+    // Optimistic update - update UI immediately
+    setOrders(orders.map(o => 
+      o._id === orderId ? { ...o, status: newStatus } : o
+    ));
+    
+    // Set loading state for this specific order
+    setUpdatingStatus(orderId);
+    
     try {
-      setUpdatingStatus(orderId);
+      // Make API call to update status
       await orderAPI.updateOrderStatus(orderId, newStatus);
-      toast.success('Order status updated');
+      toast.success(`Order status updated to ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`);
       
-      // Update local state
-      setOrders(orders.map(o => 
-        o._id === orderId ? { ...o, status: newStatus } : o
-      ));
+      // Refresh the order list to ensure consistency
+      await fetchOrders();
     } catch (error) {
-      toast.error('Failed to update order status');
+      // Revert on error
+      setOrders(orders.map(o => 
+        o._id === orderId ? { ...o, status: previousStatus } : o
+      ));
+      toast.error('Failed to update order status: ' + (error.message || 'Unknown error'));
+      console.error('Status update error:', error);
     } finally {
       setUpdatingStatus(null);
     }
@@ -127,6 +140,15 @@ const AdminOrders = () => {
 
     fetchProofImage();
   }, [selectedOrder]);
+
+  // Cleanup object URLs
+  useEffect(() => {
+    return () => {
+      if (proofImageDataUrl) {
+        URL.revokeObjectURL(proofImageDataUrl);
+      }
+    };
+  }, [proofImageDataUrl]);
 
   return (
     <div className="flex h-screen bg-gray-950">
@@ -199,6 +221,7 @@ const AdminOrders = () => {
                     transition={{ duration: 2, repeat: Infinity }}
                     className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full mx-auto"
                   />
+                  <p className="mt-4 text-gray-400">Loading orders...</p>
                 </div>
               ) : orders.length === 0 ? (
                 <div className="p-8 text-center text-gray-400">
@@ -238,18 +261,27 @@ const AdminOrders = () => {
                             <p className="text-cyan-400 font-semibold">₦{order.total?.toLocaleString()}</p>
                           </td>
                           <td className="px-6 py-4">
-                            <select
-                              value={order.status}
-                              onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                              disabled={updatingStatus === order._id}
-                              className={`px-3 py-1 rounded-full text-sm font-medium border ${statusColors[order.status]} bg-transparent focus:outline-none cursor-pointer`}
-                            >
-                              {statusOptions.map(status => (
-                                <option key={status} value={status} className="bg-gray-900">
-                                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                                </option>
-                              ))}
-                            </select>
+                            <div className="relative">
+                              <select
+                                value={order.status}
+                                onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                                disabled={updatingStatus === order._id}
+                                className={`px-3 py-1 rounded-full text-sm font-medium border ${statusColors[order.status]} bg-transparent focus:outline-none cursor-pointer transition-all ${
+                                  updatingStatus === order._id ? 'opacity-50 cursor-wait' : ''
+                                }`}
+                              >
+                                {statusOptions.map(status => (
+                                  <option key={status} value={status} className="bg-gray-900">
+                                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                                  </option>
+                                ))}
+                              </select>
+                              {updatingStatus === order._id && (
+                                <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-gray-900/50 rounded-full">
+                                  <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                                </div>
+                              )}
+                            </div>
                           </td>
                           <td className="px-6 py-4 text-gray-400 text-sm">
                             {new Date(order.createdAt).toLocaleDateString()}
@@ -267,29 +299,70 @@ const AdminOrders = () => {
                         </motion.tr>
                       ))}
                     </tbody>
-                  </table>
+                   </table>
                 </div>
               )}
             </motion.div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {totalPages > 1 && !loading && (
               <div className="flex justify-center gap-2 mt-6">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <motion.button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                      page === p
-                        ? 'bg-cyan-500/50 text-white border border-cyan-500'
-                        : 'bg-gray-900/50 text-gray-400 border border-gray-800/50 hover:border-cyan-500/50'
-                    }`}
-                  >
-                    {p}
-                  </motion.button>
-                ))}
+                <motion.button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    page === 1
+                      ? 'bg-gray-900/50 text-gray-500 cursor-not-allowed'
+                      : 'bg-gray-900/50 text-gray-400 border border-gray-800/50 hover:border-cyan-500/50'
+                  }`}
+                >
+                  Previous
+                </motion.button>
+                
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (page <= 3) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = page - 2 + i;
+                  }
+                  
+                  return (
+                    <motion.button
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                        page === pageNum
+                          ? 'bg-cyan-500/50 text-white border border-cyan-500'
+                          : 'bg-gray-900/50 text-gray-400 border border-gray-800/50 hover:border-cyan-500/50'
+                      }`}
+                    >
+                      {pageNum}
+                    </motion.button>
+                  );
+                })}
+                
+                <motion.button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    page === totalPages
+                      ? 'bg-gray-900/50 text-gray-500 cursor-not-allowed'
+                      : 'bg-gray-900/50 text-gray-400 border border-gray-800/50 hover:border-cyan-500/50'
+                  }`}
+                >
+                  Next
+                </motion.button>
               </div>
             )}
           </div>
@@ -378,7 +451,11 @@ const AdminOrders = () => {
                         />
                       ) : (
                         <div className="w-full h-48 bg-gray-700 rounded flex items-center justify-center">
-                          <p className="text-gray-400">Loading image...</p>
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full"
+                          />
                         </div>
                       )
                     ) : selectedOrder.proofOfPayment.match(/\.pdf$/i) ? (

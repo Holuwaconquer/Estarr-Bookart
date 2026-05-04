@@ -12,13 +12,19 @@ export const CloudinaryUpload = ({
   maxSize = 5242880, // 5MB
   folder = 'books',
   className = '',
-  children
+  children,
+  initialImages = [] // Add prop for initial images when editing
 }) => {
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadedImages, setUploadedImages] = useState([]);
+  const [uploadedImages, setUploadedImages] = useState(initialImages);
   const [error, setError] = useState('');
+
+  // Update when initialImages changes (e.g., when editing a book)
+  React.useEffect(() => {
+    setUploadedImages(initialImages);
+  }, [initialImages]);
 
   const handleFileSelect = async (e) => {
     const files = Array.from(e.target.files || []);
@@ -39,19 +45,26 @@ export const CloudinaryUpload = ({
         }
       }
 
-      let uploadedData;
+      let newImages;
       if (multiple && files.length > 1) {
-        uploadedData = await uploadMultipleImagesToCloudinary(files, { folder });
-        setUploadedImages(uploadedData);
+        newImages = await uploadMultipleImagesToCloudinary(files, { folder });
       } else {
         const imageData = await uploadImageToCloudinary(files[0], { folder });
-        uploadedData = [imageData];
-        setUploadedImages([imageData]);
+        newImages = [imageData];
       }
 
-      // Call parent callback
+      // Append new images to existing ones instead of replacing
+      const updatedImages = [...uploadedImages, ...newImages];
+      setUploadedImages(updatedImages);
+
+      // Call parent callback with all images
       if (onUpload) {
-        onUpload(multiple ? uploadedData : uploadedData[0]);
+        if (multiple) {
+          onUpload(updatedImages);
+        } else {
+          // For single upload, send only the first image
+          onUpload(updatedImages[updatedImages.length - 1]);
+        }
       }
 
       setUploadProgress(100);
@@ -70,11 +83,15 @@ export const CloudinaryUpload = ({
     }
   };
 
-  const removeImage = (index) => {
-    const newImages = uploadedImages.filter((_, i) => i !== index);
+  const removeImage = (indexToRemove) => {
+    const newImages = uploadedImages.filter((_, index) => index !== indexToRemove);
     setUploadedImages(newImages);
     if (onUpload) {
-      onUpload(multiple ? newImages : undefined);
+      if (multiple) {
+        onUpload(newImages);
+      } else {
+        onUpload(undefined);
+      }
     }
   };
 
@@ -110,8 +127,10 @@ export const CloudinaryUpload = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200"
+        onClick={() => !uploading && fileInputRef.current?.click()}
+        className={`relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200 ${
+          uploading ? 'opacity-50 cursor-wait' : ''
+        }`}
       >
         <input
           ref={fileInputRef}
@@ -132,10 +151,10 @@ export const CloudinaryUpload = ({
           <div className="flex flex-col items-center gap-4">
             <div className="flex flex-wrap gap-3 justify-center">
               {uploadedImages.map((img, idx) => (
-                <div key={idx} className="relative group">
+                <div key={`${img.url || img.public_id}-${idx}`} className="relative group">
                   <img
                     src={img.url}
-                    alt={img.alt}
+                    alt={img.alt || `Image ${idx + 1}`}
                     className="h-20 w-20 object-cover rounded-lg border border-gray-300"
                   />
                   <button
@@ -143,19 +162,27 @@ export const CloudinaryUpload = ({
                       e.stopPropagation();
                       removeImage(idx);
                     }}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    type="button"
                   >
                     <X className="w-4 h-4" />
                   </button>
+                  {idx === 0 && multiple && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-cyan-500/80 text-white text-xs px-1 py-0.5 rounded-b text-center">
+                      Main
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
             <p className="text-sm text-gray-600">
               {uploadedImages.length} image{uploadedImages.length !== 1 ? 's' : ''} uploaded
             </p>
-            <p className="text-xs text-blue-600 hover:text-blue-700">
-              Click to upload more {multiple ? 'images' : 'another image'}
-            </p>
+            {multiple && (
+              <p className="text-xs text-blue-600 hover:text-blue-700">
+                Click to upload more images
+              </p>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3">

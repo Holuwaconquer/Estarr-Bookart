@@ -246,7 +246,7 @@ const AdminDashboard = () => {
                         <select 
                           value={timeRange}
                           onChange={(e) => setTimeRange(e.target.value)}
-                          className="bg-transparent border-none focus:ring-0 text-sm text-white"
+                          className="bg-transparent border-none focus:ring-0 text-sm text-black"
                         >
                           <option value="week" className="bg-white">Last 7 days</option>
                           <option value="month" className="bg-white">Last 30 days</option>
@@ -326,7 +326,7 @@ const AdminDashboard = () => {
                               </div>
                               <div>
                                 <p className="font-semibold text-dark">{order.customer}</p>
-                                <p className="text-xs text-gray-500">{order.id} • {order.date}</p>
+                                <p className="text-xs text-gray-500">{order.date}</p>
                               </div>
                             </div>
                           </div>
@@ -395,7 +395,7 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Top Products */}
-                <motion.div
+                {/* <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.3 }}
@@ -452,7 +452,7 @@ const AdminDashboard = () => {
                       </tbody>
                     </table>
                   </div>
-                </motion.div>
+                </motion.div> */}
               </>
             )}
           </div>

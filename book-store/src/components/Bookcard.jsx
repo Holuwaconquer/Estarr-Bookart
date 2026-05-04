@@ -1,20 +1,29 @@
-import React, { useState, useEffect } from 'react'; // Add useEffect import
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { HiShoppingBag, HiHeart, HiStar, HiEye } from 'react-icons/hi';
+import { HiShoppingBag, HiHeart, HiStar, HiEye, HiTrash } from 'react-icons/hi';
 import { motion } from 'framer-motion';
 import { useCart } from '../contexts/CartContext.jsx';
 import { useWishlist } from '../contexts/WishlistContext.jsx';
-import toast from 'react-hot-toast'; // Add toast import
+import toast from 'react-hot-toast';
 
 const BookCard = ({ book = {} }) => {
-  const { addToCart } = useCart();
+  const { addToCart, removeFromCart, cart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [isHovered, setIsHovered] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
 
   // Get book ID
   const bookId = book._id || book.id;
+
+  // Check if book is in cart
+  useEffect(() => {
+    if (bookId && cart) {
+      const inCart = cart.some(item => (item.id === bookId || item._id === bookId || item.book === bookId));
+      setIsInCart(inCart);
+    }
+  }, [bookId, cart]);
 
   // Initialize isLiked based on wishlist status
   useEffect(() => {
@@ -24,8 +33,8 @@ const BookCard = ({ book = {} }) => {
   }, [bookId, isInWishlist]);
 
   const handleWishlist = (e) => {
-    e.preventDefault(); // Prevent navigation if inside a link
-    e.stopPropagation(); // Stop event bubbling
+    e.preventDefault();
+    e.stopPropagation();
     
     if (!bookId) {
       toast.error('Cannot add to wishlist: Book ID is missing');
@@ -35,7 +44,6 @@ const BookCard = ({ book = {} }) => {
     console.log('Wishlist clicked for book:', bookId, 'isLiked:', isLiked);
     
     if (isLiked) {
-      // Remove from wishlist
       removeFromWishlist(bookId);
       setIsLiked(false);
       toast.success('Removed from wishlist', {
@@ -47,7 +55,6 @@ const BookCard = ({ book = {} }) => {
         }
       });
     } else {
-      // Add to wishlist
       const added = addToWishlist(book);
       if (added) {
         setIsLiked(true);
@@ -63,7 +70,7 @@ const BookCard = ({ book = {} }) => {
     }
   };
 
-  const handleBuy = (e) => {
+  const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -74,8 +81,19 @@ const BookCard = ({ book = {} }) => {
     setTimeout(() => setIsAdding(false), 800);
   };
 
+  const handleRemoveFromCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setIsAdding(true);
+    removeFromCart(bookId);
+    toast.success(`${book.title || 'Book'} removed from cart!`);
+    
+    setTimeout(() => setIsAdding(false), 800);
+  };
+
   // Fix the conditional rendering for discount badge
-  const discountBadge = book.discount ? (
+  const discountBadge = book.discount && book.discount > 0 ? (
     <span className="px-3 py-1.5 bg-gradient-to-r from-red-500/90 to-pink-500/90 text-white text-xs font-semibold rounded-full shadow-lg">
       {book.discount}% OFF
     </span>
@@ -90,7 +108,7 @@ const BookCard = ({ book = {} }) => {
       onMouseLeave={() => setIsHovered(false)}
       className="group relative"
     >
-      <div className="relative bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-xl border border-gray-800/50 rounded-2xl hover:border-cyan-500/30 transition-all duration-300 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 backdrop-blur-xl border border-gray-800/50 rounded-2xl hover:border-cyan-500/30 transition-all duration-300 overflow-hidden">
         {/* Premium Badges */}
         <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
           {book.edition && (
@@ -144,26 +162,49 @@ const BookCard = ({ book = {} }) => {
                 animate={{ opacity: 1 }}
                 className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-center justify-center gap-2"
               >
-                <motion.button
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.1 }}
-                  onClick={handleBuy}
-                  disabled={isAdding}
-                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2"
-                >
-                  {isAdding ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <HiShoppingBag className="w-4 h-4" />
-                      Add to Cart
-                    </>
-                  )}
-                </motion.button>
+                {isInCart ? (
+                  <motion.button
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.1 }}
+                    onClick={handleRemoveFromCart}
+                    disabled={isAdding}
+                    className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-red-500/25 transition-all flex items-center gap-2"
+                  >
+                    {isAdding ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Removing...
+                      </>
+                    ) : (
+                      <>
+                        <HiTrash className="w-4 h-4" />
+                        Remove
+                      </>
+                    )}
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.1 }}
+                    onClick={handleAddToCart}
+                    disabled={isAdding}
+                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2"
+                  >
+                    {isAdding ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      <>
+                        <HiShoppingBag className="w-4 h-4" />
+                        Add to Cart
+                      </>
+                    )}
+                  </motion.button>
+                )}
                 <Link 
                   to={`/product/${bookId}`}
                   className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-sm font-medium text-white hover:bg-white/20 transition-colors flex items-center gap-2"
@@ -198,7 +239,7 @@ const BookCard = ({ book = {} }) => {
             <div>
               <div className="text-xs text-gray-500 mb-1">Price</div>
               <div className="flex items-baseline gap-2">
-                {book.discount ? (
+                {book.discount && book.discount > 0 ? (
                   <>
                     <span className="text-lg font-bold text-white">
                       ₦{new Intl.NumberFormat('en-NG', {
@@ -224,29 +265,54 @@ const BookCard = ({ book = {} }) => {
               </div>
             </div>
 
-            {/* Add to Cart Button */}
-            <motion.button
-              onClick={handleBuy}
-              disabled={isAdding}
-              whileTap={{ scale: 0.95 }}
-              className={`px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2 transition-all duration-200 ${
-                isAdding
-                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                  : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25'
-              }`}
-            >
-              {isAdding ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Added
-                </>
-              ) : (
-                <>
-                  <HiShoppingBag className="w-4 h-4" />
-                  Add
-                </>
-              )}
-            </motion.button>
+            {/* Add/Remove Cart Button */}
+            {isInCart ? (
+              <motion.button
+                onClick={handleRemoveFromCart}
+                disabled={isAdding}
+                whileTap={{ scale: 0.95 }}
+                className={`px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2 transition-all duration-200 ${
+                  isAdding
+                    ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    : 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:shadow-lg hover:shadow-red-500/25'
+                }`}
+              >
+                {isAdding ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Removing
+                  </>
+                ) : (
+                  <>
+                    <HiTrash className="w-4 h-4" />
+                    Remove
+                  </>
+                )}
+              </motion.button>
+            ) : (
+              <motion.button
+                onClick={handleAddToCart}
+                disabled={isAdding}
+                whileTap={{ scale: 0.95 }}
+                className={`px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2 transition-all duration-200 ${
+                  isAdding
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                    : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25'
+                }`}
+              >
+                {isAdding ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Adding
+                  </>
+                ) : (
+                  <>
+                    <HiShoppingBag className="w-4 h-4" />
+                    Add
+                  </>
+                )}
+              </motion.button>
+            )}
           </div>
 
           {/* Features */}

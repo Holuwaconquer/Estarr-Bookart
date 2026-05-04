@@ -98,7 +98,7 @@ const Navbar = () => {
                 whileHover={{ scale: 1.05 }}
                 className="relative"
               >
-                <div className="w-8 h-8 p-1 md:w-12 md:h-12 bg-white rounded flex items-center justify-center">
+                <div className="w-10 h-10 p-1 md:w-12 md:h-12 bg-white rounded flex items-center justify-center">
                   <img 
                     src={Estarr} 
                     className='w-full h-full object-contain drop-shadow-lg' 
@@ -109,7 +109,7 @@ const Navbar = () => {
               </motion.div>
               <div className="flex flex-col">
                 <motion.h1 
-                  className="md:text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
+                  className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
                   whileHover={{ scale: 1.02 }}
                 >
                   EStarr Bookart

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HiPlus, HiPencil, HiTrash, HiSearch, HiFilter, HiEye, HiX } from 'react-icons/hi';
@@ -15,6 +15,7 @@ const AdminProducts = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
   const [page, setPage] = useState(1);
@@ -33,8 +34,8 @@ const AdminProducts = () => {
     publishDate: '',
     pages: '',
     language: 'English',
-    images: [],  // Changed to array for multiple images
-    image: '' // Keep for backward compatibility
+    images: [],
+    image: ''
   });
 
   // Default categories (will be replaced by API categories)
@@ -45,6 +46,20 @@ const AdminProducts = () => {
     { _id: 'temp-4', name: 'Self-Help' },
     { _id: 'temp-5', name: 'Science' }
   ];
+
+  // Debounce search query - only update after user stops typing for 500ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Reset page when search query changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchQuery]);
 
   // Fetch categories from API
   useEffect(() => {
@@ -61,7 +76,7 @@ const AdminProducts = () => {
     fetchCategories();
   }, []);
 
-  // Fetch books
+  // Fetch books - only runs when page or debouncedSearchQuery changes
   useEffect(() => {
     const fetchBooks = async () => {
       try {
@@ -69,19 +84,21 @@ const AdminProducts = () => {
         const response = await bookAPI.getAllBooks({ 
           page, 
           limit: 10,
-          search: searchQuery 
+          search: debouncedSearchQuery 
         });
         setBooks(response.data?.books || []);
         setTotalPages(response.data?.pagination?.pages || 1);
       } catch (error) {
+        console.error('Fetch error:', error);
         toast.error('Failed to fetch books');
+        setBooks([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchBooks();
-  }, [page, searchQuery]);
+  }, [page, debouncedSearchQuery]);
 
   const handleAddBook = () => {
     setEditingBook(null);
@@ -107,22 +124,36 @@ const AdminProducts = () => {
 
   const handleEditBook = (book) => {
     setEditingBook(book);
+    
+    // Format existing images for the CloudinaryUpload component
+    const existingImages = [];
+    if (book.images && book.images.length > 0) {
+      book.images.forEach(img => {
+        existingImages.push({ url: typeof img === 'string' ? img : img.url });
+      });
+    } else if (book.image) {
+      existingImages.push({ url: book.image });
+    }
+    
     setFormData({
       ...book,
-      images: book.images || (book.image ? [{ url: book.image }] : [])
+      images: existingImages,
+      image: book.image || (existingImages[0]?.url || '')
     });
     setShowModal(true);
   };
 
   const handleImagesUpload = (uploadedImages) => {
-    // Handle both single and multiple uploads
+    // uploadedImages can be a single image object or an array of images
     if (Array.isArray(uploadedImages)) {
+      // When multiple images are uploaded, use the array directly
       setFormData(prev => ({
         ...prev,
         images: uploadedImages,
-        image: uploadedImages[0]?.url || '' // Set first as main image
+        image: uploadedImages[0]?.url || prev.image
       }));
     } else if (uploadedImages) {
+      // When a single image is uploaded, append to existing images
       setFormData(prev => ({
         ...prev,
         images: [...prev.images, uploadedImages],
@@ -134,10 +165,8 @@ const AdminProducts = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Prepare data for submission
       const submitData = {
         ...formData,
-        // Ensure we send images in the correct format
         images: formData.images.map(img => typeof img === 'string' ? img : img.url),
         image: formData.images.length > 0 
           ? (typeof formData.images[0] === 'string' ? formData.images[0] : formData.images[0].url)
@@ -152,9 +181,15 @@ const AdminProducts = () => {
         toast.success('Book created successfully');
       }
       setShowModal(false);
-      // Refresh books list
-      const response = await bookAPI.getAllBooks({ page, limit: 10 });
+      
+      // Refresh books list (keep current page and search)
+      const response = await bookAPI.getAllBooks({ 
+        page, 
+        limit: 10,
+        search: debouncedSearchQuery 
+      });
       setBooks(response.data?.books || []);
+      setTotalPages(response.data?.pagination?.pages || 1);
     } catch (error) {
       toast.error(error.message || 'Failed to save book');
     }
@@ -165,11 +200,24 @@ const AdminProducts = () => {
       try {
         await bookAPI.deleteBook(bookId);
         toast.success('Book deleted successfully');
-        setBooks(books.filter(b => b._id !== bookId));
+        
+        // Refresh the current page after deletion
+        const response = await bookAPI.getAllBooks({ 
+          page, 
+          limit: 10,
+          search: debouncedSearchQuery 
+        });
+        setBooks(response.data?.books || []);
+        setTotalPages(response.data?.pagination?.pages || 1);
       } catch (error) {
         toast.error('Failed to delete book');
       }
     }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setDebouncedSearchQuery('');
   };
 
   return (
@@ -219,12 +267,17 @@ const AdminProducts = () => {
                   type="text"
                   placeholder="Search books by title, author..."
                   value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setPage(1);
-                  }}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-100/50 border border-gray-300/50 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-10 py-3 bg-gray-100/50 border border-gray-300/50 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={clearSearch}
+                    className="absolute right-4 top-3.5 text-gray-500 hover:text-gray-700"
+                  >
+                    <HiX className="w-5 h-5" />
+                  </button>
+                )}
               </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -234,6 +287,19 @@ const AdminProducts = () => {
                 Filter
               </motion.button>
             </motion.div>
+
+            {/* Search Info */}
+            {debouncedSearchQuery && (
+              <div className="mb-4 text-sm text-gray-600">
+                Showing results for: <span className="font-semibold text-cyan-600">"{debouncedSearchQuery}"</span>
+                <button
+                  onClick={clearSearch}
+                  className="ml-2 text-cyan-500 hover:text-cyan-600 underline"
+                >
+                  Clear search
+                </button>
+              </div>
+            )}
 
             {/* Table */}
             <motion.div
@@ -249,10 +315,27 @@ const AdminProducts = () => {
                     transition={{ duration: 2, repeat: Infinity }}
                     className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full mx-auto"
                   />
+                  <p className="mt-4 text-gray-600">Loading books...</p>
                 </div>
               ) : books.length === 0 ? (
-                <div className="p-8 text-center text-gray-600">
-                  No books found
+                <div className="p-8 text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                    <HiSearch className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">No books found</h3>
+                  <p className="text-gray-500">
+                    {debouncedSearchQuery 
+                      ? `No results found for "${debouncedSearchQuery}". Try a different search term.`
+                      : 'Your inventory is empty. Click "Add New Book" to get started.'}
+                  </p>
+                  {debouncedSearchQuery && (
+                    <button
+                      onClick={clearSearch}
+                      className="mt-4 text-cyan-500 hover:text-cyan-600 font-medium underline"
+                    >
+                      Clear search
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -265,7 +348,7 @@ const AdminProducts = () => {
                         <th className="px-6 py-4 text-left text-sm text-gray-700 font-medium">Stock</th>
                         <th className="px-6 py-4 text-left text-sm text-gray-700 font-medium">Category</th>
                         <th className="px-6 py-4 text-center text-sm text-gray-700 font-medium">Actions</th>
-                      </tr>
+                       </tr>
                     </thead>
                     <tbody>
                       {books.map((book) => (
@@ -285,16 +368,16 @@ const AdminProducts = () => {
                                 <p className="text-xs text-gray-500">ID: {book._id.slice(0, 8)}</p>
                               </div>
                             </div>
-                          </td>
+                           </td>
                           <td className="px-6 py-4 text-gray-700">{book.author}</td>
-                          <td className="px-6 py-4 text-cyan-400 font-semibold">₦{book.price?.toLocaleString()}</td>
+                          <td className="px-6 py-4 text-cyan-600 font-semibold">₦{book.price?.toLocaleString()}</td>
                           <td className="px-6 py-4">
                             <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              book.stock > 10 ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
+                              book.stock > 10 ? 'bg-green-500/20 text-green-600' : 'bg-yellow-500/20 text-yellow-600'
                             }`}>
                               {book.stock} units
                             </span>
-                          </td>
+                           </td>
                           <td className="px-6 py-4 text-gray-700">{book.category}</td>
                           <td className="px-6 py-4 text-center">
                             <div className="flex justify-center gap-2">
@@ -302,7 +385,7 @@ const AdminProducts = () => {
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleEditBook(book)}
-                                className="p-2 hover:bg-blue-500/20 rounded transition-colors text-blue-400"
+                                className="p-2 hover:bg-blue-500/20 rounded transition-colors text-blue-600"
                               >
                                 <HiPencil className="w-4 h-4" />
                               </motion.button>
@@ -310,38 +393,79 @@ const AdminProducts = () => {
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleDeleteBook(book._id)}
-                                className="p-2 hover:bg-red-500/20 rounded transition-colors text-red-400"
+                                className="p-2 hover:bg-red-500/20 rounded transition-colors text-red-600"
                               >
                                 <HiTrash className="w-4 h-4" />
                               </motion.button>
                             </div>
-                          </td>
+                           </td>
                         </motion.tr>
                       ))}
                     </tbody>
-                  </table>
+                   </table>
                 </div>
               )}
             </motion.div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {totalPages > 1 && !loading && books.length > 0 && (
               <div className="flex justify-center gap-2 mt-6">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <motion.button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                      page === p
-                        ? 'bg-cyan-500/50 text-white border border-cyan-500'
-                        : 'bg-gray-200/50 text-gray-700 border border-gray-300/50 hover:border-cyan-500/50'
-                    }`}
-                  >
-                    {p}
-                  </motion.button>
-                ))}
+                <motion.button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    page === 1
+                      ? 'bg-gray-200/50 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-200/50 text-gray-700 hover:border-cyan-500/50'
+                  }`}
+                >
+                  Previous
+                </motion.button>
+                
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (page <= 3) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = page - 2 + i;
+                  }
+                  
+                  return (
+                    <motion.button
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                        page === pageNum
+                          ? 'bg-cyan-500 text-white'
+                          : 'bg-gray-200/50 text-gray-700 hover:border-cyan-500/50'
+                      }`}
+                    >
+                      {pageNum}
+                    </motion.button>
+                  );
+                })}
+                
+                <motion.button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    page === totalPages
+                      ? 'bg-gray-200/50 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-200/50 text-gray-700 hover:border-cyan-500/50'
+                  }`}
+                >
+                  Next
+                </motion.button>
               </div>
             )}
           </div>
@@ -492,6 +616,7 @@ const AdminProducts = () => {
                   onUpload={handleImagesUpload}
                   multiple={true}
                   folder="books"
+                  initialImages={formData.images}
                   className="mb-4"
                 >
                   Upload book cover and preview images
@@ -499,13 +624,13 @@ const AdminProducts = () => {
                 
                 {/* Display uploaded images */}
                 {formData.images.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-gray-800/30 rounded-lg">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-lg">
                     {formData.images.map((img, idx) => (
                       <div key={idx} className="relative group">
                         <img
                           src={typeof img === 'string' ? img : img.url}
                           alt={`Book ${idx}`}
-                          className="w-full h-24 object-cover rounded border border-gray-700"
+                          className="w-full h-24 object-cover rounded border border-gray-300"
                         />
                         <button
                           type="button"
@@ -520,8 +645,8 @@ const AdminProducts = () => {
                           <HiX className="w-4 h-4" />
                         </button>
                         {idx === 0 && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-cyan-500/50 text-xs text-white px-2 py-1 rounded-b">
-                            Main Image
+                          <div className="absolute bottom-0 left-0 right-0 bg-cyan-500/80 text-white text-xs px-2 py-1 rounded-b">
+                            Main
                           </div>
                         )}
                       </div>
@@ -530,24 +655,13 @@ const AdminProducts = () => {
                 )}
               </div>
 
-              {/* ISBN */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">ISBN</label>
-                <input
-                  type="text"
-                  value={formData.isbn}
-                  onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white focus:outline-none focus:border-cyan-500/50"
-                />
-              </div>
-
               {/* Buttons */}
               <div className="flex gap-3 justify-end">
                 <motion.button
                   onClick={() => setShowModal(false)}
                   whileHover={{ scale: 1.05 }}
                   type="button"
-                  className="px-6 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-all"
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all"
                 >
                   Cancel
                 </motion.button>
