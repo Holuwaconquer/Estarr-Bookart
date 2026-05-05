@@ -41,6 +41,13 @@ import ProtectedRouteForAuth from './components/ProtectedRouteForAuth'
 import AdminRoute from './components/AdminRoute'
 import UserRoleChecker from './components/UserRoleChecker'
 import AboutUs from './Pages/AboutUs'
+import BlogPost from './Pages/BlogPost'
+import PrivacyPolicy from './Pages/PrivacyPolicy';
+import TermsOfService from './Pages/TermsOfService';
+import ReturnsPolicy from './Pages/ReturnsPolicy';
+import ShippingInfo from './Pages/ShippingInfo';
+import Faq from './Pages/Faq';
+import Contact from './Pages/Contact';
 
 const App = () => {
   const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE || 'admin'
@@ -56,9 +63,15 @@ const App = () => {
         <Route path='category/:category' element={<CategoryPage />} />
         <Route path='product/:id' element={<ProductDetail />} />
         <Route path='blog' element={<BlogPage />} />
-        <Route path='blog/:slug' element={<BlogDetail />} />
-        <Route path='blog/post/:id' element={<BlogDetail />} />
+        <Route path='blog/:slug' element={<BlogPost />} />
         <Route path="/about" element={<AboutUs />} />
+
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/returns-policy" element={<ReturnsPolicy />} />
+        <Route path="/shipping-info" element={<ShippingInfo />} />
+        <Route path="/faq" element={<Faq />} />
+        <Route path="/contact" element={<Contact />} />
       </Route>
 
       {/* Authentication - Only for unauthenticated users */}

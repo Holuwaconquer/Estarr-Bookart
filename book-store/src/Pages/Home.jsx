@@ -27,12 +27,12 @@ const Home = () => {
           />
           
           {/* Gradient Overlay (combining your original gradient with the image) */}
-          <div className="absolute inset-0 z-1 bg-gradient-to-r from-red-500/80 to-orange-500/80" />
+          <div className="absolute inset-0 z-1 bg-gradient-to-r from-purple-500/80 to-purple-500/80" />
           
           {/* Content */}
           <div className="relative z-10 text-center">
             <h1 className='text-2xl font-bold'>Building readers</h1>
-            <p className='font-semibold text-[18px]'>Estarr BookArt Online Store</p>
+            <p className='font-semibold text-[18px]'>EStarr BookArt Online Store</p>
           </div>
         </div>
         {/* Main content area */}

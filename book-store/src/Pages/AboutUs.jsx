@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -29,6 +29,13 @@ const AboutUs = () => {
     { icon: FiTrendingUp, label: 'Books Sold', value: '50,000+', color: 'from-green-500 to-emerald-500' },
   ];
 
+  useEffect(() => {
+    document.title = 'About Us | EStarr Bookart Hub';
+    window.scrollTo(0, 0);
+
+  }, [])
+  
+
   const values = [
     {
       icon: HiOutlineLightBulb,
@@ -58,7 +65,7 @@ const AboutUs = () => {
 
   const team = [
     {
-      name: 'Esther Adeleke',
+      name: 'Esther Adesina',
       role: 'Founder & CEO',
       bio: 'Passionate about fostering a reading culture and empowering minds through literature.',
       image: null,

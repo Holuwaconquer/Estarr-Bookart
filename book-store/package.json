@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-sitemap": "node generateSitemap.js",
+    "generate-og": "node generateOgImages.js",
+    "build": "vite build"
   },
   "dependencies": {
     "@lottiefiles/dotlottie-react": "^0.17.1",
@@ -16,6 +18,8 @@
     "@studio-freight/lenis": "^1.0.42",
     "@tailwindcss/vite": "^4.1.13",
     "axios": "^1.12.2",
+    "canvas": "^3.2.3",
+    "date-fns": "^4.1.0",
     "formik": "^2.4.6",
     "framer-motion": "^12.27.0",
     "jwt-decode": "^4.0.0",

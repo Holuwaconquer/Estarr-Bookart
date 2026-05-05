@@ -1,0 +1,37 @@
+# SEO Configuration for EStarr Bookart Hub
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout
+Disallow: /cart
+
+# Sitemap locations
+Sitemap: https://estarrbookart..com.ng/sitemap.xml
+Sitemap: https://estarrbookart..com.ng/blog-sitemap.xml
+
+# Crawl delay for heavy crawlers
+Crawl-delay: 1
+
+# Host
+Host: https://estarrbookart.com.ng
+
+# Allow Googlebot to crawl everything
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0.5
+
+# Allow Bingbot
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 0.5
+
+# Block AI bots (optional)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /

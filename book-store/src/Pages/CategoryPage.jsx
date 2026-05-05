@@ -150,6 +150,9 @@ const CategoryPage = () => {
 
   // Fetch categories and books from API
   useEffect(() => {
+    document.title = 'Books Page | EStarr Bookart Hub';
+    window.scrollTo(0, 0);
+
     const fetchData = async () => {
       try {
         setLoadingBooks(true);

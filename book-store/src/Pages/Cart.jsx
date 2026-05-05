@@ -20,6 +20,11 @@ const Cart = () => {
   const { items, removeFromCart, clearCart, totalItems, updateQuantity } = useCart();
   const { authenticated } = useContext(AuthContext);
 
+  useEffect(() => {
+    document.title = 'Shopping Cart | EStarr Bookart Hub';
+    window.scrollTo(0, 0);
+  }, [])
+  
   // Debug: Log items whenever they change
   useEffect(() => {
     if (items && items.length > 0) {

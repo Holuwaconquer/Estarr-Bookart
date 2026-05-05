@@ -138,7 +138,7 @@ const FlashDeals = () => {
       <div className="max-w-7xl mx-auto">
         <div className="rounded-[4px]">
           {/* Header */}
-          <div className="bg-gradient-to-r p-4 rounded-tr-[4px] rounded-tl-[4px] from-red-500 to-orange-500 flex md:flex-row flex-wrap items-center justify-between md:gap-6 mb-6">
+          <div className="bg-gradient-to-r px-4 py-2 rounded-tr-[4px] rounded-tl-[4px] from-purple-500 to-purple-800 flex md:flex-row flex-wrap items-center justify-between md:gap-6 mb-6">
             <div className="flex items-center gap-2">
               <motion.div
                 animate={{ scale: [1, 1.1, 1] }}

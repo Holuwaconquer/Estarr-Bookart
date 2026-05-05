@@ -66,20 +66,35 @@ const Footer = () => {
             <ul className="space-y-3">
               {[
                 { path: '/about', label: 'About Us' },
-                { path: '/category', label: 'Collections' },
-                { path: '/limited-editions', label: 'Limited Editions' },
-                { path: '/signed-books', label: 'Signed Copies' },
-                { path: '/concierge', label: 'Concierge Service' },
+                { path: '/category', label: 'Collections' }
               ].map((link) => (
                 <li key={link.path}>
                   <Link 
                     to={link.path}
-                    className="text-gray-400 hover:text-white transition-colors text-sm hover:underline"
+                    className="text-gray-300 hover:text-white transition-colors text-sm hover:underline"
                   >
                     {link.label}
                   </Link>
                 </li>
               ))}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-bold mb-4 pb-2 border-b border-gray-700">Legal</h4>
+            <ul className="space-y-2 text-sm text-gray-300">
+              <li><Link to="/privacy-policy" className="hover:text-cyan-400 transition">Privacy Policy</Link></li>
+              <li><Link to="/terms-of-service" className="hover:text-cyan-400 transition">Terms of Service</Link></li>
+              <li><Link to="/returns-policy" className="hover:text-cyan-400 transition">Returns Policy</Link></li>
+              <li><Link to="/shipping-info" className="hover:text-cyan-400 transition">Shipping Info</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold mb-4 pb-2 border-b border-gray-700">Support</h4>
+            <ul className="space-y-2 text-sm text-gray-300">
+              <li><Link to="/faq" className="hover:text-cyan-400 transition">FAQ</Link></li>
+              <li><Link to="/contact" className="hover:text-cyan-400 transition">Contact Us</Link></li>
+              <li><Link to="/about" className="hover:text-cyan-400 transition">About Us</Link></li>
             </ul>
           </div>
         </div>

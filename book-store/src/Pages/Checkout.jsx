@@ -84,6 +84,11 @@ const Checkout = () => {
     }
     return savings;
   }, 0) || 0;
+  useEffect(() => {
+    document.title = 'Checkout Page | EStarr Bookart Hub';
+    window.scrollTo(0, 0);
+  }, [])
+  
 
   // Fetch bank accounts on mount
   useEffect(() => {

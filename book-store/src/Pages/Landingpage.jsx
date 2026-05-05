@@ -81,6 +81,9 @@ const Landingpage = () => {
 
   // Fetch books on mount and organize them
   useEffect(() => {
+    document.title = 'EStarr BookartLanding Page | EStarr Bookart Hub';
+    window.scrollTo(0, 0);
+
     const fetchBooks = async () => {
       try {
         setLoading(true);
@@ -335,7 +338,7 @@ const Landingpage = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleAddToCart}
                 disabled={isProcessing}
-                className="flex-1 text-[12px] md:text-[16px] bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                className="flex-1 text-[12px] md:text-[16px] bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
               >
                 {isProcessing ? (
                   <>
@@ -387,7 +390,7 @@ const Landingpage = () => {
                 onClick={() => handleCategorySelect('')}
                 className={`flex-shrink-0 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
                   !selectedCategory
-                    ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg'
+                    ? 'bg-gradient-to-r from-purple-500 to-purple-800 text-white shadow-lg'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -402,7 +405,7 @@ const Landingpage = () => {
                   onClick={() => handleCategorySelect(category.name)}
                   className={`flex-shrink-0 flex items-center gap-2 px-5 py-3 rounded-full font-semibold transition-all duration-300 ${
                     selectedCategory === category.name
-                      ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg'
+                      ? 'bg-gradient-to-r from-purple-500 to-purple-800 text-white shadow-lg'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -466,7 +469,7 @@ const Landingpage = () => {
       {recentlyViewed.length > 0 && (
         <section className="py-4 px-4 bg-white">
           <div className="max-w-7xl mx-auto">
-            <div className="bg-gradient-to-r p-4 rounded-tr-[4px] rounded-tl-[4px] from-red-500 to-orange-500 flex md:flex-row flex-wrap items-center justify-between md:gap-6 mb-6">
+            <div className="bg-gradient-to-r px-4 py-2 rounded-tr-[4px] rounded-tl-[4px] from-purple-500 to-purple-800 flex md:flex-row flex-wrap items-center justify-between md:gap-6 mb-6">
               <h2 className="text-[17px] md:text-3xl font-bold text-gray-200">
                 <span className="text-white">
                   Recently Viewed
