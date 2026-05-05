@@ -79,14 +79,13 @@ const Contact = () => {
     <>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         {/* Hero Section */}
-        <div className="relative bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-16">
-          <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative text-black py-16">
           <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
             <div className="inline-flex p-3 bg-white/20 rounded-2xl mb-6">
               <HiMail className="w-12 h-12" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Contact Us</h1>
-            <p className="text-xl text-white/80">We'd love to hear from you</p>
+            <p className="text-xl text-gray-600">We'd love to hear from you</p>
           </div>
         </div>
 

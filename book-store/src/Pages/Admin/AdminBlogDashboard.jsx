@@ -46,11 +46,11 @@ const AdminBlogDashboard = () => {
         featured: true,
         published: true,
         views: 1234,
-        createdAt: new Date('2024-01-15')
+        createdAt: new Date('2026-01-15')
       },
       {
         _id: '2',
-        title: 'Top 10 Books of 2024',
+        title: 'Top 10 Books of 2026',
         excerpt: 'Our curated list of must-read books this year.',
         content: 'Full content here...',
         category: 'recommendations',
@@ -59,7 +59,7 @@ const AdminBlogDashboard = () => {
         featured: false,
         published: true,
         views: 892,
-        createdAt: new Date('2024-01-10')
+        createdAt: new Date('2026-01-10')
       }
     ];
     

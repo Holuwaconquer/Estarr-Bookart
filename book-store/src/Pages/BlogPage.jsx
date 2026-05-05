@@ -78,10 +78,10 @@ const BlogPage = () => {
     <>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-16">
+        <div className="text-black py-16">
           <div className="max-w-7xl mx-auto px-4 text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Blog</h1>
-            <p className="text-xl text-white/80 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Discover articles, book reviews, and literary insights from the EStarr Bookart team
             </p>
           </div>
