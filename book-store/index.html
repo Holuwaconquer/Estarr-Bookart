@@ -46,34 +46,39 @@
     <meta name="theme-color" content="#3B82F6" />
     <meta name="msapplication-TileColor" content="#3B82F6" />
     
-    <!-- Fonts - CORRECTED -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     
     <!-- Fallback font if Google Fonts fails -->
     <style>
-      /* Fallback font if Google Fonts doesn't load */
       body {
         font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       }
     </style>
     
-    <!-- Preload Critical Assets -->
-    <link rel="preload" href="/estarr.jpeg" as="image" />
-    
     <!-- DNS Prefetch -->
     <link rel="dns-prefetch" href="https://connect.facebook.net" />
     <link rel="dns-prefetch" href="https://accounts.google.com" />
     
-    <!-- Fallback for older browsers -->
+    <!-- ===== FAVICONS - ORDER MATTERS ===== -->
+    <!-- SVG (modern browsers) -->
+    <link rel="icon" type="image/svg+xml" href="/estarr.jpeg" />
+    
+    <!-- ICO (older browsers) -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     
-    <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- PNG (most browsers) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     
-    <!-- Note: Remove site.webmanifest if it's causing errors, or ensure it exists -->
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    
+    <!-- Android/Chrome -->
     <link rel="manifest" href="/site.webmanifest" />
+    <meta name="msapplication-TileImage" content="/android-chrome-192x192.png" />
     
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
