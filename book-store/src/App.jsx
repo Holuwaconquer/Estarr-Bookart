@@ -48,6 +48,7 @@ import ReturnsPolicy from './Pages/ReturnsPolicy';
 import ShippingInfo from './Pages/ShippingInfo';
 import Faq from './Pages/Faq';
 import Contact from './Pages/Contact';
+import BrandPage from './Pages/BrandPage'
 
 const App = () => {
   const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE || 'admin'
@@ -72,6 +73,7 @@ const App = () => {
         <Route path="/shipping-info" element={<ShippingInfo />} />
         <Route path="/faq" element={<Faq />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/brand" element={<BrandPage />} />
       </Route>
 
       {/* Authentication - Only for unauthenticated users */}

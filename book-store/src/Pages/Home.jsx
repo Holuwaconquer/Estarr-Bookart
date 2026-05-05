@@ -5,13 +5,23 @@ import RightReserved from '../components/RightReserved'
 import Navbar from '../components/Navbar'
 
 const Home = () => {
+  document.title = "EStarr Bookart Hub | Premium Bookstore in Nigeria | Buy Books Online";
+  
+  let metaDescription = document.querySelector('meta[name="description"]');
+  if (metaDescription) {
+    metaDescription.setAttribute("content", "EStarr Bookart Hub - Nigeria's premier bookstore. Shop fiction, non-fiction, educational books online with free delivery across Nigeria on orders over ₦5,000.");
+  } else {
+    metaDescription = document.createElement('meta');
+    metaDescription.name = "description";
+    metaDescription.content = "EStarr Bookart Hub - Nigeria's premier bookstore. Shop fiction, non-fiction, educational books online with free delivery across Nigeria on orders over ₦5,000.";
+    document.head.appendChild(metaDescription);
+  }
 
   return (
       <div className='min-h-screen bg-gradient-to-b from-gray-50 to-white transition-all duration-300'>
         {/* Promotional banner before navbar */}
         {/* <PromoBar /> */}
         
-        {/* Your existing Navbar component */}
         <Navbar />
 
         <div className='flex flex-col text-white py-6 px-4 md:flex-row flex-wrap items-center justify-center relative overflow-hidden'>
@@ -31,7 +41,7 @@ const Home = () => {
           
           {/* Content */}
           <div className="relative z-10 text-center">
-            <h1 className='text-2xl font-bold'>Building readers</h1>
+            <h2 className='text-2xl font-bold'>Building readers</h2>
             <p className='font-semibold text-[18px]'>EStarr BookArt Online Store</p>
           </div>
         </div>

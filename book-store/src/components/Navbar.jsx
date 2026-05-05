@@ -167,16 +167,16 @@ const Navbar = () => {
             </nav>
 
             {/* Right Actions */}
-            <div className="flex items-center md:gap-2">
+            <div className="flex items-center gap-0 md:gap-2">
               {/* Search */}
-              <motion.button
+              {/* <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsSearchOpen(true)}
                 className=" transition-all duration-300 group"
                 aria-label="Search"
               >
                 <IoSearchOutline className="w-5 h-5 text-gray-400  transition-colors" />
-              </motion.button>
+              </motion.button> */}
 
               {/* Cart */}
               <Link to="/cart" className="relative group" aria-label="Cart">
@@ -190,7 +190,7 @@ const Navbar = () => {
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg"
+                    className="absolute -top-1 -right-0 md-top-2 md:-right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg"
                   >
                     {totalItems}
                   </motion.span>
@@ -308,7 +308,7 @@ const Navbar = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-start justify-center pt-32"
+            className="fixed inset-0 bg-black/50 backdrop-blur-xl z-50 flex items-start justify-center pt-32"
             onClick={() => setIsSearchOpen(false)}
           >
             <motion.div

@@ -361,7 +361,17 @@ const Landingpage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-
+      <div className="text-center mb-12 ">
+        <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+          EStarr Bookart Hub
+        </h1>
+        <p className="text-xl text-gray-600 mt-4">
+          Also known as <strong>Estarr Bookart</strong> or <strong>Esther Bookart</strong> - Your Trusted Bookstore in Nigeria
+        </p>
+        <p className="text-gray-500 mt-2">
+          Founded by Esther Adeleke | Quality Books | Free Delivery Across Nigeria
+        </p>
+      </div>
       {/* Featured Books with Horizontal Category Filter */}
       <section className="py-4 px-4 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto">

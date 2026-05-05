@@ -5,10 +5,11 @@ Disallow: /admin/
 Disallow: /api/
 Disallow: /checkout
 Disallow: /cart
+Allow: /brand
 
 # Sitemap locations
-Sitemap: https://estarrbookart..com.ng/sitemap.xml
-Sitemap: https://estarrbookart..com.ng/blog-sitemap.xml
+Sitemap: https://estarrbookart.com.ng/sitemap.xml
+Sitemap: https://estarrbookart.com.ng/blog-sitemap.xml
 
 # Crawl delay for heavy crawlers
 Crawl-delay: 1
