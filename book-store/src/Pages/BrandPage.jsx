@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import useCanonicalUrl from '../../useCanonicalUrl';
 
 const BrandPage = () => {
+    useCanonicalUrl()
   useEffect(() => {
     document.title = "About Estarr Bookart - Also Known as Esther Bookart | EStarr Bookart Hub";
     

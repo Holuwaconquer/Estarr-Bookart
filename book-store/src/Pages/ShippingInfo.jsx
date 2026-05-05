@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { HiTruck, HiClock, HiCash, HiShieldCheck, HiMap } from 'react-icons/hi';
+import useCanonicalUrl from '../../useCanonicalUrl';
 
 const ShippingInfo = () => {
+  useCanonicalUrl()
   useEffect(() => {
     document.title = 'Shipping Information | EStarr Bookart Hub';
     window.scrollTo(0, 0);

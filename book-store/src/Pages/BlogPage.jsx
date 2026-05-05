@@ -4,8 +4,10 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { HiSearch, HiCalendar, HiUser, HiChevronLeft, HiChevronRight } from 'react-icons/hi';
 import { getAllBlogPosts, getAllCategories, searchPosts } from '../data/blogData';
+import useCanonicalUrl from '../../useCanonicalUrl';
 
 const BlogPage = () => {
+  useCanonicalUrl()
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);

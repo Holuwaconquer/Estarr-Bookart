@@ -4,8 +4,10 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { HiCalendar, HiUser, HiTag, HiArrowLeft, HiHeart, HiShare, HiBookOpen } from 'react-icons/hi';
 import { getBlogPostBySlug, getRelatedPosts } from '../data/blogData';
+import useCanonicalUrl from '../../useCanonicalUrl';
 
 const BlogPost = () => {
+  useCanonicalUrl()
   const { slug } = useParams();
   const navigate = useNavigate();
   const [post, setPost] = useState(null);

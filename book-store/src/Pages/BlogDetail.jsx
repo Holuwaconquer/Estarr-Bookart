@@ -4,8 +4,10 @@ import { motion } from 'framer-motion';
 import { blogAPI } from '../services/api';
 import { Calendar, User, ArrowLeft, Heart, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import useCanonicalUrl from '../../useCanonicalUrl';
 
 export const BlogDetail = () => {
+  useCanonicalUrl()
   const { slug, id } = useParams();
   const navigate = useNavigate();
   const [blog, setBlog] = useState(null);

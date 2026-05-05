@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { HiShieldCheck, HiLockClosed, HiMail, HiDatabase, HiEyeOff } from 'react-icons/hi';
+import useCanonicalUrl from '../../useCanonicalUrl';
 
 const PrivacyPolicy = () => {
+  useCanonicalUrl()
   useEffect(() => {
     document.title = 'Privacy Policy | EStarr Bookart Hub';
     window.scrollTo(0, 0);

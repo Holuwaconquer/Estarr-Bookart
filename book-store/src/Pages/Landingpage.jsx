@@ -361,7 +361,7 @@ const Landingpage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="text-center mb-12 ">
+      <div className="hidden text-center mb-12 ">
         <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
           EStarr Bookart Hub
         </h1>

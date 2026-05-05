@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { HiRefresh, HiClock, HiCash, HiShieldCheck, HiMail } from 'react-icons/hi';
+import useCanonicalUrl from '../../useCanonicalUrl';
 
 const ReturnsPolicy = () => {
+  useCanonicalUrl()
   useEffect(() => {
     document.title = 'Returns Policy | EStarr Bookart Hub';
     window.scrollTo(0, 0);

@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { HiDocumentText, HiScale, HiCreditCard, HiTruck, HiShieldCheck, HiUserGroup } from 'react-icons/hi';
+import useCanonicalUrl from '../../useCanonicalUrl';
 
 const TermsOfService = () => {
+  useCanonicalUrl();
   useEffect(() => {
     document.title = 'Terms of Service | EStarr Bookart Hub';
     window.scrollTo(0, 0);
@@ -121,7 +123,7 @@ const TermsOfService = () => {
 
               <div className="mt-8 p-4 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-500">
-                  If you have any questions about these Terms, please contact us at legal@estarrbookart.com. We reserve the right to modify these terms at any time. Continued use of the site after changes constitutes acceptance of the modified terms.
+                  If you have any questions about these Terms, please contact us at legal@estarrbookart.com.ng We reserve the right to modify these terms at any time. Continued use of the site after changes constitutes acceptance of the modified terms.
                 </p>
               </div>
             </div>

@@ -20,8 +20,10 @@ import {
   HiClock
 } from 'react-icons/hi';
 import { FiUsers, FiAward, FiBookOpen, FiTrendingUp } from 'react-icons/fi';
+import useCanonicalUrl from '../../useCanonicalUrl';
 
 const AboutUs = () => {
+  useCanonicalUrl()
   const stats = [
     { icon: FiBookOpen, label: 'Books Available', value: '10,000+', color: 'from-cyan-500 to-blue-500' },
     { icon: FiUsers, label: 'Happy Readers', value: '5,000+', color: 'from-purple-500 to-pink-500' },
