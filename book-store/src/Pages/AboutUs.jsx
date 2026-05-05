@@ -71,7 +71,7 @@ const AboutUs = () => {
       role: 'Founder & CEO',
       bio: 'Passionate about fostering a reading culture and empowering minds through literature.',
       image: null,
-      social: { instagram: '#', twitter: '#' }
+      social: { instagram: 'https://www.instagram.com/estarrbookart.hub/', twitter: '#' }
     },
   ];
 

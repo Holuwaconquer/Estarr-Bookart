@@ -5,6 +5,191 @@ const { Resend } = require('resend');
 // Initialize Resend with your API key
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Welcome email template
+const sendWelcomeEmail = async (userEmail, userName) => {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'EStarr Bookart <	noreply@estarrbookart.com.ng>',
+      to: userEmail,
+      subject: 'Welcome to EStarr Bookart Hub! ',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              margin: 0;
+              padding: 0;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              background: #ffffff;
+              border-radius: 16px;
+              overflow: hidden;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+            .header {
+              background: linear-gradient(135deg, #06b6d4, #3b82f6);
+              padding: 40px 20px;
+              text-align: center;
+            }
+            .header h1 {
+              color: white;
+              margin: 0;
+              font-size: 28px;
+              font-weight: bold;
+            }
+            .header p {
+              color: rgba(255,255,255,0.9);
+              margin: 10px 0 0;
+            }
+            .content {
+              padding: 40px 30px;
+            }
+            .welcome-text {
+              font-size: 18px;
+              margin-bottom: 20px;
+            }
+            .highlight {
+              color: #06b6d4;
+              font-weight: bold;
+            }
+            .benefits {
+              background: #f0fdf4;
+              padding: 20px;
+              border-radius: 12px;
+              margin: 25px 0;
+              border-left: 4px solid #06b6d4;
+            }
+            .benefits h3 {
+              margin: 0 0 10px;
+              color: #166534;
+            }
+            .benefits ul {
+              margin: 0;
+              padding-left: 20px;
+            }
+            .benefits li {
+              margin: 8px 0;
+              color: #166534;
+            }
+            .button {
+              display: inline-block;
+              background: linear-gradient(135deg, #06b6d4, #3b82f6);
+              color: white;
+              text-decoration: none;
+              padding: 14px 32px;
+              border-radius: 12px;
+              font-weight: 600;
+              margin: 20px 0;
+              text-align: center;
+            }
+            .footer {
+              background: #f9fafb;
+              padding: 20px;
+              text-align: center;
+              font-size: 12px;
+              color: #6b7280;
+              border-top: 1px solid #e5e7eb;
+            }
+            .social-links {
+              margin-top: 15px;
+            }
+            .social-links a {
+              color: #06b6d4;
+              text-decoration: none;
+              margin: 0 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>EStarr Bookart</h1>
+              <p>Your Premier Bookstore in Nigeria</p>
+            </div>
+            
+            <div class="content">
+              <div class="welcome-text">
+                Hello <strong class="highlight">${userName || 'Book Lover'}!</strong>
+              </div>
+              
+              <p>Welcome to <strong>EStarr Bookart Hub</strong> - Nigeria's premier destination for quality books!</p>
+              
+              <p>We're thrilled to have you join our community of readers who believe in the power of books to transform lives, ignite imagination, and foster growth.</p>
+              
+              <div class="benefits">
+                <h3>✨ What you'll love about shopping with us:</h3>
+                <ul>
+                  <li>📖 Wide selection of authentic books across all genres</li>
+                  <li>🚚 Free delivery across Nigeria on orders over ₦50,000</li>
+                  <li>💰 Competitive prices and regular discounts</li>
+                  <li>⭐ Exclusive offers for registered members</li>
+                  <li>💬 Dedicated customer support</li>
+                </ul>
+              </div>
+              
+              <div style="text-align: center; color: white;">
+                <a href="https://estarrbookart.com.ng" class="button">
+                  Start Shopping Now →
+                </a>
+              </div>
+              
+              <p style="margin-top: 25px; font-size: 14px; color: #666;">
+                Here are some quick links to get you started:
+              </p>
+              <ul style="margin-top: 10px;">
+                <li>📚 <a href="https://estarrbookart.com.ng/category" style="color: #06b6d4;">Browse All Books</a></li>
+                <li>📖 <a href="https://estarrbookart.com.ng/blog" style="color: #06b6d4;">Read Our Blog</a></li>
+                <li>❓ <a href="https://estarrbookart.com.ng/faq" style="color: #06b6d4;">FAQs</a></li>
+              </ul>
+              
+              <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 25px 0;">
+                <p style="margin: 0; font-size: 14px;">
+                  <strong>💡 Pro Tip:</strong> Follow us on Instagram @estarrbookart</strong> for book recommendations, giveaways, and exclusive discounts!
+                </p>
+              </div>
+            </div>
+            
+            <div class="footer">
+              <p>EStarr Bookart Hub | Your Trusted Bookstore in Nigeria</p>
+              <p>📍 OAU, Ile-Ife, Osun State, Nigeria</p>
+              <div class="social-links">
+                <a href="https://www.instagram.com/estarrbookart.hub/">📷 Instagram</a>
+                <a href="https://threads.net/@i_am_jaszi">💬 Threads</a>
+              </div>
+              <p style="margin-top: 15px;">
+                Need help? Contact us at <a href="mailto:support@estarrbookart.com.ng" style="color: #06b6d4;">support@estarrbookart.com.ng</a>
+              </p>
+              <p style="margin-top: 10px; font-size: 11px;">
+                © ${new Date().getFullYear()} EStarr Bookart Hub. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+
+    if (error) {
+      console.error('❌ Welcome email error:', error);
+      return false;
+    }
+    
+    console.log('✅ Welcome email sent to:', userEmail);
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to send welcome email:', error);
+    return false;
+  }
+};
+
 const userSignUp = async (req, res) => {
   const { name, email, password, phonenumber } = req.body;
 
@@ -18,7 +203,17 @@ const userSignUp = async (req, res) => {
     }
     
     console.log('user has been saved');
-    res.status(201).json({ message: 'user has successfully been saved', status: true, user });
+    
+    // Send welcome email (don't await - send in background)
+    sendWelcomeEmail(email, name).catch(err => {
+      console.error('Background email error:', err);
+    });
+    
+    res.status(201).json({ 
+      message: 'user has successfully been saved', 
+      status: true, 
+      user 
+    });
   } catch (err) {
     if (err.code === 11000) {
       return res.status(400).json({ error: "Duplicate field: email already exists" });
