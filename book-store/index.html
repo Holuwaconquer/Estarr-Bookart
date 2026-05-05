@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/estarr.jpeg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     
     <!-- Primary Meta Tags -->
@@ -15,13 +14,11 @@
     <meta name="googlebot" content="index, follow" />
     <meta name="language" content="English" />
     <meta name="revisit-after" content="7 days" />
-    <meta name="distribution" content="global" />
-    <meta name="rating" content="General" />
     
     <!-- Canonical URL -->
     <link rel="canonical" href="https://estarrbookart.com.ng" />
     
-    <!-- Alternate URLs for different regions -->
+    <!-- Alternate URLs -->
     <link rel="alternate" hreflang="en" href="https://estarrbookart.com.ng" />
     <link rel="alternate" hreflang="en-NG" href="https://estarrbookart.com.ng" />
     
@@ -36,52 +33,46 @@
     <meta property="og:image:alt" content="EStarr Bookart Hub - Your Premier Bookstore in Nigeria" />
     <meta property="og:site_name" content="EStarr Bookart Hub" />
     <meta property="og:locale" content="en_NG" />
-    <meta property="og:locale:alternate" content="en_US" />
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://estarrbookart.com.ng/" />
     <meta name="twitter:title" content="EStarr Bookart Hub | Premium Bookstore in Nigeria" />
-    <meta name="twitter:description" content="Shop quality books at EStarr Bookart Hub. Free delivery across Nigeria on orders over ₦5,000. Your trusted source for fiction, non-fiction, and educational books." />
+    <meta name="twitter:description" content="Shop quality books at EStarr Bookart Hub. Free delivery across Nigeria on orders over ₦5,000." />
     <meta name="twitter:image" content="https://estarrbookart.com.ng/og-image.jpg" />
     <meta name="twitter:image:alt" content="EStarr Bookart Hub - Bookstore in Nigeria" />
-    <meta name="twitter:site" content="@estarrbookart" />
-    <meta name="twitter:creator" content="@estarrbookart" />
     
-    <!-- Preview Links (for Link Previews in messengers) -->
-    <meta property="og:image:secure_url" content="https://estarrbookart.com.ng/og-image.jpg" />
-    
-    <!-- Additional SEO Meta Tags -->
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Theme Color -->
     <meta name="theme-color" content="#3B82F6" />
+    <meta name="msapplication-TileColor" content="#3B82F6" />
     
-    <!-- Business Information -->
-    <meta name="business:contact_data:country" content="Nigeria" />
-    <meta name="business:contact_data:website" content="https://estarrbookart.com.ng" />
-    <meta name="geo.region" content="NG" />
-    <meta name="geo.placename" content="Nigeria" />
-    
-    <!-- Fonts -->
+    <!-- Fonts - CORRECTED -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100.900;1,100.900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Fallback font if Google Fonts fails -->
+    <style>
+      /* Fallback font if Google Fonts doesn't load */
+      body {
+        font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      }
+    </style>
     
     <!-- Preload Critical Assets -->
     <link rel="preload" href="/estarr.jpeg" as="image" />
     
-    <!-- DNS Prefetch for External Resources -->
+    <!-- DNS Prefetch -->
     <link rel="dns-prefetch" href="https://connect.facebook.net" />
     <link rel="dns-prefetch" href="https://accounts.google.com" />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     
-    <!-- Favicon and App Icons -->
-    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <!-- Fallback for older browsers -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    
+    <!-- Note: Remove site.webmanifest if it's causing errors, or ensure it exists -->
     <link rel="manifest" href="/site.webmanifest" />
     
     <!-- JSON-LD Structured Data -->
@@ -92,79 +83,15 @@
       "name": "EStarr Bookart Hub",
       "url": "https://estarrbookart.com.ng",
       "logo": "https://estarrbookart.com.ng/estarr.jpeg",
-      "image": "https://estarrbookart.com.ng/og-image.jpg",
-      "description": "Premium bookstore in Nigeria offering a wide selection of quality books across all genres. Free delivery nationwide on orders over ₦5,000.",
+      "description": "Premium bookstore in Nigeria offering a wide selection of quality books.",
       "address": {
         "@type": "PostalAddress",
-        "addressCountry": "NG",
-        "addressLocality": "Nigeria"
+        "addressCountry": "NG"
       },
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "contactType": "customer service",
-        "availableLanguage": ["English"]
-      },
-      "sameAs": [
-        "https://www.instagram.com/estarrbookart.hubafrika",
-        "https://www.threads.net/@i_am_jaszi"
-      ],
       "priceRange": "₦",
-      "openingHoursSpecification": {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday"
-        ],
-        "opens": "09:00",
-        "closes": "18:00"
-      },
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://estarrbookart.com.ng/category?q={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
-    }
-    </script>
-    
-    <!-- Organization Schema -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "EStarr Bookart Hub",
-      "url": "https://estarrbookart.com.ng",
-      "logo": "https://estarrbookart.com.ng/estarr.jpeg",
       "sameAs": [
-        "https://www.instagram.com/estarrbookart.hubafrika",
-        "https://www.threads.net/@i_am_jaszi"
-      ],
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "contactType": "customer support",
-        "availableLanguage": "English"
-      }
-    }
-    </script>
-    
-    <!-- Website Schema -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "EStarr Bookart Hub",
-      "url": "https://estarrbookart.com.ng",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": {
-          "@type": "EntryPoint",
-          "urlTemplate": "https://estarrbookart.com.ng/category?q={search_term_string}"
-        },
-        "query-input": "required name=search_term_string"
-      }
+        "https://www.instagram.com/estarrbookart.hubafrika"
+      ]
     }
     </script>
   </head>
@@ -188,30 +115,8 @@
           xfbml      : true,
           version    : 'v17.0'
         });
-          
         FB.AppEvents.logPageView();   
       };
-
-      (function(d, s, id) {
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) {return;}
-        js = d.createElement(s); js.id = id;
-        js.src = "https://connect.facebook.net/en_US/sdk.js";
-        fjs.parentNode.insertBefore(js, fjs);
-      }(document, 'script', 'facebook-jssdk'));
-    </script>
-    
-    <!-- Performance Monitoring (Optional - Add your analytics here) -->
-    <script>
-      // Add performance monitoring
-      if ('performance' in window && 'getEntriesByType' in performance) {
-        window.addEventListener('load', () => {
-          const navigationTiming = performance.getEntriesByType('navigation')[0];
-          if (navigationTiming) {
-            console.log('Page load time:', navigationTiming.loadEventEnd - navigationTiming.fetchStart, 'ms');
-          }
-        });
-      }
     </script>
   </body>
 </html>
