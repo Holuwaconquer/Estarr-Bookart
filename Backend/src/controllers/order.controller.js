@@ -2,6 +2,8 @@ const Order = require('../models/Order');
 const Book = require('../models/Book');
 const ApiResponse = require('../utils/apiResponse');
 const cloudinary = require('../config/cloudinary');
+const { sendOrderNotificationEmail, sendOrderConfirmationEmail } = require('../services/emailService');
+const User = require('../models/User');
 
 // Helper function to upload file to Cloudinary
 const uploadToCloudinary = async (file, folder = 'order-proofs') => {
@@ -107,6 +109,19 @@ exports.createOrder = async (req, res, next) => {
       total,
       status: 'pending',
       paymentStatus: 'pending'
+    });
+
+    // Fetch user details for email
+    const user = await User.findById(userId).select('name email phonenumber');
+
+    // Send admin notification (don't await - send in background)
+    sendOrderNotificationEmail(order, user).catch(err => {
+      console.error('Background admin notification error:', err);
+    });
+
+    // Send order confirmation to customer (don't await - send in background)
+    sendOrderConfirmationEmail(order, user).catch(err => {
+      console.error('Background order confirmation error:', err);
     });
 
     return ApiResponse.success(res, 'Order created successfully', order, 201);
