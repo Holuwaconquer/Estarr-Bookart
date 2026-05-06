@@ -365,7 +365,6 @@ const AdminProducts = () => {
                               )}
                               <div>
                                 <p className="text-dark font-medium">{book.title}</p>
-                                <p className="text-xs text-gray-500">ID: {book._id.slice(0, 8)}</p>
                               </div>
                             </div>
                            </td>

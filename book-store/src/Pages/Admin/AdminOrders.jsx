@@ -390,11 +390,7 @@ const AdminOrders = () => {
 
             <div className="p-6 space-y-6">
               {/* Order Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-gray-400 text-sm">Order ID</p>
-                  <p className="text-white font-mono">{selectedOrder._id}</p>
-                </div>
+              <div className="grid  md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-gray-400 text-sm">Date</p>
                   <p className="text-white">{new Date(selectedOrder.createdAt).toLocaleDateString()}</p>

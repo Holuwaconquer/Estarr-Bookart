@@ -282,7 +282,7 @@ const AdminFlashSalesManagement = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="w-full flex h-screen bg-gray-50 overflow-x-auto">
       {/* Sidebar */}
       <div className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 md:left-0 md:z-40 md:bg-white md:border-r md:border-gray-200">
         <AdminSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
@@ -310,14 +310,14 @@ const AdminFlashSalesManagement = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col md:ml-64">
+      <div className="w-full flex-1 flex flex-col md:ml-64">
         <AdminHeader isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
           <div className="p-6 space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between">
               <div className="flex items-center gap-3">
                 <HiFire className="w-8 h-8 text-orange-500" />
                 <h2 className="text-2xl font-bold text-gray-800">Flash Sales Management</h2>
@@ -440,7 +440,7 @@ const AdminFlashSalesManagement = () => {
             )}
 
             {/* Current Flash Sales */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-800">
                   Current Flash Sales ({flashSalesProducts.length})

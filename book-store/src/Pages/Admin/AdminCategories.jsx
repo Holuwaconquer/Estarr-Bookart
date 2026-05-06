@@ -132,7 +132,7 @@ const AdminCategories = () => {
         {/* Page Content */}
         <div className="p-8 max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col md:flex-row justify-between md:items-center mb-8">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                 Manage Categories
@@ -293,60 +293,9 @@ const AdminCategories = () => {
                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 resize-none"
                 />
               </div>
-
-              {/* Icon Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Icon</label>
-                <div className="grid grid-cols-7 gap-2">
-                  {iconOptions.map(icon => (
-                    <button
-                      key={icon}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, icon })}
-                      className={`p-3 text-2xl rounded-lg border-2 transition-all duration-300 ${
-                        formData.icon === icon
-                          ? 'border-cyan-500 bg-cyan-600/20'
-                          : 'border-gray-600 bg-gray-700 hover:border-gray-500'
-                      }`}
-                    >
-                      {icon}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Color Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Color</label>
-                <div className="grid grid-cols-4 gap-3">
-                  {colorOptions.map(color => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, color })}
-                      className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                        formData.color === color
-                          ? 'border-white scale-105'
-                          : 'border-gray-600'
-                      }`}
-                    >
-                      <div className={`h-8 rounded bg-gradient-to-r ${color}`}></div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
+              
               {/* Order */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Display Order</label>
-                  <input
-                    type="number"
-                    value={formData.order}
-                    onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
 
                 {/* Active Status */}
                 <div>
