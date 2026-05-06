@@ -184,7 +184,7 @@ const Navbar = () => {
                   whileTap={{ scale: 0.95 }}
                   className="p-2 rounded-xl transition-all duration-300"
                 >
-                  <IoCartOutline className="w-5 h-5 text-gray-400 transition-colors" />
+                  <IoCartOutline className="w-5 h-5 text-gray-800 transition-colors" />
                 </motion.button>
                 {totalItems > 0 && (
                   <motion.span
@@ -225,9 +225,9 @@ const Navbar = () => {
                 aria-label="Menu"
               >
                 {isMobileMenuOpen ? (
-                  <IoClose className="w-6 h-6 text-gray-300" />
+                  <IoClose className="w-6 h-6 text-gray-800" />
                 ) : (
-                  <IoMenu className="w-6 h-6 text-gray-300" />
+                  <IoMenu className="w-6 h-6 text-gray-800" />
                 )}
               </motion.button>
             </div>

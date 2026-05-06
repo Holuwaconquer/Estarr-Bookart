@@ -5,7 +5,7 @@ import {
   HiSparkles, HiClock, HiStar,
   HiCheckCircle, HiTruck, HiArrowRight, HiFire,
   HiChevronLeft, HiChevronRight, HiShoppingCart,
-  HiHeart, HiOutlineHeart, HiEye, HiChevronDown,HiTrash 
+  HiHeart, HiOutlineHeart, HiEye, HiChevronDown,HiTrash , HiChevronUp 
 } from 'react-icons/hi';
 import { FiBook, FiSearch, FiShoppingBag, FiPercent, FiBox } from 'react-icons/fi';
 import { MdLocalShipping, MdSecurity, MdHeadsetMic } from 'react-icons/md';
@@ -39,6 +39,8 @@ const Landingpage = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const scrollContainerRef = useRef(null);
   const { addToCart, removeFromCart, cart } = useCart()
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const categoryDropdownRef = useRef(null);
 
   const defaultCategories = [
     { name: 'Fiction', icon: '📚', color: 'from-red-500 to-orange-500', bg: 'bg-gradient-to-r from-red-500/10 to-orange-500/10', count: '1.2k' },
@@ -62,8 +64,8 @@ const Landingpage = () => {
           ? response.data
           : (response.data?.categories || []);
         
-        if (fetchedCategories.length > 0) {
-          const styledCategories = fetchedCategories.slice(0, 8).map((cat, idx) => ({
+        if (fetchedCategories?.length > 0) {
+          const styledCategories = fetchedCategories.map((cat, idx) => ({
             name: cat.name || cat
           }));
           setCategories(styledCategories);
@@ -146,6 +148,15 @@ const Landingpage = () => {
     };
 
     fetchBooks();
+
+    const handleClickOutside = (event) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+
   }, []);
 
   // Filter books by category
@@ -251,7 +262,7 @@ const Landingpage = () => {
 
         {/* Wishlist Button */}
         <button
-          onClick={() => toggleWishlist(book._id)}
+          onClick={(e) => {toggleWishlist(book._id); e.stopPropagation()}}
           className="absolute top-3 right-3 z-10 flex items-center justify-center bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-white transition-colors"
         >
           {wishlist.has(book._id) ? (
@@ -375,63 +386,128 @@ const Landingpage = () => {
       {/* Featured Books with Horizontal Category Filter */}
       <section className="py-4 px-4 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto">
-
-          {/* Horizontal Scrollable Categories */}
-          <div className="relative mb-6 group">
-            {/* Left Scroll Button */}
-            <button
-              onClick={() => scroll('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 disabled:opacity-0"
-              style={{ transform: 'translateY(-50%)' }}
-            >
-              <HiChevronLeft className="w-5 h-5" />
-            </button>
-
-            {/* Categories Container */}
-            <div
-              ref={scrollContainerRef}
-              className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth pb-2"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {/* All Categories Option */}
+          {/* Custom Category Select Dropdown */}
+          <div className="w-full mb-6" ref={categoryDropdownRef}>
+            <div className="w-full relative">
+              {/* Dropdown Trigger */}
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleCategorySelect('')}
-                className={`flex-shrink-0 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-                  !selectedCategory
-                    ? 'bg-gradient-to-r from-purple-500 to-purple-800 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                className="w-full flex items-center justify-between gap-3 px-6 py-2 bg-white border-2 border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 group"
               >
-                All Books
+                <div className="w-full flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-800 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                  </div>
+                  <span className="text-lg font-semibold text-gray-800">
+                    {selectedCategory ? selectedCategory : 'Browse Collection'}
+                  </span>
+                </div>
+                <motion.div
+                  animate={{ rotate: isCategoryDropdownOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {isCategoryDropdownOpen ? (
+                    <HiChevronUp className="w-5 h-5 text-purple-600" />
+                  ) : (
+                    <HiChevronDown className="w-5 h-5 text-gray-400 group-hover:text-purple-600 transition-colors" />
+                  )}
+                </motion.div>
               </motion.button>
 
-              {categories.map((category, idx) => (
-                <motion.button
-                  key={idx}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleCategorySelect(category.name)}
-                  className={`flex-shrink-0 flex items-center gap-2 px-5 py-3 rounded-full font-semibold transition-all duration-300 ${
-                    selectedCategory === category.name
-                      ? 'bg-gradient-to-r from-purple-500 to-purple-800 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <span>{category.name}</span>
-                </motion.button>
-              ))}
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {isCategoryDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scaleY: 0 }}
+                    animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                    exit={{ opacity: 0, y: -10, scaleY: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-20 origin-top"
+                  >
+                    <div className="max-h-80 overflow-y-auto">
+                      {/* Browse Collection Option */}
+                      <button
+                        onClick={() => {
+                          handleCategorySelect('');
+                          setIsCategoryDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-6 py-4 hover:bg-gray-50 transition-all duration-200 border-b border-gray-100 ${
+                          !selectedCategory ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700' : 'text-gray-700'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          !selectedCategory ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="font-semibold">Browse Collection</p>
+                          <p className="text-xs text-gray-500">View all books in our store</p>
+                        </div>
+                        {!selectedCategory && (
+                          <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+
+                      {/* Category Options */}
+                      {categories.map((category, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            handleCategorySelect(category.name);
+                            setIsCategoryDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-6 py-4 hover:bg-gray-50 transition-all duration-200 border-b border-gray-100 last:border-0 ${
+                            selectedCategory === category.name ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700' : 'text-gray-700'
+                          }`}
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            selectedCategory === category.name ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-500'
+                          }`}>
+                            <span className="text-sm font-bold">{category.name.charAt(0)}</span>
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="font-semibold">{category.name}</p>
+                            {/* <p className="text-xs text-gray-500">{category.count || 0} products</p> */}
+                          </div>
+                          {selectedCategory === category.name && (
+                            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            {/* Right Scroll Button */}
-            <button
-              onClick={() => scroll('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              style={{ transform: 'translateY(-50%)' }}
-            >
-              <HiChevronRight className="w-5 h-5" />
-            </button>
+            {/* Selected Category Badge (optional) */}
+            {selectedCategory && (
+              <div className="flex items-center gap-2 mt-3">
+                <span className="text-sm text-gray-500">Filtering by:</span>
+                <span className="inline-flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                  {selectedCategory}
+                  <button
+                    onClick={() => handleCategorySelect('')}
+                    className="hover:text-purple-900 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Books Grid */}
@@ -458,17 +534,15 @@ const Landingpage = () => {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No Books Found</h3>
                 <p className="text-gray-600">No books available in {selectedCategory} category.</p>
+                <button
+                  onClick={() => handleCategorySelect('')}
+                  className="mt-4 text-purple-600 hover:text-purple-700 font-semibold underline"
+                >
+                  Browse all books
+                </button>
               </div>
             )}
           </div>
-          {selectedCategory !== "" && (
-            <button
-              onClick={() => handleCategorySelect('')}
-              className="w-full text-center mt-4 text-red-600 hover:text-red-700 font-semibold"
-            >
-              View all books
-            </button>
-          )}
         </div>
       </section>
 
