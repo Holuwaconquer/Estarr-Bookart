@@ -83,18 +83,17 @@ const Footer = () => {
           <div>
             <h4 className="font-bold mb-4 pb-2 border-b border-gray-700">Legal</h4>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><Link to="/privacy-policy" className="hover:text-cyan-400 transition">Privacy Policy</Link></li>
-              <li><Link to="/terms-of-service" className="hover:text-cyan-400 transition">Terms of Service</Link></li>
-              <li><Link to="/returns-policy" className="hover:text-cyan-400 transition">Returns Policy</Link></li>
-              <li><Link to="/shipping-info" className="hover:text-cyan-400 transition">Shipping Info</Link></li>
+              <li><Link to="/legal/privacy-policy" className="hover:text-cyan-400 transition">Privacy Policy</Link></li>
+              <li><Link to="/legal/terms-of-service" className="hover:text-cyan-400 transition">Terms of Service</Link></li>
+              <li><Link to="/legal/returns-policy" className="hover:text-cyan-400 transition">Returns Policy</Link></li>
+              <li><Link to="/legal/shipping-info" className="hover:text-cyan-400 transition">Shipping Info</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-bold mb-4 pb-2 border-b border-gray-700">Support</h4>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><Link to="/faq" className="hover:text-cyan-400 transition">FAQ</Link></li>
+              <li><Link to="/support/faq" className="hover:text-cyan-400 transition">FAQ</Link></li>
               <li><Link to="/contact" className="hover:text-cyan-400 transition">Contact Us</Link></li>
-              <li><Link to="/about" className="hover:text-cyan-400 transition">About Us</Link></li>
             </ul>
           </div>
         </div>

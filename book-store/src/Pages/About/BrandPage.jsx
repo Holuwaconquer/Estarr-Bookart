@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import useCanonicalUrl from '../../useCanonicalUrl';
+import useCanonicalUrl from '../../../useCanonicalUrl';
 
 const BrandPage = () => {
     useCanonicalUrl()

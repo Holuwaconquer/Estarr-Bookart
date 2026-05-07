@@ -8,6 +8,14 @@
       "destination": "/index.html"
     }
   ],
+  "redirects": [
+    { "source": "/privacy-policy", "destination": "/legal/privacy-policy", "permanent": true },
+    { "source": "/terms-of-service", "destination": "/legal/terms-of-service", "permanent": true },
+    { "source": "/shipping-info", "destination": "/legal/shipping-info", "permanent": true },
+    { "source": "/returns-policy", "destination": "/legal/returns-policy", "permanent": true },
+    { "source": "/faq", "destination": "/support/faq", "permanent": true },
+    { "source": "/brand", "destination": "/about/brand", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/estarr.jpeg",
@@ -41,6 +49,37 @@
         {
           "key": "Content-Type",
           "value": "application/manifest+json"
+        }
+      ]
+    },
+    {
+      "source": "/favicon-:size.png",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        },
+        {
+          "key": "Content-Type",
+          "value": "image/png"
+        }
+      ]
+    },
+    {
+      "source": "/apple-touch-icon.png",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/og-image.jpg",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
         }
       ]
     }

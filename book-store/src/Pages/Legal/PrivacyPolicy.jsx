@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { HiShieldCheck, HiLockClosed, HiMail, HiDatabase, HiEyeOff } from 'react-icons/hi';
-import useCanonicalUrl from '../../useCanonicalUrl';
+import useCanonicalUrl from '../../../useCanonicalUrl';
 
 const PrivacyPolicy = () => {
   useCanonicalUrl()
@@ -78,18 +78,18 @@ const PrivacyPolicy = () => {
     <>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         {/* Hero Section */}
-        <div className="relative text-black py-16">
+        <div className="relative text-black py-4">
           <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
             <div className="inline-flex p-3 bg-white/20 rounded-2xl mb-6">
               <HiShieldCheck className="w-12 h-12" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Privacy Policy</h1>
-            <p className="text-xl text-gray-600">Last updated: January 2026</p>
+            <p className="text-xl text-gray-600">Last updated: May 2026</p>
           </div>
         </div>
 
         {/* Content */}
-        <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div className="p-8 md:p-12">
               <p className="text-gray-600 mb-8 leading-relaxed">

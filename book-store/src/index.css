@@ -32,13 +32,6 @@ html {
   color: white;
 }
 
-/* Focus styles */
-*:focus {
-  outline: 2px solid rgba(245, 158, 11, 0.5);
-  outline-offset: 2px;
-}
-
-
 :root {
   --brand-primary: #7C3AED;
   --brand-primary-dark: #5B21B6;

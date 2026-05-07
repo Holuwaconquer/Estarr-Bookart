@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { HiRefresh, HiClock, HiCash, HiShieldCheck, HiMail } from 'react-icons/hi';
-import useCanonicalUrl from '../../useCanonicalUrl';
+import useCanonicalUrl from '../../../useCanonicalUrl';
 
 const ReturnsPolicy = () => {
   useCanonicalUrl()
@@ -14,7 +14,7 @@ const ReturnsPolicy = () => {
     <>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         {/* Hero Section */}
-        <div className="relative text-black py-16">
+        <div className="relative text-black py-4">
           <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
             <div className="inline-flex p-3 bg-white/20 rounded-2xl mb-6">
               <HiRefresh className="w-12 h-12" />
@@ -25,7 +25,7 @@ const ReturnsPolicy = () => {
         </div>
 
         {/* Content */}
-        <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div className="p-8 md:p-12">
               <div className="grid md:grid-cols-3 gap-6 mb-10">
