@@ -921,6 +921,55 @@ export const bankAccountAPI = {
   }
 };
 
+export const shippingLocationAPI = {
+  getAllLocations: async () => {
+    return request('/shipping-locations/admin', {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  },
+
+  getLocations: async () => {
+    return request('/shipping-locations', {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  },
+
+  getLocation: async (id) => {
+    return request(`/shipping-locations/${id}`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  },
+
+  createLocation: async (locationData) => {
+    return request('/shipping-locations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders()
+      },
+      body: JSON.stringify(locationData)
+    });
+  },
+
+  updateLocation: async (id, locationData) => {
+    return request(`/shipping-locations/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders()
+      },
+      body: JSON.stringify(locationData)
+    });
+  },
+
+  deleteLocation: async (id) => {
+    return request(`/shipping-locations/${id}`, {
+      method: 'DELETE',
+      headers: { ...authHeaders() }
+    });
+  }
+};
+
 export default {
   authAPI,
   bookAPI,
@@ -930,5 +979,6 @@ export default {
   blogAPI,
   reviewAPI,
   categoryAPI,
-  bankAccountAPI
+  bankAccountAPI,
+  shippingLocationAPI
 };

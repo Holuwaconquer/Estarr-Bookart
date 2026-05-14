@@ -8,6 +8,7 @@ import {
   HiNewspaper,
   HiUsers,
   HiCog,
+  HiMap,
   HiLogout,
   HiMenuAlt3,
   HiX,
@@ -59,6 +60,11 @@ const AdminSidebar = (props) => {
       label: 'Users', 
       path: '/admin/users', 
       icon: HiUsers 
+    },
+    { 
+      label: 'Shipping Locations', 
+      path: '/admin/shipping-locations', 
+      icon: HiMap 
     },
     // { 
     //   label: 'Analytics', 

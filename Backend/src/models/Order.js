@@ -36,6 +36,10 @@ const orderSchema = new mongoose.Schema({
     country: String,
     phone: String
   },
+  shippingLocation: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ShippingLocation'
+  },
   paymentMethod: {
     type: String,
     enum: ['card', 'paypal', 'bank-transfer', 'korapay', 'manual'],

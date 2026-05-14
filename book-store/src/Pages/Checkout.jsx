@@ -8,11 +8,13 @@ import {
   HiExclamationCircle,
   HiCreditCard,
   HiUpload,
-  HiCheckCircle
+  HiCheckCircle,
+  HiMap,
+  HiTruck
 } from 'react-icons/hi';
 import { useCart } from '../contexts/CartContext';
 import { AuthContext } from '../AuthContext';
-import api, { cartAPI, orderAPI, bankAccountAPI } from '../services/api';
+import api, { cartAPI, orderAPI, bankAccountAPI, shippingLocationAPI } from '../services/api';
 import { paymentAPI } from '../services/payment.service';
 import { emailAPI } from '../services/email.service';
 
@@ -21,7 +23,7 @@ const Checkout = () => {
   const { items, clearCart } = useCart();
   const { authenticated, user } = useContext(AuthContext);
   
-  const [step, setStep] = useState(1); // 1: Review, 2: Shipping, 3: Payment Method, 4: Payment Details
+  const [step, setStep] = useState(1); // 1: Review, 2: Shipping Location, 3: Shipping Address, 4: Payment Method
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [loading, setLoading] = useState(false);
   const [bankAccounts, setBankAccounts] = useState([]);
@@ -29,6 +31,8 @@ const Checkout = () => {
   const [proofPreview, setProofPreview] = useState(null); // Preview of selected file
   const [uploadComplete, setUploadComplete] = useState(false); // Track actual upload completion
   const [currentOrderId, setCurrentOrderId] = useState(null);
+  const [shippingLocations, setShippingLocations] = useState([]);
+  const [selectedShippingLocation, setSelectedShippingLocation] = useState(null);
 
   const [formData, setFormData] = useState({
     street: '',
@@ -64,12 +68,12 @@ const Checkout = () => {
   // Calculate totals with discounts applied
   const subtotal = items?.reduce((sum, item) => sum + getItemTotal(item), 0) || 0;
   
-  // Calculate dynamic shipping cost - use highest shipping cost from all items (same shipping for all items)
-  const shippingFee = items && items.length > 0 
-    ? Math.max(...items.map(item => Number(item.shippingCost) || 0), 0)
+  // Calculate shipping fee based on selected location
+  const shippingFee = selectedShippingLocation 
+    ? (selectedShippingLocation.isFreeShipping ? 0 : selectedShippingLocation.shippingFee)
     : 0;
   
-  console.log('📦 Checkout cart items shipping costs:', items?.map(item => ({ title: item.title, shippingCost: item.shippingCost })));
+  console.log('📦 Checkout selected shipping location:', selectedShippingLocation);
   console.log('💰 Checkout final shipping fee:', shippingFee);
   
   const total = subtotal + shippingFee;
@@ -103,6 +107,7 @@ const Checkout = () => {
     }
 
     fetchBankAccounts();
+    fetchShippingLocations();
   }, [authenticated, items, navigate]);
 
   const fetchBankAccounts = async () => {
@@ -117,6 +122,20 @@ const Checkout = () => {
     } catch (error) {
       console.error('Failed to fetch bank accounts:', error);
       toast.error('Failed to load bank accounts');
+    }
+  };
+
+  const fetchShippingLocations = async () => {
+    try {
+      const response = await shippingLocationAPI.getLocations();
+      if (response?.data && Array.isArray(response.data)) {
+        setShippingLocations(response.data);
+      } else if (response?.data?.locations && Array.isArray(response.data.locations)) {
+        setShippingLocations(response.data.locations);
+      }
+    } catch (error) {
+      console.error('Failed to fetch shipping locations:', error);
+      toast.error('Failed to load shipping locations');
     }
   };
 
@@ -141,6 +160,7 @@ const Checkout = () => {
           discount: item.discount || 0
         })),
         shippingAddress: formData,
+        shippingLocation: selectedShippingLocation?._id,
         paymentMethod: paymentMethod,
         subtotal: subtotal,
         shippingFee: shippingFee,
@@ -262,7 +282,7 @@ const Checkout = () => {
                 s <= step ? 'bg-purple-600' : 'bg-gray-300'
               }`}></div>
               <p className="text-xs text-gray-600 mt-2 text-center">
-                {s === 1 ? 'Review' : s === 2 ? 'Shipping' : s === 3 ? 'Payment' : 'Confirm'}
+                {s === 1 ? 'Review' : s === 2 ? 'Location' : s === 3 ? 'Address' : 'Payment'}
               </p>
             </div>
           ))}
@@ -337,10 +357,110 @@ const Checkout = () => {
                 </div>
               )}
 
-              {/* Step 2: Shipping */}
+              {/* Step 2: Shipping Location */}
               {step === 2 && (
                 <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-xl font-bold mb-4">Shipping Address</h2>
+                  <h2 className="text-xl font-bold mb-4">Select Shipping Location</h2>
+                  <p className="text-gray-600 mb-6">Choose where you want your order to be shipped to.</p>
+
+                  {shippingLocations.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No shipping locations available at the moment.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {shippingLocations
+                        .filter(location => location.isActive)
+                        .sort((a, b) => a.sortOrder - b.sortOrder)
+                        .map((location) => (
+                          <motion.div
+                            key={location._id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                              selectedShippingLocation?._id === location._id
+                                ? 'border-purple-500 bg-purple-50'
+                                : 'border-gray-200 hover:border-purple-300'
+                            }`}
+                            onClick={() => setSelectedShippingLocation(location)}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h3 className="font-bold text-lg">{location.name}</h3>
+                                <p className="text-gray-600 text-sm mb-2">
+                                  {location.region} • {location.state}
+                                  {location.city && `, ${location.city}`}
+                                </p>
+                                {location.description && (
+                                  <p className="text-gray-500 text-sm mb-2">{location.description}</p>
+                                )}
+                                <div className="flex items-center gap-4 text-sm text-gray-600">
+                                  <span className="flex items-center gap-1">
+                                    <HiTruck className="w-4 h-4" />
+                                    {location.estimatedDeliveryDays} day{location.estimatedDeliveryDays !== 1 ? 's' : ''} delivery
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                {location.isFreeShipping ? (
+                                  <div className="text-green-600 font-bold text-lg">FREE</div>
+                                ) : (
+                                  <div className="text-purple-600 font-bold text-lg">
+                                    ₦{location.shippingFee.toLocaleString()}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                    </div>
+                  )}
+
+                  <div className="flex gap-4 mt-6">
+                    <button
+                      onClick={() => setStep(1)}
+                      className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-bold hover:bg-gray-300"
+                    >
+                      Back to Review
+                    </button>
+                    <button
+                      onClick={() => setStep(3)}
+                      disabled={!selectedShippingLocation}
+                      className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      Continue to Address
+                    </button>
+                  </div>
+
+                  {selectedShippingLocation && (
+                    <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg text-sm text-gray-700">
+                      <div className="font-semibold text-purple-900 mb-2">You selected:</div>
+                      <div className="space-y-2">
+                        <div>{selectedShippingLocation.name}</div>
+                        <div>
+                          {selectedShippingLocation.region} • {selectedShippingLocation.state}
+                          {selectedShippingLocation.city ? `, ${selectedShippingLocation.city}` : ''}
+                        </div>
+                        <div>
+                          {selectedShippingLocation.isFreeShipping ? (
+                            <span className="text-green-600 font-semibold">Free shipping</span>
+                          ) : (
+                            <span className="text-purple-600 font-semibold">₦{selectedShippingLocation.shippingFee.toLocaleString()}</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Estimated delivery: {selectedShippingLocation.estimatedDeliveryDays} day{selectedShippingLocation.estimatedDeliveryDays !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Step 3: Shipping Address */}
+              {step === 3 && (
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h2 className="text-xl font-bold mb-4">Shipping Information (this is your personal shipping address)</h2>
                   <div className="space-y-4">
                     <input
                       type="text"
@@ -403,13 +523,13 @@ const Checkout = () => {
                   </div>
                   <div className="flex gap-4 mt-6">
                     <button
-                      onClick={() => setStep(1)}
+                      onClick={() => setStep(2)}
                       className="flex-1 border border-purple-600 text-purple-600 py-3 rounded-lg font-bold hover:bg-purple-50"
                     >
-                      Back
+                      Back to Location
                     </button>
                     <button
-                      onClick={() => setStep(3)}
+                      onClick={() => setStep(4)}
                       className="flex-1 bg-purple-600 px-2 text-white py-3 rounded-lg font-bold hover:bg-purple-700"
                     >
                       Continue to Payment
@@ -418,8 +538,8 @@ const Checkout = () => {
                 </div>
               )}
 
-              {/* Step 3: Payment Method */}
-              {step === 3 && (
+              {/* Step 4: Payment Method */}
+              {step === 4 && (
                 <div className="bg-white rounded-lg shadow p-6">
                   <h2 className="text-xl font-bold mb-4">Select Payment Method</h2>
                   <div className="space-y-4">
@@ -449,7 +569,7 @@ const Checkout = () => {
                   </div>
                   <div className="flex gap-4 mt-6">
                     <button
-                      onClick={() => setStep(2)}
+                      onClick={() => setStep(3)}
                       className="flex-1 border border-purple-600 text-purple-600 py-3 rounded-lg font-bold hover:bg-purple-50"
                     >
                       Back
@@ -677,7 +797,35 @@ const Checkout = () => {
                   </p>
                 )}
               </div>
-              
+
+              <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-2 text-sm font-bold text-purple-900">
+                  <HiMap className="w-4 h-4" />
+                  Selected Shipping Destination
+                </div>
+                {selectedShippingLocation ? (
+                  <div className="space-y-2 text-sm text-gray-700">
+                    <div className="font-semibold">{selectedShippingLocation.name}</div>
+                    <div>
+                      {selectedShippingLocation.region} • {selectedShippingLocation.state}
+                      {selectedShippingLocation.city ? `, ${selectedShippingLocation.city}` : ''}
+                    </div>
+                    <div>
+                      {selectedShippingLocation.isFreeShipping ? (
+                        <span className="text-green-600 font-semibold">Free shipping</span>
+                      ) : (
+                        <span className="text-purple-600 font-semibold">₦{selectedShippingLocation.shippingFee.toLocaleString()}</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {selectedShippingLocation.estimatedDeliveryDays} day{selectedShippingLocation.estimatedDeliveryDays !== 1 ? 's' : ''} delivery estimate
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Choose a shipping location to see the fee and delivery estimate.</p>
+                )}
+              </div>
+
               <div className="flex justify-between font-bold text-lg mt-4">
                 <span>Total</span>
                 <span className="text-blue-600">₦{total.toLocaleString()}</span>

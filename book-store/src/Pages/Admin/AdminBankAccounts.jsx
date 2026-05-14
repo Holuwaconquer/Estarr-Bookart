@@ -24,14 +24,105 @@ const AdminBankAccounts = () => {
   });
 
   const popularBanks = [
+    // Tier 1 Banks
     { name: 'Zenith Bank', code: '057' },
-    { name: 'GTBank', code: '007' },
+    { name: 'GTBank (Guaranty Trust Bank)', code: '007' },
     { name: 'Access Bank', code: '044' },
-    { name: 'First Bank', code: '011' },
-    { name: 'UBA', code: '033' },
-    { name: 'Stanbic IBTC', code: '221' },
-    { name: 'Standard Chartered', code: '068' },
-    { name: 'FCMB', code: '214' },
+    { name: 'First Bank of Nigeria', code: '011' },
+    { name: 'United Bank for Africa (UBA)', code: '033' },
+    { name: 'Stanbic IBTC Bank', code: '221' },
+    { name: 'Fidelity Bank', code: '070' },
+    { name: 'First City Monument Bank (FCMB)', code: '214' },
+    
+    // Other Commercial Banks
+    { name: 'Union Bank of Nigeria', code: '032' },
+    { name: 'Wema Bank', code: '035' },
+    { name: 'Sterling Bank', code: '232' },
+    { name: 'Polaris Bank', code: '076' },
+    { name: 'Unity Bank', code: '215' },
+    { name: 'Providus Bank', code: '101' },
+    { name: 'Suntrust Bank', code: '100' },
+    { name: 'Titan Trust Bank', code: '102' },
+    
+    // Mobile Banks / Digital Banks
+    { name: 'OPay Digital Bank', code: '999' },
+    { name: 'Paga', code: '327' },
+    { name: 'PalmPay', code: '998' },
+    { name: 'Moniepoint MFB', code: '505' },
+    { name: 'Kuda Bank', code: '090267' },
+    { name: 'VFD Microfinance Bank', code: '090110' },
+    { name: 'Rubies MFB', code: '125' },
+    { name: 'Sparkle MFB', code: '090262' },
+    { name: 'Carbon (One Finance)', code: '090263' },
+    { name: 'FairMoney MFB', code: '090268' },
+    { name: 'Mint MFB', code: '090264' },
+    { name: 'ALAT by Wema', code: '035' },
+    { name: 'EcoBank Mobile', code: '050' },
+    { name: '9PSB', code: '120' },
+    { name: 'Chipper Cash', code: '090269' },
+    { name: 'Barter by Flutterwave', code: '090270' },
+    
+    // Major Microfinance Banks
+    { name: 'Fortis MFB', code: '501' },
+    { name: 'Fintouch MFB', code: '502' },
+    { name: 'Addosser MFB', code: '503' },
+    { name: 'LAPO MFB', code: '504' },
+    { name: 'FCMB Easy Account', code: '214' },
+    { name: 'Accion MFB', code: '602' },
+    { name: 'Bosak MFB', code: '607' },
+    { name: 'Mayfair MFB', code: '608' },
+    { name: 'Seed Capital MFB', code: '609' },
+    { name: 'Trust MFB', code: '610' },
+    { name: 'Banc Corp', code: '611' },
+    { name: 'New Dawn MFB', code: '612' },
+    { name: 'ECC MFB', code: '613' },
+    { name: 'Infinity MFB', code: '614' },
+    { name: 'Unical MFB', code: '615' },
+    { name: 'Grooming MFB', code: '616' },
+    { name: 'Personal Trust MFB', code: '617' },
+    { name: 'Apeks MFB', code: '618' },
+    { name: 'KCMB MFB', code: '619' },
+    { name: 'Petra MFB', code: '620' },
+    { name: 'Consistent Trust MFB', code: '621' },
+    { name: 'Astrapolis MFB', code: '622' },
+    { name: 'Lagos Building Investment Company (LBIC) MFB', code: '623' },
+    { name: 'FBN Microfinance Bank', code: '624' },
+    { name: 'Royal Exchange MFB', code: '625' },
+    { name: 'Havenhill MFB', code: '626' },
+    { name: 'E-Barcs MFB', code: '627' },
+    { name: 'AMJU Unique MFB', code: '628' },
+    { name: 'Beyond Boundaries MFB', code: '629' },
+    { name: 'Links MFB', code: '630' },
+    { name: 'Meridian MFB', code: '631' },
+    { name: 'PremiumTrust MFB', code: '632' },
+    { name: 'Regent MFB', code: '633' },
+    { name: 'Safe Haven MFB', code: '634' },
+    { name: 'VFD MFB', code: '635' },
+    { name: 'Covenant MFB', code: '636' },
+    
+    // Non-Interest (Islamic) Banks
+    { name: 'Jaiz Bank', code: '301' },
+    { name: 'Taj Bank', code: '302' },
+    { name: 'Lotus Bank', code: '303' },
+    { name: 'Alternate Bank', code: '304' },
+    
+    // Development Finance Institutions
+    { name: 'Bank of Industry (BOI)', code: '801' },
+    { name: 'Development Bank of Nigeria (DBN)', code: '802' },
+    { name: 'Nigeria Export Import Bank (NEXIM)', code: '803' },
+    
+    // Other Financial Institutions
+    { name: 'Standard Chartered Bank', code: '068' },
+    { name: 'Citibank Nigeria', code: '023' },
+    { name: 'Heritage Bank', code: '030' },
+    { name: 'Keystone Bank', code: '082' },
+    { name: 'Globus Bank', code: '103' },
+    { name: 'Premium Trust Bank', code: '104' },
+    
+    // Payment Service Banks
+    { name: 'HopePSB', code: '110' },
+    { name: 'MoneyMaster PSB', code: '111' },
+    { name: 'MoMo PSB', code: '112' }
   ];
 
   // Fetch accounts
@@ -345,6 +436,7 @@ const AdminBankAccounts = () => {
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-gray-400 mt-1">Includes all commercial banks, mobile banks, and microfinance banks</p>
               </div>
 
               {/* Bank Code */}

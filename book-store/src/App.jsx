@@ -36,6 +36,7 @@ import AdminOrders from './Pages/Admin/AdminOrders'
 import AdminBlog from './Pages/Admin/AdminBlog'
 import AdminBankAccounts from './Pages/Admin/AdminBankAccounts'
 import AdminUsers from './Pages/Admin/AdminUsers'
+import AdminShippingLocations from './Pages/Admin/AdminShippingLocations'
 import ProtectedRoute from './components/ProtectedRoute'
 import ProtectedRouteForAuth from './components/ProtectedRouteForAuth'
 import AdminRoute from './components/AdminRoute'
@@ -128,6 +129,7 @@ const App = () => {
       <Route path={`/${ADMIN_ROUTE}/blog`} element={<AdminRoute><AdminBlog /></AdminRoute>} />
       <Route path={`/${ADMIN_ROUTE}/users`} element={<AdminRoute><AdminUsers /></AdminRoute>} />
       <Route path={`/${ADMIN_ROUTE}/bank-accounts`} element={<AdminRoute><AdminBankAccounts /></AdminRoute>} />
+      <Route path={`/${ADMIN_ROUTE}/shipping-locations`} element={<AdminRoute><AdminShippingLocations /></AdminRoute>} />
 
       <Route path="*" element={<UserRoleChecker />} />
 
