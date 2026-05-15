@@ -120,7 +120,7 @@ const ShippingInfo = () => {
                 <div className="bg-blue-50 p-6 rounded-xl mt-8">
                   <h3 className="font-bold text-gray-800 mb-2">Questions About Shipping?</h3>
                   <p className="text-gray-600">Contact our shipping team:</p>
-                  <p className="text-gray-600">Email: estheribukunoluwa100@gmail.com</p>
+                  <p className="text-gray-600">Email: estarrbookart@gmail.com</p>
                   <p className="text-gray-600">Phone: +234 814 515 7410, +234 701 626 7055</p>
                 </div>
               </div>

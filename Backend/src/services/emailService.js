@@ -3,7 +3,7 @@ const { Resend } = require('resend');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Admin email address
-const ADMIN_EMAIL = 'estheribukunoluwa100@gmail.com';
+const ADMIN_EMAIL = 'estarrbookart@gmail.com';
 
 const sendOrderNotificationEmail = async (order, user) => {
   try {

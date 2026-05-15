@@ -205,7 +205,7 @@ const Faq = () => {
             <p className="text-gray-600 mb-6">We're here to help! Contact our customer support team.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:estheribukunoluwa100@gmail.com"
+                href="mailto:estarrbookart@gmail.com"
                 className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-semibold hover:shadow-lg transition"
               >
                 Email Support

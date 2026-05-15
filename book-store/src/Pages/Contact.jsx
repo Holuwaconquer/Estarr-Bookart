@@ -46,8 +46,8 @@ const Contact = () => {
     {
       icon: HiMail,
       title: 'Email Us',
-      details: ['estheribukunoluwa100@gmail.com'],
-      action: 'mailto:estheribukunoluwa100@gmail.com'
+      details: ['estarrbookart@gmail.com'],
+      action: 'mailto:estarrbookart@gmail.com'
     },
     {
       icon: HiPhone,

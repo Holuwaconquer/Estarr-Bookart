@@ -55,7 +55,7 @@ const Footer = () => {
                 <IoMailOutline className="w-5 h-5 text-purple-400 flex-shrink-0" />
                 <div>
                   <p className="font-medium text-sm">Email</p>
-                  <p className="text-gray-400 text-sm">estheribukunoluwa100@gmail.com</p>
+                  <p className="text-gray-400 text-sm">estarrbookart@gmail.com</p>
                 </div>
               </div>
             </div>

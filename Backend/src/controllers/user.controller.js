@@ -165,7 +165,7 @@ const sendWelcomeEmail = async (userEmail, userName) => {
                 <a href="https://threads.net/@i_am_jaszi">💬 Threads</a>
               </div>
               <p style="margin-top: 15px;">
-                Need help? Contact us at <a href="mailto:estheribukunoluwa100@gmail.com" style="color: #06b6d4;">estheribukunoluwa100@gmail.com</a>
+                Need help? Contact us at <a href="mailto:estarrbookart@gmail.com" style="color: #06b6d4;">estarrbookart@gmail.com</a>
               </p>
               <p style="margin-top: 10px; font-size: 11px;">
                 © ${new Date().getFullYear()} EStarr Bookart Hub. All rights reserved.
