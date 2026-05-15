@@ -31,13 +31,13 @@ const ShippingInfo = () => {
               <div className="grid md:grid-cols-2 gap-6 mb-10">
                 <div className="bg-green-50 p-6 rounded-xl text-center">
                   <HiCash className="w-12 h-12 text-green-600 mx-auto mb-3" />
-                  <h3 className="text-2xl font-bold text-gray-800">Free Shipping</h3>
-                  <p className="text-gray-600">On orders over ₦5,000</p>
+                  <h3 className="text-2xl font-bold text-gray-800">Shipping Discount</h3>
+                  <p className="text-gray-600">On orders over ₦50,000</p>
                 </div>
                 <div className="bg-blue-50 p-6 rounded-xl text-center">
                   <HiClock className="w-12 h-12 text-blue-600 mx-auto mb-3" />
                   <h3 className="text-2xl font-bold text-gray-800">Fast Delivery</h3>
-                  <p className="text-gray-600">2-5 business days nationwide</p>
+                  <p className="text-gray-600">2-14 business days nationwide</p>
                 </div>
               </div>
 
@@ -45,8 +45,8 @@ const ShippingInfo = () => {
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Shipping Destinations</h2>
                 <p>We currently ship to all states within Nigeria. International shipping is not available at this time.</p>
 
-                <h2 className="text-2xl font-bold text-gray-800 mt-8 mb-4">Shipping Rates</h2>
-                <div className="overflow-x-auto">
+                {/* <h2 className="text-2xl font-bold text-gray-800 mt-8 mb-4">Shipping Rates</h2> */}
+                {/* <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-gray-50">
@@ -73,7 +73,7 @@ const ShippingInfo = () => {
                       </tr>
                     </tbody>
                   </table>
-                </div>
+                </div> */}
 
                 <h2 className="text-2xl font-bold text-gray-800 mt-8 mb-4">Delivery Timeframes</h2>
                 <ul>
@@ -120,8 +120,8 @@ const ShippingInfo = () => {
                 <div className="bg-blue-50 p-6 rounded-xl mt-8">
                   <h3 className="font-bold text-gray-800 mb-2">Questions About Shipping?</h3>
                   <p className="text-gray-600">Contact our shipping team:</p>
-                  <p className="text-gray-600">Email: shipping@estarrbookart.com</p>
-                  <p className="text-gray-600">Phone: +234 (0) 123 456 7890</p>
+                  <p className="text-gray-600">Email: estheribukunoluwa100@gmail.com</p>
+                  <p className="text-gray-600">Phone: +234 814 515 7410, +234 701 626 7055</p>
                 </div>
               </div>
             </div>

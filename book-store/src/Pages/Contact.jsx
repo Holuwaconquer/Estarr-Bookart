@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { HiMail, HiPhone, HiLocationMarker, HiClock, HiCheckCircle } from 'react-icons/hi';
-import { FaInstagram, FaFacebook, FaTwitter } from 'react-icons/fa';
+import { FaInstagram, FaFacebook, FaTwitter, FaLinkedin } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
 const Contact = () => {
@@ -46,13 +46,13 @@ const Contact = () => {
     {
       icon: HiMail,
       title: 'Email Us',
-      details: ['support@estarrbookart.com', 'orders@estarrbookart.com'],
-      action: 'mailto:support@estarrbookart.com.ng'
+      details: ['estheribukunoluwa100@gmail.com'],
+      action: 'mailto:estheribukunoluwa100@gmail.com'
     },
     {
       icon: HiPhone,
       title: 'Call Us',
-      details: ['+234 814 515 7410'],
+      details: ['+234 814 515 7410', '+234 701 626 7055'],
       action: 'tel:+2348145157410'
     },
     {
@@ -64,7 +64,7 @@ const Contact = () => {
     {
       icon: HiClock,
       title: 'Business Hours',
-      details: ['Monday - Friday: 9:00 AM - 6:00 PM', 'Saturday: 10:00 AM - 4:00 PM', 'Sunday: Closed'],
+      details: ['We are available 24/7'],
       action: null
     }
   ];
@@ -72,7 +72,7 @@ const Contact = () => {
   const socialLinks = [
     { icon: FaInstagram, name: 'Instagram', url: 'https://instagram.com/estarrbookart.hubafrika', color: 'hover:text-pink-600' },
     { icon: FaFacebook, name: 'Facebook', url: 'https://facebook.com/estarrbookart', color: 'hover:text-blue-600' },
-    { icon: FaTwitter, name: 'Twitter', url: 'https://twitter.com/estarrbookart', color: 'hover:text-blue-400' }
+    { icon: FaLinkedin, name: 'Twitter', url: 'https://twitter.com/estarrbookart', color: 'hover:text-blue-400' }
   ];
 
   return (

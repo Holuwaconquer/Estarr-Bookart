@@ -249,7 +249,7 @@ const sendOrderConfirmationEmail = async (order, user) => {
     `).join('');
 
     const { data, error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'EStarr Bookart <orders@estarrbookart.com.ng>',
+      from: 'EStarr Bookart <orders@estarrbookart.com.ng>',
       to: user.email,
       subject: `Order Confirmation - #${order.orderNumber || order._id.slice(-8)}`,
       html: `

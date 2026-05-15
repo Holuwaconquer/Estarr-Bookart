@@ -21,14 +21,15 @@ import {
 } from 'react-icons/hi';
 import { FiUsers, FiAward, FiBookOpen, FiTrendingUp } from 'react-icons/fi';
 import useCanonicalUrl from '../../useCanonicalUrl';
+import { FaFacebook, FaInstagram, FaLinkedin } from 'react-icons/fa';
 
 const AboutUs = () => {
   useCanonicalUrl()
   const stats = [
-    { icon: FiBookOpen, label: 'Books Available', value: '10,000+', color: 'from-cyan-500 to-blue-500' },
-    { icon: FiUsers, label: 'Happy Readers', value: '5,000+', color: 'from-purple-500 to-pink-500' },
-    { icon: FiAward, label: 'Years of Excellence', value: '5+', color: 'from-amber-500 to-orange-500' },
-    { icon: FiTrendingUp, label: 'Books Sold', value: '50,000+', color: 'from-green-500 to-emerald-500' },
+    { icon: FiBookOpen, label: 'Books Available', value: '1,000+', color: 'from-cyan-500 to-blue-500' },
+    { icon: FiUsers, label: 'Happy Readers', value: '200+', color: 'from-purple-500 to-pink-500' },
+    { icon: FiAward, label: 'Years of Excellence', value: '1', color: 'from-amber-500 to-orange-500' },
+    { icon: FiTrendingUp, label: 'Books Sold', value: '365+', color: 'from-green-500 to-emerald-500' },
   ];
 
   useEffect(() => {
@@ -69,9 +70,9 @@ const AboutUs = () => {
     {
       name: 'Esther Adesina',
       role: 'Founder & CEO',
-      bio: 'Passionate about fostering a reading culture and empowering minds through literature.',
+      bio: 'I am EStarr, known as The Book Artist. Creative writer, passionate about fostering the reading culture. Experience books through my lens.',
       image: null,
-      social: { instagram: 'https://www.instagram.com/estarrbookart.hub/', twitter: '#' }
+      social: { instagram: 'https://www.instagram.com/theestheradesina', facebook: 'Esther Adesina', linkedin: 'Esther Adesina' } 
     },
   ];
 
@@ -85,17 +86,17 @@ const AboutUs = () => {
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500 rounded-full blur-3xl" />
         </div> */}
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-32">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 ">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center"
           >
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-purple-700 bg-clip-text text-transparent">
+            <h1 className="text-3xl md:text-6xl font-bold bg-gradient-to-r from-purple-400 to-purple-700 bg-clip-text text-transparent">
               Welcome to EStarr Bookart Hub
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-[14px] md:text-2xl italic text-gray-600 max-w-3xl mx-auto">
               More than a bookstore — a hub for growth, purpose, and impact through reading
             </p>
           </motion.div>
@@ -103,7 +104,7 @@ const AboutUs = () => {
       </section>
 
       {/* Story Section */}
-      <section className="py-16 px-4">
+      <section className="pb-4 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -115,24 +116,21 @@ const AboutUs = () => {
               <h2 className="text-3xl md:text-4xl text-center font-bold text-gray-900 mb-6">
                 Our Story
               </h2>
-              <div className="space-y-4 text-gray-600">
+              <div className="space-y-4 text-gray-600 text-center">
                 <p>
-                  EStarr Bookart Hub was born from a simple yet powerful vision — to create a 
-                  vibrant community where books are not just sold but celebrated as tools for 
-                  transformation. Based in Nigeria, we've grown into a trusted destination for 
-                  readers seeking knowledge, inspiration, and personal growth.
+                  EStarr Bookart was born from a simple yet powerful vision: to create a vibrant community where books are not just sold, but celebrated as tools for transformation.
                 </p>
                 <p>
-                  Our journey began with a passion for fostering a reading culture that goes 
-                  beyond entertainment. We believe that every book has the power to ignite 
-                  purpose, shape perspectives, and create lasting impact. Today, we serve 
-                  thousands of readers across Nigeria, with strong connections to academic 
-                  communities including Obafemi Awolowo University (OAU), Ile-Ife.
+                  A vision that started through the eyes of an 8-year-old child with a deep curiosity for growth and personal development has evolved into a brand committed to helping people become better versions of themselves through intentional reading; making books accessible, affordable, and undeniably attractive to everyone.
                 </p>
                 <p>
-                  At EStarr Bookart Hub, we're not just selling books — we're building a 
-                  movement of lifelong learners and change-makers who understand that investing 
-                  in books is investing in oneself.
+                  Currently based within Obafemi Awolowo University (OAU), Ile-Ife, EStarr Bookart is steadily growing into a trusted destination for readers seeking knowledge, inspiration, and personal growth. Today, we proudly serve a growing community of royals, thinkers, and change-makers.
+                </p>
+                <p>
+                  At EStarr Bookart, we are building a culture of readers, leaders, and lifelong learners who understand that investing in books is investing in oneself.
+                </p>
+                <p>
+                  Welcome to EStarr Bookart; Your Home of Good Books.
                 </p>
               </div>
             </motion.div>
@@ -220,9 +218,7 @@ const AboutUs = () => {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Mission</h3>
               <p className="text-gray-600 leading-relaxed">
-                To foster a culture of reading and continuous learning by providing access 
-                to quality books that inspire growth, ignite purpose, and create lasting 
-                impact in communities across Nigeria.
+                From a simple love for reading to a growing community of readers, we are committed to nurturing a culture where books are celebrated as a tool for transformation.
               </p>
             </motion.div>
 
@@ -238,9 +234,7 @@ const AboutUs = () => {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Vision</h3>
               <p className="text-gray-600 leading-relaxed">
-                To become the leading hub for book lovers and learners across Africa, 
-                empowering individuals to transform their lives through the power of reading 
-                and knowledge sharing.
+                Reserving lives. To become the leading hub for book lovers across the world and trusted book brand for royals. People’s lives get better here and that’s our testimony.
               </p>
             </motion.div>
           </div>
@@ -310,7 +304,7 @@ const AboutUs = () => {
               {
                 icon: HiTruck,
                 title: 'Free Delivery',
-                description: 'Free shipping on orders over ₦5,000 across Nigeria',
+                description: 'Special delivery discounts available on orders above ₦50,000 across Nigeria.',
                 color: 'cyan'
               },
               {
@@ -361,7 +355,7 @@ const AboutUs = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 gap-8 max-w-4xl mx-auto">
             {team.map((member, idx) => (
               <motion.div
                 key={idx}
@@ -382,9 +376,14 @@ const AboutUs = () => {
                   <p className="text-cyan-600 font-medium mb-2">{member.role}</p>
                   <p className="text-gray-600 text-sm mb-4">{member.bio}</p>
                   <div className="flex justify-center gap-3">
-                    <a href={member.social.instagram} className="p-2 bg-gray-100 rounded-full hover:bg-cyan-100 transition-colors">
-                      {/* <HiOutlineInstagram className="w-5 h-5 text-gray-600 hover:text-cyan-600" />  */}
-                      insta
+                    <a href={member.social.instagram} target='_blank' className="p-2 bg-gray-100 rounded-full hover:bg-cyan-100 transition-colors">
+                      <FaInstagram className="w-5 h-5 text-gray-600 hover:text-cyan-600" />
+                    </a>
+                    <a href={member.social.facebook} target='_blank' className="p-2 bg-gray-100 rounded-full hover:bg-cyan-100 transition-colors">
+                      <FaFacebook className="w-5 h-5 text-gray-600 hover:text-cyan-600" />
+                    </a>
+                    <a href={member.social.linkedin} target='_blank' className="p-2 bg-gray-100 rounded-full hover:bg-cyan-100 transition-colors">
+                      <FaLinkedin className="w-5 h-5 text-gray-600 hover:text-cyan-600" />
                     </a>
                   </div>
                 </div>

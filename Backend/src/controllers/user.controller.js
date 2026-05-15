@@ -165,7 +165,7 @@ const sendWelcomeEmail = async (userEmail, userName) => {
                 <a href="https://threads.net/@i_am_jaszi">💬 Threads</a>
               </div>
               <p style="margin-top: 15px;">
-                Need help? Contact us at <a href="mailto:support@estarrbookart.com.ng" style="color: #06b6d4;">support@estarrbookart.com.ng</a>
+                Need help? Contact us at <a href="mailto:estheribukunoluwa100@gmail.com" style="color: #06b6d4;">estheribukunoluwa100@gmail.com</a>
               </p>
               <p style="margin-top: 10px; font-size: 11px;">
                 © ${new Date().getFullYear()} EStarr Bookart Hub. All rights reserved.
@@ -471,7 +471,7 @@ const ForgotPassword = async (req, res) => {
     try {
       // Send email using Resend
       const { data, error } = await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'Estarr BookArts <noreply@yourdomain.com>',
+        from: 'EStarr Bookarts <noreply@estarrbookarts.com.ng>',
         to: email,
         subject: 'Password Reset Request',
         html: `
@@ -487,7 +487,7 @@ const ForgotPassword = async (req, res) => {
               
               <!-- Header -->
               <div style="background: linear-gradient(135deg, #06b6d4, #3b82f6); padding: 32px 24px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">Estarr BookArts</h1>
+                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">EStarr Bookarts</h1>
                 <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 16px;">Password Reset Request</p>
               </div>
               
@@ -495,7 +495,7 @@ const ForgotPassword = async (req, res) => {
               <div style="padding: 40px 32px;">
                 <p style="color: #1f2937; font-size: 18px; margin-top: 0;">Hello,</p>
                 <p style="color: #4b5563; font-size: 16px; margin-bottom: 24px;">
-                  We received a request to reset your password for your Estarr BookArts account. Click the button below to create a new password.
+                  We received a request to reset your password for your EStarr Bookarts account. Click the button below to create a new password.
                 </p>
                 
                 <!-- Button -->
@@ -529,7 +529,7 @@ const ForgotPassword = async (req, res) => {
               <!-- Footer -->
               <div style="background-color: #f9fafb; padding: 20px 32px; text-align: center; border-top: 1px solid #e5e7eb;">
                 <p style="color: #6b7280; font-size: 12px; margin: 0;">
-                  © ${new Date().getFullYear()} Estarr BookArts. All rights reserved.
+                  © ${new Date().getFullYear()} EStarr Bookarts. All rights reserved.
                 </p>
                 <p style="color: #9ca3af; font-size: 11px; margin: 8px 0 0;">
                   Your trusted bookstore in Nigeria
@@ -899,14 +899,14 @@ const sendTestEmail = async (req, res) => {
     const { email } = req.body;
     
     const { data, error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'Estarr BookArts <noreply@yourdomain.com>',
+      from: 'EStarr Bookart <noreply@estarrbookart.com.ng>',
       to: email || 'test@example.com',
-      subject: 'Test Email from Estarr BookArts',
+      subject: 'Test Email from EStarr Bookarts',
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
           <h1>Test Email</h1>
           <p>This is a test email to confirm Resend is working properly.</p>
-          <p>Best regards,<br>Estarr BookArts Team</p>
+          <p>Best regards,<br>EStarr Bookarts Team</p>
         </div>
       `,
     });
