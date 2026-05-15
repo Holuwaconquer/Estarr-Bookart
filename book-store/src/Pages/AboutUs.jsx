@@ -72,7 +72,7 @@ const AboutUs = () => {
       role: 'Founder & CEO',
       bio: 'I am EStarr, known as The Book Artist. Creative writer, passionate about fostering the reading culture. Experience books through my lens.',
       image: null,
-      social: { instagram: 'https://www.instagram.com/theestheradesina', facebook: 'Esther Adesina', linkedin: 'Esther Adesina' } 
+      social: { instagram: 'https://www.instagram.com/theestheradesina', facebook: 'https://www.facebook.com/estheribukunoluwa.adesina.5', linkedin: 'https://www.linkedin.com/in/esther-adesina-9a4641242/' } 
     },
   ];
 
