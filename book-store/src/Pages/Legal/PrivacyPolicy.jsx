@@ -62,14 +62,14 @@ const PrivacyPolicy = () => {
         • Opt-out of marketing communications
         • Data portability
         • Lodge a complaint with supervisory authorities
-        To exercise these rights, please contact us at privacy@estarrbookart.com`
+        To exercise these rights, please contact us at estarrbookart@gmail.com`
     },
     {
       icon: HiMail,
       title: 'Contact Us',
       content: `If you have questions about this Privacy Policy or our data practices, please contact us at:
-        • Email: privacy@estarrbookart.com
-        • Phone: +234 (0) 123 456 7890
+        • Email: estarrbookart@gmail.com
+        • Phone: 08145157410, 07016267055
         • Address: EStarr Bookart Hub, OAU, Ile-Ife, Osun State, Nigeria`
     }
   ];

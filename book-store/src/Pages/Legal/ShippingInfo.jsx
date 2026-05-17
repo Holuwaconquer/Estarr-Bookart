@@ -76,11 +76,12 @@ const ShippingInfo = () => {
                 </div> */}
 
                 <h2 className="text-2xl font-bold text-gray-800 mt-8 mb-4">Delivery Timeframes</h2>
-                <ul>
+                {/* <ul>
                   <li><strong>Lagos, Abuja, Port Harcourt:</strong> 1-3 business days</li>
                   <li><strong>Other State Capitals:</strong> 3-5 business days</li>
                   <li><strong>Remote Areas:</strong> 5-7 business days</li>
-                </ul>
+                </ul> */}
+                <p>Delivery timeframe varies depending on your location and order details.</p>
 
                 <h2 className="text-2xl font-bold text-gray-800 mt-8 mb-4">Order Processing</h2>
                 <p>Orders are processed within 1-2 business days after payment confirmation. You will receive:</p>

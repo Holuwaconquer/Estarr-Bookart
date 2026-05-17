@@ -68,7 +68,7 @@ const ReturnsPolicy = () => {
 
                 <h2 className="text-2xl font-bold text-gray-800 mt-8 mb-4">How to Initiate a Return</h2>
                 <ol className="list-decimal pl-5">
-                  <li>Contact our customer service at returns@estarrbookart.com with your order number</li>
+                  <li>Contact our customer service at estarrbookart@gmail.com with your order number</li>
                   <li>Provide the reason for return and photos if item is damaged</li>
                   <li>Wait for return authorization and instructions</li>
                   <li>Package the item securely in original packaging</li>
@@ -100,9 +100,9 @@ const ReturnsPolicy = () => {
                     <div>
                       <h3 className="font-bold text-gray-800 mb-2">Questions About Returns?</h3>
                       <p className="text-gray-600">Contact our returns team:</p>
-                      <p className="text-gray-600">Email: returns@estarrbookart.com</p>
-                      <p className="text-gray-600">Phone: +234 (0) 123 456 7890</p>
-                      <p className="text-gray-600 text-sm mt-2">Hours: Monday-Friday, 9 AM - 5 PM (WAT)</p>
+                      <p className="text-gray-600">Email: estarrbookart@gmail.com</p>
+                      <p className="text-gray-600">Phone: 08145157410, 07016267055</p>
+                      <p className="text-gray-600 text-sm mt-2">Hours: 24/7</p>
                     </div>
                   </div>
                 </div>

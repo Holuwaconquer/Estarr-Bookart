@@ -72,7 +72,7 @@ const AboutUs = () => {
       role: 'Founder & CEO',
       bio: 'I am EStarr, known as The Book Artist. Creative writer, passionate about fostering the reading culture. Experience books through my lens.',
       image: null,
-      social: { instagram: 'https://www.instagram.com/theestheradesina', facebook: 'https://www.facebook.com/estheribukunoluwa.adesina.5', linkedin: 'https://www.linkedin.com/in/esther-adesina-9a4641242/' } 
+      social: { facebook: 'https://www.facebook.com/estheribukunoluwa.adesina.5', linkedin: 'https://www.linkedin.com/in/esther-adesina-9a4641242/', instagram: 'https://www.instagram.com/theestheradesina',   } 
     },
   ];
 
@@ -304,7 +304,7 @@ const AboutUs = () => {
               {
                 icon: HiTruck,
                 title: 'Free Delivery',
-                description: 'Special delivery discounts available on orders above ₦50,000 across Nigeria.',
+                description: 'Enjoy free delivery within OAU Campus. Also enjoy special delivery discounts and exclusive bonuses when you shop multiple books..',
                 color: 'cyan'
               },
               {
@@ -376,14 +376,14 @@ const AboutUs = () => {
                   <p className="text-cyan-600 font-medium mb-2">{member.role}</p>
                   <p className="text-gray-600 text-sm mb-4">{member.bio}</p>
                   <div className="flex justify-center gap-3">
-                    <a href={member.social.instagram} target='_blank' className="p-2 bg-gray-100 rounded-full hover:bg-cyan-100 transition-colors">
-                      <FaInstagram className="w-5 h-5 text-gray-600 hover:text-cyan-600" />
-                    </a>
                     <a href={member.social.facebook} target='_blank' className="p-2 bg-gray-100 rounded-full hover:bg-cyan-100 transition-colors">
                       <FaFacebook className="w-5 h-5 text-gray-600 hover:text-cyan-600" />
                     </a>
                     <a href={member.social.linkedin} target='_blank' className="p-2 bg-gray-100 rounded-full hover:bg-cyan-100 transition-colors">
                       <FaLinkedin className="w-5 h-5 text-gray-600 hover:text-cyan-600" />
+                    </a>
+                    <a href={member.social.instagram} target='_blank' className="p-2 bg-gray-100 rounded-full hover:bg-cyan-100 transition-colors">
+                      <FaInstagram className="w-5 h-5 text-gray-600 hover:text-cyan-600" />
                     </a>
                   </div>
                 </div>
@@ -411,14 +411,14 @@ const AboutUs = () => {
             
             <div className="flex justify-center gap-6 mb-12">
               <a 
-                href="https://www.instagram.com/theestheradesina" 
+                href="https://www.instagram.com/estarrbookart.hub" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="p-4 bg-white/20 rounded-full hover:bg-white/30 transition-all hover:scale-110"
               >
                 <FaInstagram className="w-8 h-8" />
               </a>
-              <a 
+              {/* <a 
                 href="https://www.facebook.com/estheribukunoluwa.adesina.5" 
                 target="_blank" 
                 rel="noopener noreferrer"
@@ -433,7 +433,7 @@ const AboutUs = () => {
                 className="p-4 bg-white/20 rounded-full hover:bg-white/30 transition-all hover:scale-110"
               >
                 <FaLinkedin className="w-8 h-8" />
-              </a>
+              </a> */}
             </div>
 
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto">
