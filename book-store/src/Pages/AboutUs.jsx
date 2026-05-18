@@ -28,7 +28,7 @@ const AboutUs = () => {
   const stats = [
     { icon: FiBookOpen, label: 'Books Available', value: '1,000+', color: 'from-cyan-500 to-blue-500' },
     { icon: FiUsers, label: 'Happy Readers', value: '200+', color: 'from-purple-500 to-pink-500' },
-    { icon: FiAward, label: 'Years of Excellence', value: '1', color: 'from-amber-500 to-orange-500' },
+    { icon: FiAward, label: 'Year of Excellence', value: '1', color: 'from-amber-500 to-orange-500' },
     { icon: FiTrendingUp, label: 'Books Sold', value: '365+', color: 'from-green-500 to-emerald-500' },
   ];
 
@@ -234,7 +234,7 @@ const AboutUs = () => {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Vision</h3>
               <p className="text-gray-600 leading-relaxed">
-                Reserving lives. To become the leading hub for book lovers across the world and trusted book brand for royals. People’s lives get better here and that’s our testimony.
+                Preserving lives. To become the leading hub for book lovers across the world and trusted book brand for royals. People’s lives get better here and that’s our testimony.
               </p>
             </motion.div>
           </div>
@@ -303,8 +303,8 @@ const AboutUs = () => {
             {[
               {
                 icon: HiTruck,
-                title: 'Free Delivery',
-                description: 'Enjoy free delivery within OAU Campus. Also enjoy special delivery discounts and exclusive bonuses when you shop multiple books..',
+                title: 'Delivery',
+                description: 'Enjoy easy pickup on OAU Campus. Delivery options are also available, with special discounts and exclusive bonuses when you shop multiple books.',
                 color: 'cyan'
               },
               {
