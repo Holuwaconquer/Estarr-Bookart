@@ -24,6 +24,8 @@ export const setSeoMeta = (config = {}) => {
   setMetaTag('property', 'og:title', title);
   setMetaTag('property', 'og:description', description);
   setMetaTag('property', 'og:image', image);
+  setMetaTag('property', 'og:image:secure_url', image);
+  setMetaTag('property', 'og:image:type', 'image/jpeg');
   setMetaTag('property', 'og:url', url);
   setMetaTag('property', 'og:type', type);
 
@@ -32,6 +34,7 @@ export const setSeoMeta = (config = {}) => {
   setMetaTag('name', 'twitter:title', title);
   setMetaTag('name', 'twitter:description', description);
   setMetaTag('name', 'twitter:image', image);
+  setMetaTag('name', 'twitter:image:src', image);
 
   // Canonical URL
   setCanonicalUrl(url);

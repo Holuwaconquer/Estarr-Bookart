@@ -83,7 +83,7 @@ const Landingpage = () => {
 
   // Fetch books on mount and organize them
   useEffect(() => {
-    document.title = 'EStarr BookartLanding Page | EStarr Bookart Hub';
+    document.title = 'EStarr Bookart | Your Home of Good Books';
     window.scrollTo(0, 0);
 
     const fetchBooks = async () => {
