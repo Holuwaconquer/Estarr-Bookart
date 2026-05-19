@@ -634,7 +634,7 @@ const CategoryPage = () => {
                             <p className="text-gray-600 text-sm mb-2">by {book.author}</p>
                             <p className="text-gray-700 text-sm mb-4 line-clamp-2">{book.description}</p>
                             
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between">
                               <div className="flex items-center gap-4">
                                 <div>
                                   <span className="text-3xl font-bold text-cyan-600">₦{Math.round(book.price).toLocaleString()}</span>
@@ -764,7 +764,7 @@ const CategoryPage = () => {
               className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-gradient-to-b from-gray-950 to-gray-900 overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6">
+              <div className="p-6 text-white">
                 <div className="flex items-center justify-between mb-8">
                   <h2 className="text-2xl font-bold">Filters</h2>
                   <button

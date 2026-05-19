@@ -426,7 +426,7 @@ const Checkout = () => {
                     <button
                       onClick={() => setStep(3)}
                       disabled={!selectedShippingLocation}
-                      className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      className="flex-1 text-[12px] bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                       Continue to Address
                     </button>
@@ -468,7 +468,7 @@ const Checkout = () => {
                       placeholder="Street Address"
                       value={formData.street}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border rounded-lg"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                       required
                     />
                     <div className="grid grid-cols-2 gap-4">
@@ -478,7 +478,7 @@ const Checkout = () => {
                         placeholder="City"
                         value={formData.city}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                         required
                       />
                       <input
@@ -487,7 +487,7 @@ const Checkout = () => {
                         placeholder="State"
                         value={formData.state}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                         required
                       />
                     </div>
@@ -498,7 +498,7 @@ const Checkout = () => {
                         placeholder="Zip Code"
                         value={formData.zipCode}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                         required
                       />
                       <input
@@ -507,7 +507,7 @@ const Checkout = () => {
                         placeholder="Country"
                         value={formData.country}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                         required
                       />
                     </div>
@@ -517,11 +517,11 @@ const Checkout = () => {
                       placeholder="Phone Number"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border rounded-lg"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                       required
                     />
                   </div>
-                  <div className="flex gap-4 mt-6">
+                  <div className="flex flex-col md:flex-row gap-4 mt-6">
                     <button
                       onClick={() => setStep(2)}
                       className="flex-1 border border-purple-600 text-purple-600 py-3 rounded-lg font-bold hover:bg-purple-50"
@@ -695,7 +695,7 @@ const Checkout = () => {
                     )}
                   </div>
 
-                  <div className="flex gap-4">
+                  <div className="flex flex-col md:flex-row gap-4">
                     <button
                       onClick={() => setStep(3)}
                       className="flex-1 border border-purple-600 text-purple-600 py-3 rounded-lg font-bold hover:bg-purple-50"
@@ -769,7 +769,7 @@ const Checkout = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow p-6 sticky top-8">
               <h3 className="text-lg font-bold mb-4">Order Summary</h3>
-              <div className="space-y-3 pb-4 border-b">
+              <div className="space-y-3 pb-4 border-b border-gray-300">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal</span>
                   <span>₦{subtotal.toLocaleString()}</span>
@@ -791,11 +791,6 @@ const Checkout = () => {
                   </span>
                 </div>
                 
-                {shippingFee > 0 && (
-                  <p className="text-xs text-gray-500">
-                    Free shipping on orders over ₦100
-                  </p>
-                )}
               </div>
 
               <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">

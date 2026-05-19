@@ -160,7 +160,7 @@ const BookCard = ({ book = {} }) => {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-center justify-center gap-2"
+                className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col md:flex-row items-center justify-center gap-2"
               >
                 {isInCart ? (
                   <motion.button
@@ -235,7 +235,7 @@ const BookCard = ({ book = {} }) => {
           </p>
 
           {/* Price & Action */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between">
             <div>
               <div className="text-xs text-gray-500 mb-1">Price</div>
               <div className="flex items-baseline gap-2">
