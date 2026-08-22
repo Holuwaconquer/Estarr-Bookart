@@ -1,87 +1,73 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  HiSparkles, HiClock, HiStar,
-  HiCheckCircle, HiTruck, HiArrowRight, HiFire,
-  HiChevronLeft, HiChevronRight, HiShoppingCart,
-  HiHeart, HiOutlineHeart, HiEye, HiChevronDown,HiTrash , HiChevronUp 
-} from 'react-icons/hi';
-import { FiBook, FiSearch, FiShoppingBag, FiPercent, FiBox } from 'react-icons/fi';
+import { HiSparkles, HiShoppingCart, HiHeart, HiOutlineHeart, HiEye, HiTrash } from 'react-icons/hi';
 import { MdLocalShipping, MdSecurity, MdHeadsetMic } from 'react-icons/md';
 import { bookAPI, categoryAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Navigation, Pagination } from 'swiper/modules';
 import FlashDeals from '../components/FlashDeals';
-import HeroFlashDeals from '../components/HeroFlashDeals';
-import HeroRightSidebar from '../components/HeroRightSidebar';
-import HeroLeftCategories from '../components/HeroLeftCategories';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 import { useCart } from '../contexts/CartContext';
+import { useNavigate } from 'react-router-dom';
+
+// ---------------------------------------------------------------------
+// Palette — purple-led, two disciplined accents.
+// PURPLE does category tinting, gradients, and hover states (5 tonal
+// steps, never jumps hue). AMBER marks warmth/urgency (sale, new,
+// wishlist). TEAL marks trust (security, shipping, support). Nothing
+// else. Keep in sync with Navbar.jsx.
+// ---------------------------------------------------------------------
+const PURPLE = ['#5B21B6', '#6D28D9', '#7C3AED', '#8B5CF6', '#A78BFA'];
+const AMBER = '#D97706';
+const TEAL = '#0F766E';
+const DEEP = '#4C1D95';
+const DANGER = '#DC2626';
+
+const tintFor = (label = '') => {
+  let hash = 0;
+  for (let i = 0; i < label.length; i++) hash = label.charCodeAt(i) + ((hash << 5) - hash);
+  return PURPLE[Math.abs(hash) % PURPLE.length];
+};
+
+const defaultCategories = [
+  { name: 'Fiction' }, { name: 'Non-Fiction' }, { name: 'Romance' }, { name: 'Mystery' },
+  { name: 'Science' }, { name: 'History' }, { name: 'Biography' }, { name: 'Self-Help' },
+];
+
+// Floating gradient blob — pure motion graphics, no images needed.
+const Blob = ({ color, size, style, duration = 14, delay = 0 }) => (
+  <motion.div
+    className="absolute rounded-full blur-3xl opacity-20 pointer-events-none"
+    style={{ width: size, height: size, background: color, ...style }}
+    animate={{ x: [0, 40, -30, 0], y: [0, -30, 20, 0], scale: [1, 1.15, 0.95, 1] }}
+    transition={{ duration, delay, repeat: Infinity, ease: 'easeInOut' }}
+  />
+);
 
 const Landingpage = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
   const [featuredBooks, setFeaturedBooks] = useState([]);
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [newBooks, setNewBooks] = useState([]);
-  const [topProducts, setTopProducts] = useState([]);
-  const [trendingBooks, setTrendingBooks] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [categories, setCategories] = useState([]);
   const [allBooks, setAllBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [wishlist, setWishlist] = useState(new Set());
-  const [swiperRef, setSwiperRef] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const scrollContainerRef = useRef(null);
-  const { addToCart, removeFromCart, cart } = useCart()
-  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
-  const categoryDropdownRef = useRef(null);
 
-  const defaultCategories = [
-    { name: 'Fiction', icon: '📚', color: 'from-red-500 to-orange-500', bg: 'bg-gradient-to-r from-red-500/10 to-orange-500/10', count: '1.2k' },
-    { name: 'Non-Fiction', icon: '📖', color: 'from-blue-600 to-cyan-500', bg: 'bg-gradient-to-r from-blue-600/10 to-cyan-500/10', count: '890' },
-    { name: 'Romance', icon: '💕', color: 'from-pink-500 to-rose-500', bg: 'bg-gradient-to-r from-pink-500/10 to-rose-500/10', count: '560' },
-    { name: 'Mystery', icon: '🔍', color: 'from-purple-600 to-indigo-500', bg: 'bg-gradient-to-r from-purple-600/10 to-indigo-500/10', count: '340' },
-    { name: 'Science', icon: '🔬', color: 'from-green-500 to-emerald-500', bg: 'bg-gradient-to-r from-green-500/10 to-emerald-500/10', count: '450' },
-    { name: 'History', icon: '📜', color: 'from-amber-600 to-orange-500', bg: 'bg-gradient-to-r from-amber-600/10 to-orange-500/10', count: '670' },
-    { name: 'Biography', icon: '👤', color: 'from-violet-600 to-purple-500', bg: 'bg-gradient-to-r from-violet-600/10 to-purple-500/10', count: '320' },
-    { name: 'Self-Help', icon: '🌟', color: 'from-yellow-500 to-amber-500', bg: 'bg-gradient-to-r from-yellow-500/10 to-amber-500/10', count: '780' },
-  ];
-
-  // Fetch categories from API on component mount
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        setLoading(true);
         const response = await categoryAPI.getAllCategories();
-        console.log('Categories response:', response);
-        const fetchedCategories = Array.isArray(response.data)
-          ? response.data
-          : (response.data?.categories || []);
-        
-        if (fetchedCategories?.length > 0) {
-          const styledCategories = fetchedCategories.map((cat, idx) => ({
-            name: cat.name || cat
-          }));
-          setCategories(styledCategories);
-        } else {
-          setCategories(defaultCategories);
-        }
+        const fetched = Array.isArray(response.data) ? response.data : (response.data?.categories || []);
+        setCategories(fetched.length > 0 ? fetched.map((cat) => ({ name: cat.name || cat })) : defaultCategories);
       } catch (error) {
         console.error('Failed to fetch categories:', error);
         setCategories(defaultCategories);
       }
     };
-
     fetchCategories();
   }, []);
 
-  // Fetch books on mount and organize them
   useEffect(() => {
     document.title = 'EStarr Bookart | Your Home of Good Books';
     window.scrollTo(0, 0);
@@ -96,47 +82,25 @@ const Landingpage = () => {
           setAllBooks(books);
           setFeaturedBooks(books.slice(0, 20));
           setFilteredBooks(books.slice(0, 20));
-          
-          setNewBooks(books.slice(0, 6));
-          
-          const sortedByRating = [...books].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-          setTopProducts(sortedByRating.slice(0, 4));
-          
-          const trending = books.slice(0, 16).filter((_, idx) => idx % 2 === 0 || books[idx]?.rating >= 4.5);
-          setTrendingBooks(trending.slice(0, 8));
-          
+          setNewBooks(books.slice(0, 8));
+
           const viewed = localStorage.getItem('recentlyViewed');
           if (viewed) {
             try {
               const viewedIds = JSON.parse(viewed);
-              const viewedBooks = viewedIds
-                .map(id => books.find(b => b._id === id))
-                .filter(b => b)
-                .slice(0, 6);
-              setRecentlyViewed(viewedBooks);
+              setRecentlyViewed(viewedIds.map((id) => books.find((b) => b._id === id)).filter(Boolean).slice(0, 6));
             } catch (e) {
               setRecentlyViewed([]);
             }
           }
-          
-          try {
-            const currentCats = categories || [];
-            const isShowingDefaults = currentCats.length === 0 || (currentCats[0] && currentCats[0].name === defaultCategories[0].name);
-            if (isShowingDefaults) {
-              const derived = Array.from(new Set(books.map(b => (b.category?.name || b.category || '').toString().trim()).filter(Boolean)));
-              if (derived.length > 0) {
-                const styled = derived.slice(0, 8).map((name, idx) => ({
-                  name,
-                  icon: defaultCategories[idx]?.icon || '📚',
-                  color: defaultCategories[idx]?.color || 'from-blue-500 to-cyan-500',
-                  bg: defaultCategories[idx]?.bg || 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10',
-                  count: Math.floor(Math.random() * 1000) + 50
-                }));
-                setCategories(styled);
-              }
-            }
-          } catch (e) {
-            // ignore derivation errors
+
+          const derived = Array.from(
+            new Set(books.map((b) => (b.category?.name || b.category || '').toString().trim()).filter(Boolean))
+          );
+          if (derived.length > 0) {
+            setCategories((prev) =>
+              prev[0]?.name === defaultCategories[0].name ? derived.slice(0, 8).map((name) => ({ name })) : prev
+            );
           }
         }
       } catch (error) {
@@ -148,40 +112,21 @@ const Landingpage = () => {
     };
 
     fetchBooks();
-
-    const handleClickOutside = (event) => {
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
-        setIsCategoryDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-
   }, []);
 
-  // Filter books by category
   useEffect(() => {
     if (selectedCategory) {
-      const filtered = allBooks.filter(book => {
-        const bookCategory = (book.category?.name || book.category || '').toLowerCase();
-        return bookCategory === selectedCategory.toLowerCase();
-      });
+      const filtered = allBooks.filter(
+        (book) => (book.category?.name || book.category || '').toLowerCase() === selectedCategory.toLowerCase()
+      );
       setFilteredBooks(filtered.slice(0, 20));
     } else {
       setFilteredBooks(featuredBooks);
     }
   }, [selectedCategory, allBooks, featuredBooks]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/category?q=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery('');
-    }
-  };
-
   const toggleWishlist = (bookId) => {
-    setWishlist(prev => {
+    setWishlist((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(bookId)) {
         newSet.delete(bookId);
@@ -198,346 +143,224 @@ const Landingpage = () => {
     setSelectedCategory(categoryName === selectedCategory ? '' : categoryName);
   };
 
-  const scroll = (direction) => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = 200;
-      const newScrollLeft = scrollContainerRef.current.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount);
-      scrollContainerRef.current.scrollTo({
-        left: newScrollLeft,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  const BookCard = ({ book, index, showBadge = false, badgeText = 'New' }) => {
+  // ---------------------------------------------------------------------
+  // Book card. `eager` = animate on mount (used for the first, above-fold
+  // grid so it's guaranteed to play without waiting for scroll). Every
+  // other grid uses whileInView since the user has to scroll to reach it.
+  // ---------------------------------------------------------------------
+  const BookCard = ({ book, index, eager = false }) => {
     const { addToCart, removeFromCart, cart } = useCart();
     const [isInCart, setIsInCart] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const tint = tintFor(book?.category?.name || book?.category || book?.title);
 
-    // Check if book is in cart
     useEffect(() => {
       if (book?._id && cart) {
-        const inCart = cart.some(item => (item.id === book._id || item._id === book._id || item.book === book._id));
-        setIsInCart(inCart);
+        setIsInCart(cart.some((item) => item.id === book._id || item._id === book._id || item.book === book._id));
       }
     }, [book, cart]);
 
     const handleAddToCart = async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
       setIsProcessing(true);
       await addToCart(book);
-      toast.success(`${book?.title || 'Book'} added to cart!`);
+      toast.success(`${book?.title || 'Book'} added to cart`);
       setTimeout(() => setIsProcessing(false), 800);
     };
 
     const handleRemoveFromCart = async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
       setIsProcessing(true);
       await removeFromCart(book._id);
-      toast.success(`${book?.title || 'Book'} removed from cart!`);
+      toast.success(`${book?.title || 'Book'} removed from cart`);
       setTimeout(() => setIsProcessing(false), 800);
     };
 
+    const motionProps = eager
+      ? { initial: { opacity: 0, y: 24, scale: 0.96 }, animate: { opacity: 1, y: 0, scale: 1 } }
+      : { initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: '-40px' } };
+
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05 }}
+        {...motionProps}
+        transition={{ delay: Math.min(index * 0.05, 0.6), type: 'spring', stiffness: 200, damping: 22 }}
         whileHover={{ y: -8 }}
         onClick={() => navigate(`/product/${book?._id}`)}
-        className="group bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200 relative"
+        className="group relative bg-white rounded-2xl overflow-hidden border border-black/[0.06] transition-all duration-300 cursor-pointer"
+        style={{ boxShadow: '0 2px 10px rgba(30,27,41,0.05)' }}
+        onMouseEnter={(e) => { e.currentTarget.style.boxShadow = `0 16px 32px -12px ${tint}40`; e.currentTarget.style.borderColor = `${tint}66`; }}
+        onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 2px 10px rgba(30,27,41,0.05)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)'; }}
       >
-        {/* New Badge */}
-        {/* {showBadge && (
-          <div className="absolute top-3 right-3 z-10">
-            <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-              {badgeText}
-            </div>
-          </div>
-        )} */}
+        <div className="h-[3px] w-full" style={{ background: tint }} />
 
-        {/* Wishlist Button */}
-        <button
-          onClick={(e) => {toggleWishlist(book._id); e.stopPropagation()}}
-          className="absolute top-3 right-3 z-10 flex items-center justify-center bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-white transition-colors"
-        >
-          {wishlist.has(book._id) ? (
-            <HiHeart className="w-5 h-5 text-red-500" />
-          ) : (
-            <HiOutlineHeart className="w-5 h-5 text-gray-600 hover:text-red-500" />
-          )}
-        </button>
-
-        {/* Book Image */}
-        <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 h-[180px] flex items-center justify-center overflow-hidden">
+        <div className="relative h-[190px] flex items-center justify-center overflow-hidden" style={{ background: `${tint}0D` }}>
           <motion.img
             src={book?.image || book?.coverImage || `https://via.placeholder.com/250x300?text=${encodeURIComponent(book?.title || 'Book')}`}
             alt={book?.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            whileHover={{ scale: 1.1 }}
-            onError={(e) => {
-              e.target.src = 'https://via.placeholder.com/250x300?text=No+Image';
-            }}
+            className="w-full h-full object-cover"
+            whileHover={{ scale: 1.06 }}
+            transition={{ duration: 0.4 }}
+            onError={(e) => { e.target.src = 'https://via.placeholder.com/250x300?text=No+Image'; }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
-          {/* Quick View Overlay */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+
+          <motion.button
+            whileHover={{ scale: 1.12 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={(e) => { toggleWishlist(book._id); e.stopPropagation(); }}
+            aria-label="Toggle wishlist"
+            className="absolute top-2.5 right-2.5 flex items-center justify-center bg-white/90 backdrop-blur-sm w-8 h-8 rounded-full shadow-md"
+          >
+            {wishlist.has(book._id) ? <HiHeart className="w-4 h-4" style={{ color: AMBER }} /> : <HiOutlineHeart className="w-4 h-4 text-ink/50" />}
+          </motion.button>
+
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-ink/0 group-hover:bg-ink/15">
             <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate(`/product/${book?._id}`)}
-              className="bg-white/90 backdrop-blur-sm text-gray-900 px-6 py-2 rounded-full font-semibold flex items-center gap-2 shadow-lg"
+              whileHover={{ scale: 1.05 }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/product/${book?._id}`); }}
+              className="bg-white px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-lg"
+              style={{ color: DEEP }}
             >
-              <HiEye className="w-5 h-5" />
-              Quick View
+              <HiEye className="w-4 h-4" /> Quick view
             </motion.button>
           </div>
         </div>
-        
-        {/* Book Info */}
-        <div className="p-4">
-          <h3 className="font-semibold text-gray-800 hover:text-blue-600 cursor-pointer text-lg">
-            {book?.title || 'Unknown'}
-          </h3>
-          <p className="text-sm text-gray-500 truncate mb-3">{book?.author || 'Unknown Author'}</p>
-          
-          {/* Price */}
-          <div className="flex flex-wrap items-center justify-between mb-4">
-            <div className='flex items-center gap-1'>
-              <p className="text-xl font-bold text-gray-900">₦{(book?.price || 0).toLocaleString()}</p>
-              {book?.originalPrice && (
-                <p className="text-sm text-gray-400 line-through">₦{book.originalPrice.toLocaleString()}</p>
-              )}
-            </div>
-            {/* {book?.stock && (
-              <span className={`text-xs px-2 py-1 rounded-full ${book.stock > 10 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                {book.stock > 5 ? 'In Stock' : 'Low Stock'}
-              </span>
-            )} */}
-          </div>
 
-          {/* Action Buttons - Now shows Remove when in cart */}
-          <div className="flex gap-2">
-            {isInCart ? (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleRemoveFromCart}
-                disabled={isProcessing}
-                className="flex-1 text-[12px] md:text-[16px] bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-              >
-                {isProcessing ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Removing...
-                  </>
-                ) : (
-                  <>
-                    <HiTrash className="w-5 h-5" />
-                    Remove
-                  </>
-                )}
-              </motion.button>
-            ) : (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleAddToCart}
-                disabled={isProcessing}
-                className="flex-1 text-[12px] md:text-[16px] bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-              >
-                {isProcessing ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <HiShoppingCart className="w-5 h-5" />
-                    Add to Cart
-                  </>
-                )}
-              </motion.button>
+        <div className="p-4">
+          <h3 className="font-serif text-[17px] leading-snug text-ink line-clamp-1">{book?.title || 'Unknown'}</h3>
+          <p className="text-xs text-ink/50 mt-1 mb-3 truncate">{book?.author || 'Unknown author'}</p>
+
+          <div className="flex items-center gap-2 mb-3">
+            <p className="font-mono text-base font-bold text-ink">&#8358;{(book?.price || 0).toLocaleString()}</p>
+            {book?.originalPrice && (
+              <p className="font-mono text-xs text-ink/30 line-through">&#8358;{book.originalPrice.toLocaleString()}</p>
             )}
           </div>
+
+          {isInCart ? (
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              onClick={handleRemoveFromCart}
+              disabled={isProcessing}
+              className="w-full text-sm py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-white"
+              style={{ background: DANGER }}
+            >
+              {isProcessing ? <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : (<><HiTrash className="w-4 h-4" /> Remove</>)}
+            </motion.button>
+          ) : (
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              onClick={handleAddToCart}
+              disabled={isProcessing}
+              className="w-full text-sm py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-white"
+              style={{ background: `linear-gradient(120deg, ${tint}, ${DEEP})` }}
+            >
+              {isProcessing ? <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : (<><HiShoppingCart className="w-4 h-4" /> Add to cart</>)}
+            </motion.button>
+          )}
         </div>
       </motion.div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="hidden text-center mb-12 ">
-        <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
-          EStarr Bookart Hub
-        </h1>
-        <p className="text-xl text-gray-600 mt-4">
-          Also known as <strong>Estarr Bookart</strong> or <strong>Esther Bookart</strong> - Your Trusted Bookstore in Nigeria
-        </p>
-        <p className="text-gray-500 mt-2">
-          Founded by Esther Adeleke | Quality Books | Free Delivery Across Nigeria
-        </p>
-      </div>
-      {/* Featured Books with Horizontal Category Filter */}
-      <section className="py-4 px-4 bg-gradient-to-b from-white to-gray-50">
-        <div className="max-w-7xl mx-auto">
-          {/* Custom Category Select Dropdown */}
-          <div className="w-full mb-6" ref={categoryDropdownRef}>
-            <div className="w-full relative">
-              {/* Dropdown Trigger */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                className="w-full flex items-center justify-between gap-3 px-6 py-2 bg-white border-2 border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 group"
-              >
-                <div className="w-full flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-800 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                  </div>
-                  <span className="text-lg font-semibold text-gray-800">
-                    {selectedCategory ? selectedCategory : 'Browse Collection'}
-                  </span>
-                </div>
-                <motion.div
-                  animate={{ rotate: isCategoryDropdownOpen ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
+    <div className="min-h-screen bg-paper overflow-x-hidden">
+      {/* ------------------------------------------------------------- */}
+      {/* Catalog — the page opens directly on books. A slim animated    */}
+      {/* strip + drifting purple blobs carry the motion.                */}
+      {/* ------------------------------------------------------------- */}
+      <section id="catalog" className="relative pt-6 pb-6 px-4 overflow-hidden">
+        <Blob color={PURPLE[1]} size={320} style={{ top: '-140px', left: '-80px' }} duration={16} />
+        <Blob color={PURPLE[3]} size={260} style={{ top: '-100px', right: '-60px' }} duration={13} delay={1} />
+
+        <div className="relative max-w-7xl mx-auto">
+          {/* Category bubbles */}
+          <motion.div
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15 }}
+            className="flex gap-2.5 overflow-x-auto pb-0 -mx-1 px-1 scrollbar-hide"
+          >
+            {categories.map((category, idx) => {
+              const tint = tintFor(category.name);
+              const active = selectedCategory === category.name;
+              return (
+                <motion.button
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 + idx * 0.04 }}
+                  whileHover={{ scale: 1.06, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleCategorySelect(category.name)}
+                  className="flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-colors"
+                  style={
+                    active
+                      ? { background: `linear-gradient(120deg, ${tint}, ${DEEP})`, color: 'white', boxShadow: `0 8px 20px ${tint}55` }
+                      : { background: `${tint}14`, color: tint }
+                  }
                 >
-                  {isCategoryDropdownOpen ? (
-                    <HiChevronUp className="w-5 h-5 text-purple-600" />
-                  ) : (
-                    <HiChevronDown className="w-5 h-5 text-gray-400 group-hover:text-purple-600 transition-colors" />
-                  )}
-                </motion.div>
-              </motion.button>
+                  {category.name}
+                </motion.button>
+              );
+            })}
+            <AnimatePresence>
+              {selectedCategory && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  onClick={() => handleCategorySelect('')}
+                  className="flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-bold text-white"
+                  style={{ background: '#14121F' }}
+                >
+                  Clear ×
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
+      </section>
 
-              {/* Dropdown Menu */}
-              <AnimatePresence>
-                {isCategoryDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10, scaleY: 0 }}
-                    animate={{ opacity: 1, y: 0, scaleY: 1 }}
-                    exit={{ opacity: 0, y: -10, scaleY: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-20 origin-top"
-                  >
-                    <div className="max-h-80 overflow-y-auto">
-                      {/* Browse Collection Option */}
-                      <button
-                        onClick={() => {
-                          handleCategorySelect('');
-                          setIsCategoryDropdownOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-3 px-6 py-4 hover:bg-gray-50 transition-all duration-200 border-b border-gray-100 ${
-                          !selectedCategory ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700' : 'text-gray-700'
-                        }`}
-                      >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          !selectedCategory ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-500'
-                        }`}>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                          </svg>
-                        </div>
-                        <div className="flex-1 text-left">
-                          <p className="font-semibold">Browse Collection</p>
-                          <p className="text-xs text-gray-500">View all books in our store</p>
-                        </div>
-                        {!selectedCategory && (
-                          <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </button>
-
-                      {/* Category Options */}
-                      {categories.map((category, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            handleCategorySelect(category.name);
-                            setIsCategoryDropdownOpen(false);
-                          }}
-                          className={`w-full flex items-center gap-3 px-6 py-4 hover:bg-gray-50 transition-all duration-200 border-b border-gray-100 last:border-0 ${
-                            selectedCategory === category.name ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700' : 'text-gray-700'
-                          }`}
-                        >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            selectedCategory === category.name ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-500'
-                          }`}>
-                            <span className="text-sm font-bold">{category.name.charAt(0)}</span>
-                          </div>
-                          <div className="flex-1 text-left">
-                            <p className="font-semibold">{category.name}</p>
-                            {/* <p className="text-xs text-gray-500">{category.count || 0} products</p> */}
-                          </div>
-                          {selectedCategory === category.name && (
-                            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Selected Category Badge (optional) */}
-            {selectedCategory && (
-              <div className="flex items-center gap-2 mt-3">
-                <span className="text-sm text-gray-500">Filtering by:</span>
-                <span className="inline-flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-                  {selectedCategory}
-                  <button
-                    onClick={() => handleCategorySelect('')}
-                    className="hover:text-purple-900 transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Books Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-[32px]">
+      {/* ------------------------------------------------------------- */}
+      {/* Book grid — visible the instant the page loads                */}
+      {/* ------------------------------------------------------------- */}
+      <section className="py-6 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {loading ? (
-              [...Array(4)].map((_, idx) => (
-                <div key={idx} className="bg-white rounded-xl p-4 shadow-lg animate-pulse">
-                  <div className="bg-gray-200 h-64 rounded-lg mb-4"></div>
-                  <div className="space-y-3">
-                    <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              [...Array(12)].map((_, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.4, repeat: Infinity, delay: idx * 0.05 }}
+                  className="bg-white rounded-2xl overflow-hidden"
+                >
+                  <div className="bg-ink/5 h-[190px]" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 bg-ink/10 rounded w-4/5" />
+                    <div className="h-3 bg-ink/10 rounded w-1/2" />
+                    <div className="h-10 bg-ink/10 rounded-xl mt-2" />
                   </div>
-                </div>
+                </motion.div>
               ))
             ) : filteredBooks.length > 0 ? (
-              filteredBooks.map((book, idx) => (
-                <BookCard key={book._id} book={book} index={idx} />
-              ))
+              filteredBooks.map((book, idx) => <BookCard key={book._id} book={book} index={idx} eager={idx < 8} />)
             ) : (
               <div className="col-span-full py-16 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                  <HiSparkles className="w-8 h-8 text-blue-600" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Books Found</h3>
-                <p className="text-gray-600">No books available in {selectedCategory} category.</p>
-                <button
-                  onClick={() => handleCategorySelect('')}
-                  className="mt-4 text-purple-600 hover:text-purple-700 font-semibold underline"
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4"
+                  style={{ background: `linear-gradient(120deg, ${PURPLE[1]}, ${DEEP})` }}
                 >
+                  <HiSparkles className="w-8 h-8 text-white" />
+                </motion.div>
+                <h3 className="font-serif text-xl text-ink mb-2">No books on this shelf yet</h3>
+                <p className="text-ink/50">Nothing available in {selectedCategory} right now.</p>
+                <button onClick={() => handleCategorySelect('')} className="mt-4 font-bold underline underline-offset-4" style={{ color: PURPLE[0] }}>
                   Browse all books
                 </button>
               </div>
@@ -546,102 +369,104 @@ const Landingpage = () => {
         </div>
       </section>
 
-      {/* Flash Deals Countdown - Dynamic */}
+      {/* Flash deals — existing component */}
       <FlashDeals />
 
-      {/* Recently Viewed Section */}
-      {recentlyViewed.length > 0 && (
-        <section className="py-4 px-4 bg-white">
+      {/* ------------------------------------------------------------- */}
+      {/* New arrivals                                                   */}
+      {/* ------------------------------------------------------------- */}
+      {!loading && newBooks.length > 0 && (
+        <section className="py-10 px-4">
           <div className="max-w-7xl mx-auto">
-            <div className="bg-gradient-to-r px-4 py-2 rounded-tr-[4px] rounded-tl-[4px] from-purple-500 to-purple-800 flex md:flex-row flex-wrap items-center justify-between md:gap-6 mb-6">
-              <h2 className="text-[17px] md:text-3xl font-bold text-gray-200">
-                <span className="text-white">
-                  Recently Viewed
-                </span>
-              </h2>
-              <button
-                onClick={() => setRecentlyViewed([])}
-                className="text-sm text-gray-200 hover:text-gray-400 font-medium"
-              >
-                Clear History
-              </button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-[32px]">
-              {recentlyViewed.map((book, idx) => (
-                <BookCard key={book._id} book={book} index={idx} />
-              ))}
+            <h2 className="font-serif text-3xl text-ink mb-5 flex items-center gap-3">
+              Fresh off the press
+              <motion.span animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 2, repeat: Infinity }} className="text-2xl">
+                <HiSparkles style={{ color: AMBER }} />
+              </motion.span>
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {newBooks.slice(0, 4).map((book, idx) => <BookCard key={book._id} book={book} index={idx} />)}
             </div>
           </div>
         </section>
       )}
 
-      {/* Value Propositions */}
-      <section className="py-12 px-4 bg-gradient-to-r from-blue-50 to-cyan-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <motion.div
-              whileHover={{ y: -5 }}
-              className="bg-white rounded-2xl p-6 shadow-lg text-center"
-            >
-              <div className="inline-flex p-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg mb-4">
-                <MdSecurity className="w-8 h-8" />
-              </div>
-              <h3 className="font-bold text-lg text-gray-900 mb-2">Secure Payment</h3>
-              <p className="text-gray-600">100% secure checkout</p>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ y: -5 }}
-              className="bg-white rounded-2xl p-6 shadow-lg text-center"
-            >
-              <div className="inline-flex p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg mb-4">
-                <FiPercent className="w-8 h-8" />
-              </div>
-              <h3 className="font-bold text-lg text-gray-900 mb-2">Best Price</h3>
-              <p className="text-gray-600">Price match guarantee</p>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ y: -5 }}
-              className="bg-white rounded-2xl p-6 shadow-lg text-center"
-            >
-              <div className="inline-flex p-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg mb-4">
-                <MdHeadsetMic className="w-8 h-8" />
-              </div>
-              <h3 className="font-bold text-lg text-gray-900 mb-2">24/7 Support</h3>
-              <p className="text-gray-600">Dedicated customer service</p>
-            </motion.div>
+      {/* ------------------------------------------------------------- */}
+      {/* Recently viewed                                                */}
+      {/* ------------------------------------------------------------- */}
+      {recentlyViewed.length > 0 && (
+        <section className="py-10 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-serif text-3xl text-ink">Recently viewed</h2>
+              <button onClick={() => setRecentlyViewed([])} className="text-sm text-ink/50 hover:text-ink font-semibold">
+                Clear history
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {recentlyViewed.map((book, idx) => <BookCard key={book._id} book={book} index={idx} />)}
+            </div>
           </div>
+        </section>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* Value props — purple primary, teal for trust, amber for support */}
+      {/* ------------------------------------------------------------- */}
+      <section className="py-16 px-4 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+          {[
+            { icon: MdSecurity, title: 'Secure payment', body: '100% protected checkout', tint: TEAL },
+            { icon: MdLocalShipping, title: 'Nationwide delivery', body: 'Shipped from Ile-Ife to you', tint: PURPLE[1] },
+            { icon: MdHeadsetMic, title: 'Real support', body: 'A person answers, always', tint: AMBER },
+          ].map((item, i) => (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              whileHover={{ y: -6 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+              className="rounded-2xl p-7 bg-white border border-black/[0.05]"
+              style={{ boxShadow: `0 8px 24px ${item.tint}1A` }}
+            >
+              <div className="inline-flex p-3.5 rounded-2xl mb-4" style={{ background: `${item.tint}18` }}>
+                <item.icon className="w-6 h-6" style={{ color: item.tint }} />
+              </div>
+              <h3 className="font-serif text-lg text-ink mb-1">{item.title}</h3>
+              <p className="text-ink/50 text-sm">{item.body}</p>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* Newsletter Section */}
-      <section className="py-16 px-4 bg-gradient-to-r from-blue-600 to-cyan-600">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20"
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Stay in the Loop!</h2>
-            <p className="text-blue-100 mb-6 text-lg">Subscribe to get exclusive deals, new arrivals, and special offers</p>
-            <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+      {/* ------------------------------------------------------------- */}
+      {/* Newsletter — deep purple close, single hue, no clash           */}
+      {/* ------------------------------------------------------------- */}
+      <section className="relative py-20 px-4 overflow-hidden" style={{ background: `linear-gradient(120deg, ${DEEP}, ${PURPLE[1]})` }}>
+        <Blob color={PURPLE[3]} size={300} style={{ top: '-80px', left: '-60px' }} duration={12} />
+        <Blob color={AMBER} size={200} style={{ bottom: '-60px', right: '-40px' }} duration={14} delay={1} />
+        <div className="relative max-w-2xl mx-auto text-center">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full bg-white/20 text-white mb-4">
+              <HiSparkles className="w-3.5 h-3.5" /> The reading list
+            </span>
+            <h2 className="font-serif text-4xl md:text-5xl text-white mb-4">New arrivals, in your inbox.</h2>
+            <p className="text-white/80 mb-8">One email, once a week — new titles, quiet discounts, nothing else.</p>
+            <form
+              onSubmit={(e) => { e.preventDefault(); toast.success('Subscribed'); }}
+              className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+            >
               <input
                 type="email"
-                placeholder="Enter your email address"
-                className="flex-1 px-6 py-3 rounded-full bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                required
+                placeholder="you@email.com"
+                className="flex-1 px-5 py-4 rounded-full bg-white/15 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/60"
               />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                type="submit"
-                className="bg-white text-blue-600 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl"
-              >
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" className="bg-white px-7 py-4 rounded-full font-bold" style={{ color: DEEP }}>
                 Subscribe
               </motion.button>
             </form>
-            <p className="text-white/60 text-sm mt-4">By subscribing, you agree to our Privacy Policy</p>
           </motion.div>
         </div>
       </section>

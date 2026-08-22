@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  HiFilter, 
-  HiViewGrid, 
-  HiViewList, 
-  HiStar, 
-  HiShoppingBag, 
+import {
+  HiFilter,
+  HiViewGrid,
+  HiViewList,
+  HiStar,
+  HiShoppingBag,
   HiChevronDown,
   HiX,
   HiAdjustments,
@@ -20,6 +20,15 @@ import BookCard from '../components/Bookcard.jsx';
 import { bookAPI, categoryAPI } from '../services/api';
 import { useCart } from '../contexts/CartContext.jsx';
 import toast from 'react-hot-toast';
+
+// ---------------------------------------------------------------------
+// Same palette as Landingpage.jsx / ProductDetail.jsx.
+// ---------------------------------------------------------------------
+const PURPLE = ['#5B21B6', '#6D28D9', '#7C3AED', '#8B5CF6', '#A78BFA'];
+const AMBER = '#D97706';
+const TEAL = '#0F766E';
+const DEEP = '#4C1D95';
+const DANGER = '#DC2626';
 
 const CategoryPage = () => {
   const { addToCart, removeFromCart, cart } = useCart();
@@ -44,12 +53,12 @@ const CategoryPage = () => {
   const handleAddToCart = async (book, e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const bookId = book._id || book.id;
     setAddingToCart(prev => ({ ...prev, [bookId]: 'adding' }));
-    
+
     await addToCart(book);
-    
+
     setTimeout(() => {
       setAddingToCart(prev => ({ ...prev, [bookId]: false }));
     }, 800);
@@ -59,24 +68,25 @@ const CategoryPage = () => {
   const handleRemoveFromCart = async (bookId, e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     setAddingToCart(prev => ({ ...prev, [bookId]: 'removing' }));
-    
+
     await removeFromCart(bookId);
-    
+
     setTimeout(() => {
       setAddingToCart(prev => ({ ...prev, [bookId]: false }));
     }, 800);
   };
 
-  // Fallback categories
+  // Fallback categories — dot colors now cycle through the purple scale
+  // instead of a different rainbow gradient per category.
   const defaultCategories = [
-    { id: 'fiction', name: 'Fiction', count: 142, color: 'from-blue-500 to-cyan-500' },
-    { id: 'non-fiction', name: 'Non-Fiction', count: 89, color: 'from-purple-500 to-pink-500' },
-    { id: 'limited-edition', name: 'Limited Editions', count: 24, color: 'from-amber-500 to-orange-500' },
-    { id: 'signed', name: 'Signed Copies', count: 18, color: 'from-emerald-500 to-green-500' },
-    { id: 'vintage', name: 'Vintage Books', count: 36, color: 'from-rose-500 to-red-500' },
-    { id: 'illustrated', name: 'Illustrated', count: 42, color: 'from-indigo-500 to-blue-500' },
+    { id: 'fiction', name: 'Fiction', count: 142, color: PURPLE[0] },
+    { id: 'non-fiction', name: 'Non-Fiction', count: 89, color: PURPLE[1] },
+    { id: 'limited-edition', name: 'Limited Editions', count: 24, color: PURPLE[2] },
+    { id: 'signed', name: 'Signed Copies', count: 18, color: PURPLE[3] },
+    { id: 'vintage', name: 'Vintage Books', count: 36, color: PURPLE[4] },
+    { id: 'illustrated', name: 'Illustrated', count: 42, color: PURPLE[0] },
   ];
 
   const filterBooks = (booksArray) => {
@@ -85,16 +95,15 @@ const CategoryPage = () => {
       if (selectedCategories.length > 0) {
         const bookCategory = book.category ? book.category.toLowerCase().trim() : '';
         const normalizedBookCategory = bookCategory.replace(/\s+/g, '-');
-        
-        // Check if book category matches any selected category
+
         const hasMatchingCategory = selectedCategories.some(catId => {
           const normalizedCatId = catId.toLowerCase();
-          return normalizedBookCategory === normalizedCatId || 
+          return normalizedBookCategory === normalizedCatId ||
                 bookCategory === normalizedCatId ||
                 bookCategory.includes(normalizedCatId) ||
                 normalizedCatId.includes(bookCategory);
         });
-        
+
         if (!hasMatchingCategory) {
           return false;
         }
@@ -130,7 +139,7 @@ const CategoryPage = () => {
 
   // Create filtered books
   const filteredBooks = filterBooks(books);
-  
+
   // Sort the filtered books
   const sortedBooks = [...filteredBooks].sort((a, b) => {
     switch (sortBy) {
@@ -157,12 +166,11 @@ const CategoryPage = () => {
       try {
         setLoadingBooks(true);
         setLoadingCategories(true);
-        
+
         // Fetch books
         const booksResponse = await bookAPI.getAllBooks({ limit: 50 });
         let fetchedBooks = [];
-        
-        // Handle different response formats
+
         if (Array.isArray(booksResponse)) {
           fetchedBooks = booksResponse;
         } else if (booksResponse.data?.books && Array.isArray(booksResponse.data.books)) {
@@ -172,42 +180,39 @@ const CategoryPage = () => {
         } else if (booksResponse.books && Array.isArray(booksResponse.books)) {
           fetchedBooks = booksResponse.books;
         }
-        
+
         console.log('Fetched books:', fetchedBooks);
         setBooks(fetchedBooks);
         setLoadingBooks(false);
-        
+
         // Fetch categories
         try {
           const categoriesResponse = await categoryAPI.getAllCategories();
           const apiCategories = categoriesResponse.data || [];
-          
-          // Extract unique categories from books
+
           const bookCategories = [...new Set(fetchedBooks
             .filter(book => book.category)
             .map(book => book.category.trim())
           )];
-          
+
           console.log('Book categories:', bookCategories);
-          
+
           if (apiCategories.length > 0) {
-            // Use API categories first
             const styledCategories = apiCategories.map((cat, idx) => ({
               id: (cat._id || cat.name || '').toLowerCase().replace(/\s+/g, '-'),
               name: cat.name || cat,
-              count: fetchedBooks.filter(book => 
+              count: fetchedBooks.filter(book =>
                 book.category && book.category.toLowerCase() === (cat.name || cat).toLowerCase()
               ).length,
-              color: defaultCategories[idx % defaultCategories.length].color
+              color: PURPLE[idx % PURPLE.length]
             }));
             setCategories(styledCategories);
           } else if (bookCategories.length > 0) {
-            // Create categories from book data
             const styledCategories = bookCategories.map((cat, idx) => ({
               id: cat.toLowerCase().replace(/\s+/g, '-'),
               name: cat,
               count: fetchedBooks.filter(book => book.category === cat).length,
-              color: defaultCategories[idx % defaultCategories.length].color
+              color: PURPLE[idx % PURPLE.length]
             }));
             setCategories(styledCategories);
           } else {
@@ -215,27 +220,26 @@ const CategoryPage = () => {
           }
         } catch (categoryError) {
           console.error('Failed to fetch categories:', categoryError);
-          // Create categories from book data as fallback
           const bookCategories = [...new Set(fetchedBooks
             .filter(book => book.category)
             .map(book => book.category.trim())
           )];
-          
+
           if (bookCategories.length > 0) {
             const styledCategories = bookCategories.map((cat, idx) => ({
               id: cat.toLowerCase().replace(/\s+/g, '-'),
               name: cat,
               count: fetchedBooks.filter(book => book.category === cat).length,
-              color: defaultCategories[idx % defaultCategories.length].color
+              color: PURPLE[idx % PURPLE.length]
             }));
             setCategories(styledCategories);
           } else {
             setCategories(defaultCategories);
           }
         }
-        
+
         setLoadingCategories(false);
-        
+
       } catch (error) {
         console.error('Failed to fetch data:', error);
         setBooks([]);
@@ -284,173 +288,130 @@ const CategoryPage = () => {
     setActiveFilters([]);
     setPriceRange([0, 100000]);
   };
-  
-  // Render list item buttons
-  const renderListButtons = (book) => {
-    const bookId = book._id || book.id;
-    const inCart = isBookInCart(bookId);
-    const isProcessing = addingToCart[bookId];
-
-    if (inCart) {
-      return (
-        <button 
-          onClick={(e) => handleRemoveFromCart(bookId, e)}
-          disabled={isProcessing === 'removing'}
-          className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-red-500/25 transition-all flex items-center gap-2 text-sm whitespace-nowrap"
-        >
-          {isProcessing === 'removing' ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Removing...
-            </>
-          ) : (
-            <>
-              <HiTrash className="w-4 h-4" />
-              Remove
-            </>
-          )}
-        </button>
-      );
-    }
-
-    return (
-      <button 
-        onClick={(e) => handleAddToCart(book, e)}
-        disabled={isProcessing === 'adding'}
-        className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2 text-sm whitespace-nowrap"
-      >
-        {isProcessing === 'adding' ? (
-          <>
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Adding...
-          </>
-        ) : (
-          <>
-            <HiShoppingBag className="w-4 h-4" />
-            Add to Cart
-          </>
-        )}
-      </button>
-    );
-  };
 
   return (
-    <div className="min-h-screen bg-white ">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-paper text-ink">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Mobile Filter Button */}
-        <div className="lg:hidden mb-6 text-white">
+        <div className="lg:hidden mb-6">
           <button
             onClick={() => setIsMobileFilterOpen(true)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-gray-900 to-gray-800 border border-gray-800 rounded-xl hover:border-cyan-500/30 transition-all"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-black/[0.08] rounded-xl hover:border-black/[0.15] transition-all"
           >
-            <HiAdjustments className="w-5 h-5 text-cyan-400" />
-            <span className="font-medium">Filters & Categories</span>
+            <HiAdjustments className="w-5 h-5" style={{ color: PURPLE[0] }} />
+            <span className="font-medium text-ink">Filters & Categories</span>
             {(selectedCategories.length > 0 || activeFilters.length > 0) && (
-              <span className="ml-auto bg-cyan-500 text-white text-xs px-2 py-1 rounded-full">
+              <span className="ml-auto text-white text-xs px-2 py-1 rounded-full" style={{ background: PURPLE[0] }}>
                 {selectedCategories.length + activeFilters.length}
               </span>
             )}
           </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 text-white">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Desktop Sidebar */}
           <div className="hidden lg:block lg:w-1/4">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-800/50 rounded-2xl p-6 sticky top-6"
+              className="bg-white border border-black/[0.06] rounded-2xl p-6 sticky top-6"
+              style={{ boxShadow: '0 4px 20px rgba(30,27,41,0.05)' }}
             >
               {/* Categories */}
               <div className="mb-8">
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                  <HiFilter className="w-5 h-5 " />
+                <h3 className="text-lg font-serif font-semibold text-ink mb-4 flex items-center gap-2">
+                  <HiFilter className="w-5 h-5" style={{ color: PURPLE[0] }} />
                   Categories
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {loadingCategories ? (
                     [...Array(3)].map((_, idx) => (
-                      <div key={idx} className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 animate-pulse">
+                      <div key={idx} className="w-full flex items-center justify-between p-3 rounded-xl bg-black/[0.03] animate-pulse">
                         <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 rounded-full bg-gray-700" />
-                          <div className="h-4 bg-gray-700 rounded w-24"></div>
+                          <div className="w-3 h-3 rounded-full bg-black/10" />
+                          <div className="h-4 bg-black/10 rounded w-24"></div>
                         </div>
-                        <div className="h-4 bg-gray-700 rounded w-8"></div>
+                        <div className="h-4 bg-black/10 rounded w-8"></div>
                       </div>
                     ))
                   ) : (
-                    categories.map((category) => (
-                      <button
-                        key={category.id}
-                        onClick={() => handleCategoryToggle(category.id)}
-                        className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-300 ${
-                          selectedCategories.includes(category.id)
-                            ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30'
-                            : 'bg-white/5 hover:bg-white/10 border border-transparent'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${category.color}`} />
-                          <span className="text-sm font-medium">{category.name}</span>
-                        </div>
-                        <span className="text-xs bg-gray-800/50 px-2 py-1 rounded-full">
-                          {category.count}
-                        </span>
-                      </button>
-                    ))
+                    categories.map((category) => {
+                      const active = selectedCategories.includes(category.id);
+                      return (
+                        <button
+                          key={category.id}
+                          onClick={() => handleCategoryToggle(category.id)}
+                          className="w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 border"
+                          style={
+                            active
+                              ? { background: `${PURPLE[2]}12`, borderColor: `${PURPLE[2]}55` }
+                              : { background: 'transparent', borderColor: 'transparent' }
+                          }
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ background: category.color }} />
+                            <span className="text-sm font-medium text-ink">{category.name}</span>
+                          </div>
+                          <span className="text-xs bg-black/[0.05] text-ink/60 px-2 py-1 rounded-full">
+                            {category.count}
+                          </span>
+                        </button>
+                      );
+                    })
                   )}
                 </div>
               </div>
 
               {/* Price Range */}
-              <div className="mb-8">
-                <h3 className="text-lg font-bold text-white mb-4">Price Range</h3>
+              <div className="mb-4">
+                <h3 className="text-lg font-serif font-semibold text-ink mb-4">Price Range</h3>
                 <div className="space-y-4">
-                  <div className="flex justify-between text-sm text-gray-400">
+                  <div className="flex justify-between text-sm text-ink/50 font-mono">
                     <span>₦{priceRange[0].toLocaleString()}</span>
                     <span>₦{priceRange[1].toLocaleString()}</span>
                   </div>
-                  <div className="relative">
-                    <input
-                      type="range"
-                      min="0"
-                      max="100000"
-                      step="1000"
-                      value={priceRange[1]}
-                      onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                      className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-cyan-500 [&::-webkit-slider-thumb]:to-blue-500"
-                    />
-                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100000"
+                    step="1000"
+                    value={priceRange[1]}
+                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                    className="w-full h-1.5 bg-black/[0.08] rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#5B21B6] [&::-webkit-slider-thumb]:shadow-md"
+                  />
                 </div>
               </div>
 
               {/* Filters */}
               <div className="mb-8">
-                <h3 className="text-lg font-bold text-white mb-4">Filters</h3>
+                <h3 className="text-lg font-serif font-semibold text-ink mb-4">Filters</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {filters.map((filter) => (
-                    <button
-                      key={filter.id}
-                      onClick={() => handleFilterToggle(filter.id)}
-                      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-300 ${
-                        activeFilters.includes(filter.id)
-                          ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30'
-                          : 'bg-white/5 hover:bg-white/10 border-transparent hover:border-gray-700'
-                      }`}
-                    >
-                      <filter.icon className={`w-5 h-5 mb-2 ${
-                        activeFilters.includes(filter.id) ? 'text-cyan-400' : 'text-gray-400'
-                      }`} />
-                      <span className="text-xs text-center">{filter.label}</span>
-                    </button>
-                  ))}
+                  {filters.map((filter) => {
+                    const active = activeFilters.includes(filter.id);
+                    return (
+                      <button
+                        key={filter.id}
+                        onClick={() => handleFilterToggle(filter.id)}
+                        className="flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-200"
+                        style={
+                          active
+                            ? { background: `${PURPLE[2]}12`, borderColor: `${PURPLE[2]}55` }
+                            : { background: 'transparent', borderColor: 'rgba(0,0,0,0.06)' }
+                        }
+                      >
+                        <filter.icon className="w-5 h-5 mb-2" style={{ color: active ? PURPLE[0] : '#94A3B8' }} />
+                        <span className="text-xs text-center text-ink/70">{filter.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Clear Filters */}
               <button
                 onClick={clearAllFilters}
-                className="w-full py-3 border-2 border-cyan-500/30 text-white rounded-xl font-semibold hover:bg-cyan-500/10 transition-all"
+                className="w-full py-3 border-2 rounded-xl font-semibold transition-all"
+                style={{ borderColor: `${PURPLE[2]}40`, color: PURPLE[0] }}
               >
                 Clear All Filters
               </button>
@@ -460,53 +421,48 @@ const CategoryPage = () => {
           {/* Main Content */}
           <div className="lg:w-3/4">
             {/* Toolbar */}
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 backdrop-blur-xl border border-gray-800/50 rounded-2xl p-6 mb-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-white border border-black/[0.06] rounded-2xl p-6 mb-6" style={{ boxShadow: '0 4px 20px rgba(30,27,41,0.05)' }}>
+              <div className="flex flex-wrap md:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">All Collections</h2>
-                  <p className="text-gray-400 text-sm">Showing {sortedBooks.length} premium book{sortedBooks.length !== 1 ? 's' : ''}</p>
+                  <h2 className="font-serif text-2xl font-semibold text-ink">All Collections</h2>
+                  <p className="text-ink/50 text-sm">Showing {sortedBooks.length} book{sortedBooks.length !== 1 ? 's' : ''}</p>
                 </div>
 
                 <div className="flex items-center gap-4">
                   {/* View Toggle */}
-                  <div className="flex bg-gray-900/50 rounded-xl p-1">
+                  {/* <div className="flex bg-black/[0.04] rounded-xl p-1">
                     <button
                       onClick={() => setViewMode('grid')}
-                      className={`p-2 rounded-lg transition-all ${
-                        viewMode === 'grid'
-                          ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
-                          : 'text-gray-400 hover:text-white'
-                      }`}
+                      className="p-2 rounded-lg transition-all"
+                      style={viewMode === 'grid' ? { background: PURPLE[0], color: '#fff' } : { color: '#94A3B8' }}
                     >
                       <HiViewGrid className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
-                      className={`p-2 rounded-lg transition-all ${
-                        viewMode === 'list'
-                          ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
-                          : 'text-gray-400 hover:text-white'
-                      }`}
+                      className="p-2 rounded-lg transition-all"
+                      style={viewMode === 'list' ? { background: PURPLE[0], color: '#fff' } : { color: '#94A3B8' }}
                     >
                       <HiViewList className="w-4 h-4" />
                     </button>
-                  </div>
+                  </div> */}
 
                   {/* Sort Dropdown */}
                   <div className="relative">
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="appearance-none bg-gray-900/50 border border-gray-800 rounded-xl pl-3 pr-8 py-2 focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm w-40"
+                      className="appearance-none bg-white border border-black/[0.1] rounded-xl pl-3 pr-8 py-2 focus:ring-2 focus:outline-none text-sm w-40 text-ink"
+                      style={{ '--tw-ring-color': `${PURPLE[2]}55` }}
                     >
                       {sortOptions.map((option) => (
-                        <option key={option.id} value={option.id} className="bg-gray-900">
+                        <option key={option.id} value={option.id}>
                           {option.label}
                         </option>
                       ))}
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-                      <HiChevronDown className="w-4 h-4 text-gray-400" />
+                      <HiChevronDown className="w-4 h-4 text-ink/40" />
                     </div>
                   </div>
                 </div>
@@ -514,19 +470,17 @@ const CategoryPage = () => {
 
               {/* Active Filters */}
               {(selectedCategories.length > 0 || activeFilters.length > 0) && (
-                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-800/50">
+                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-black/[0.06]">
                   {selectedCategories.map((catId) => {
                     const cat = categories.find(c => c.id === catId);
                     return (
                       <span
                         key={catId}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-full text-sm"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border"
+                        style={{ background: `${PURPLE[2]}12`, borderColor: `${PURPLE[2]}40`, color: DEEP }}
                       >
                         {cat?.name}
-                        <button
-                          onClick={() => handleCategoryToggle(catId)}
-                          className="hover:text-red-400"
-                        >
+                        <button onClick={() => handleCategoryToggle(catId)} className="hover:opacity-60">
                           <HiX className="w-3 h-3" />
                         </button>
                       </span>
@@ -537,22 +491,17 @@ const CategoryPage = () => {
                     return (
                       <span
                         key={filterId}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full text-sm"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border"
+                        style={{ background: `${AMBER}14`, borderColor: `${AMBER}40`, color: AMBER }}
                       >
                         {filter?.label}
-                        <button
-                          onClick={() => handleFilterToggle(filterId)}
-                          className="hover:text-red-400"
-                        >
+                        <button onClick={() => handleFilterToggle(filterId)} className="hover:opacity-60">
                           <HiX className="w-3 h-3" />
                         </button>
                       </span>
                     );
                   })}
-                  <button
-                    onClick={clearAllFilters}
-                    className="text-sm text-gray-400 hover:text-cyan-400"
-                  >
+                  <button onClick={clearAllFilters} className="text-sm text-ink/50 hover:text-ink font-medium">
                     Clear all
                   </button>
                 </div>
@@ -563,12 +512,12 @@ const CategoryPage = () => {
             {loadingBooks ? (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, idx) => (
-                  <div key={idx} className="bg-white rounded-xl p-4 shadow-lg animate-pulse">
-                    <div className="bg-gray-200 h-64 rounded-lg mb-4"></div>
+                  <div key={idx} className="bg-white rounded-2xl p-4 border border-black/[0.06] animate-pulse">
+                    <div className="bg-black/[0.05] h-64 rounded-lg mb-4"></div>
                     <div className="space-y-3">
-                      <div className="h-4 bg-gray-200 rounded"></div>
-                      <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                      <div className="h-4 bg-black/[0.06] rounded"></div>
+                      <div className="h-3 bg-black/[0.06] rounded w-3/4"></div>
+                      <div className="h-4 bg-black/[0.06] rounded w-1/2"></div>
                     </div>
                   </div>
                 ))}
@@ -597,24 +546,25 @@ const CategoryPage = () => {
                     const bookId = book._id || book.id;
                     const inCart = isBookInCart(bookId);
                     const isProcessing = addingToCart[bookId];
-                    
+
                     return (
                       <motion.div
                         key={bookId}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="bg-white backdrop-blur-xl border border-gray-200 rounded-2xl overflow-hidden shadow-lg"
+                        className="bg-white border border-black/[0.06] rounded-2xl overflow-hidden"
+                        style={{ boxShadow: '0 4px 20px rgba(30,27,41,0.05)' }}
                       >
                         <div className="flex flex-col md:flex-row p-6">
                           {/* Book Image */}
                           <div className="md:w-1/4 mb-4 md:mb-0">
-                            <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                            <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-black/[0.03]">
                               {book.image ? (
                                 <img src={book.image} alt={book.title} className="w-full h-full object-cover" />
                               ) : (
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                  <div className="w-24 h-32 bg-gradient-to-br from-gray-300 to-gray-400 rounded-lg shadow-lg" />
+                                  <div className="w-24 h-32 rounded-lg shadow-md" style={{ background: `linear-gradient(135deg, ${PURPLE[3]}, ${PURPLE[1]})` }} />
                                 </div>
                               )}
                             </div>
@@ -623,34 +573,31 @@ const CategoryPage = () => {
                           {/* Book Info */}
                           <div className="md:w-3/4 md:pl-6">
                             <div className="flex items-start justify-between mb-3">
-                              <div>
-                                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full border border-blue-300 mb-2">
-                                  {book.category || 'Fiction'}
-                                </span>
-                              </div>
+                              <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full border mb-2" style={{ background: `${PURPLE[2]}12`, borderColor: `${PURPLE[2]}40`, color: DEEP }}>
+                                {book.category || 'Fiction'}
+                              </span>
                             </div>
-                            
-                            <h3 className="text-2xl font-bold text-gray-900 mb-1">{book.title}</h3>
-                            <p className="text-gray-600 text-sm mb-2">by {book.author}</p>
-                            <p className="text-gray-700 text-sm mb-4 line-clamp-2">{book.description}</p>
-                            
-                            <div className="flex flex-wrap items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                <div>
-                                  <span className="text-3xl font-bold text-cyan-600">₦{Math.round(book.price).toLocaleString()}</span>
-                                  {book.discount && (
-                                    <div className="text-sm text-red-600 font-semibold">
-                                      Save {book.discount}%
-                                    </div>
-                                  )}
-                                </div>
+
+                            <h3 className="font-serif text-2xl font-semibold text-ink mb-1">{book.title}</h3>
+                            <p className="text-ink/60 text-sm mb-2">by {book.author}</p>
+                            <p className="text-ink/70 text-sm mb-4 line-clamp-2">{book.description}</p>
+
+                            <div className="flex flex-wrap items-center justify-between gap-4">
+                              <div>
+                                <span className="font-mono text-3xl font-bold text-ink">₦{Math.round(book.price).toLocaleString()}</span>
+                                {book.discount && (
+                                  <div className="text-sm font-semibold" style={{ color: AMBER }}>
+                                    Save {book.discount}%
+                                  </div>
+                                )}
                               </div>
                               <div className="space-y-2">
                                 {inCart ? (
-                                  <button 
+                                  <button
                                     onClick={(e) => handleRemoveFromCart(bookId, e)}
                                     disabled={isProcessing === 'removing'}
-                                    className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-red-500/25 transition-all flex items-center gap-2 text-sm whitespace-nowrap"
+                                    className="px-4 py-2 text-white rounded-lg font-semibold transition-all flex items-center gap-2 text-sm whitespace-nowrap w-full justify-center"
+                                    style={{ background: DANGER }}
                                   >
                                     {isProcessing === 'removing' ? (
                                       <>
@@ -665,10 +612,11 @@ const CategoryPage = () => {
                                     )}
                                   </button>
                                 ) : (
-                                  <button 
+                                  <button
                                     onClick={(e) => handleAddToCart(book, e)}
                                     disabled={isProcessing === 'adding'}
-                                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2 text-sm whitespace-nowrap"
+                                    className="px-4 py-2 text-white rounded-lg font-semibold transition-all flex items-center gap-2 text-sm whitespace-nowrap w-full justify-center"
+                                    style={{ background: `linear-gradient(120deg, ${PURPLE[1]}, ${DEEP})` }}
                                   >
                                     {isProcessing === 'adding' ? (
                                       <>
@@ -683,9 +631,10 @@ const CategoryPage = () => {
                                     )}
                                   </button>
                                 )}
-                                <button 
+                                <button
                                   onClick={() => window.location.href = `/product/${bookId}`}
-                                  className="px-4 py-2 border border-cyan-500/30 text-cyan-600 rounded-lg font-semibold hover:bg-cyan-500/10 transition-all text-sm whitespace-nowrap w-full"
+                                  className="px-4 py-2 border rounded-lg font-semibold transition-all text-sm whitespace-nowrap w-full"
+                                  style={{ borderColor: `${PURPLE[2]}40`, color: PURPLE[0] }}
                                 >
                                   View Details
                                 </button>
@@ -700,11 +649,11 @@ const CategoryPage = () => {
               )
             ) : (
               <div className="py-16 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                  <HiSparkles className="w-8 h-8 text-blue-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ background: `${PURPLE[2]}14` }}>
+                  <HiSparkles className="w-8 h-8" style={{ color: PURPLE[0] }} />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-100 mb-2">No Products Found</h3>
-                <p className="text-gray-200">We're curating our collection. Check back soon for amazing books!</p>
+                <h3 className="text-xl font-serif font-semibold text-ink mb-2">No Products Found</h3>
+                <p className="text-ink/50">We're curating our collection. Check back soon for amazing books!</p>
               </div>
             )}
 
@@ -712,31 +661,28 @@ const CategoryPage = () => {
             {sortedBooks.length > 6 && !loadingBooks && (
               <div className="mt-8 lg:mt-12 flex justify-center">
                 <nav className="flex items-center gap-2">
-                  <button className="px-4 py-2 border border-gray-800 rounded-xl hover:bg-white/5 transition-colors text-sm">
+                  <button className="px-4 py-2 border border-black/[0.1] rounded-xl hover:bg-black/[0.03] transition-colors text-sm text-ink/70">
                     Previous
                   </button>
                   {[1, 2, 3].map((page) => (
                     <button
                       key={page}
-                      className={`px-4 py-2 rounded-xl transition-colors text-sm ${
-                        page === 1
-                          ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
-                          : 'border border-gray-800 hover:bg-white/5'
-                      }`}
+                      className="px-4 py-2 rounded-xl transition-colors text-sm"
+                      style={page === 1 ? { background: PURPLE[0], color: '#fff' } : { border: '1px solid rgba(0,0,0,0.1)', color: '#1E1B29' }}
                     >
                       {page}
                     </button>
                   ))}
-                  <span className="px-2 text-gray-500">...</span>
+                  <span className="px-2 text-ink/30">...</span>
                   {[8, 9, 10].map((page) => (
                     <button
                       key={page}
-                      className="px-4 py-2 border border-gray-800 rounded-xl hover:bg-white/5 transition-colors text-sm"
+                      className="px-4 py-2 border border-black/[0.1] rounded-xl hover:bg-black/[0.03] transition-colors text-sm text-ink/70"
                     >
                       {page}
                     </button>
                   ))}
-                  <button className="px-4 py-2 border border-gray-800 rounded-xl hover:bg-white/5 transition-colors text-sm">
+                  <button className="px-4 py-2 border border-black/[0.1] rounded-xl hover:bg-black/[0.03] transition-colors text-sm text-ink/70">
                     Next
                   </button>
                 </nav>
@@ -753,7 +699,7 @@ const CategoryPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 lg:hidden"
+            className="fixed inset-0 bg-ink/40 backdrop-blur-sm z-50 lg:hidden"
             onClick={() => setIsMobileFilterOpen(false)}
           >
             <motion.div
@@ -761,63 +707,60 @@ const CategoryPage = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'tween' }}
-              className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-gradient-to-b from-gray-950 to-gray-900 overflow-y-auto"
+              className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-white overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6 text-white">
+              <div className="p-6">
                 <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-bold">Filters</h2>
-                  <button
-                    onClick={() => setIsMobileFilterOpen(false)}
-                    className="p-2 hover:bg-white/10 rounded-lg"
-                  >
-                    <HiX className="w-6 h-6" />
+                  <h2 className="font-serif text-2xl font-semibold text-ink">Filters</h2>
+                  <button onClick={() => setIsMobileFilterOpen(false)} className="p-2 hover:bg-black/[0.05] rounded-lg">
+                    <HiX className="w-6 h-6 text-ink/60" />
                   </button>
                 </div>
 
                 {/* Categories */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-bold mb-4">Categories</h3>
-                  <div className="space-y-3">
+                  <h3 className="text-lg font-serif font-semibold text-ink mb-4">Categories</h3>
+                  <div className="space-y-2.5">
                     {loadingCategories ? (
                       [...Array(3)].map((_, idx) => (
-                        <div key={idx} className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 animate-pulse">
+                        <div key={idx} className="w-full flex items-center justify-between p-3 rounded-xl bg-black/[0.03] animate-pulse">
                           <div className="flex items-center gap-3">
-                            <div className="w-3 h-3 rounded-full bg-gray-700" />
-                            <div className="h-4 bg-gray-700 rounded w-24"></div>
+                            <div className="w-3 h-3 rounded-full bg-black/10" />
+                            <div className="h-4 bg-black/10 rounded w-24"></div>
                           </div>
-                          <div className="h-4 bg-gray-700 rounded w-8"></div>
+                          <div className="h-4 bg-black/10 rounded w-8"></div>
                         </div>
                       ))
                     ) : (
-                      categories.map((category) => (
-                        <button
-                          key={category.id}
-                          onClick={() => handleCategoryToggle(category.id)}
-                          className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
-                            selectedCategories.includes(category.id)
-                              ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30'
-                              : 'bg-white/5 hover:bg-white/10'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${category.color}`} />
-                            <span className="text-sm font-medium">{category.name}</span>
-                          </div>
-                          <span className="text-xs bg-gray-800/50 px-2 py-1 rounded-full">
-                            {category.count}
-                          </span>
-                        </button>
-                      ))
+                      categories.map((category) => {
+                        const active = selectedCategories.includes(category.id);
+                        return (
+                          <button
+                            key={category.id}
+                            onClick={() => handleCategoryToggle(category.id)}
+                            className="w-full flex items-center justify-between p-3 rounded-xl transition-all border"
+                            style={active ? { background: `${PURPLE[2]}12`, borderColor: `${PURPLE[2]}55` } : { background: 'transparent', borderColor: 'transparent' }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-2.5 h-2.5 rounded-full" style={{ background: category.color }} />
+                              <span className="text-sm font-medium text-ink">{category.name}</span>
+                            </div>
+                            <span className="text-xs bg-black/[0.05] text-ink/60 px-2 py-1 rounded-full">
+                              {category.count}
+                            </span>
+                          </button>
+                        );
+                      })
                     )}
                   </div>
                 </div>
 
                 {/* Price Range */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-bold mb-4">Price Range</h3>
+                  <h3 className="text-lg font-serif font-semibold text-ink mb-4">Price Range</h3>
                   <div className="space-y-4">
-                    <div className="flex justify-between text-sm text-gray-400">
+                    <div className="flex justify-between text-sm text-ink/50 font-mono">
                       <span>₦{priceRange[0].toLocaleString()}</span>
                       <span>₦{priceRange[1].toLocaleString()}</span>
                     </div>
@@ -828,38 +771,37 @@ const CategoryPage = () => {
                       step="1000"
                       value={priceRange[1]}
                       onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                      className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-cyan-500 [&::-webkit-slider-thumb]:to-blue-500"
+                      className="w-full h-1.5 bg-black/[0.08] rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#5B21B6]"
                     />
                   </div>
                 </div>
 
                 {/* Filters */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-bold mb-4">Filters</h3>
+                  <h3 className="text-lg font-serif font-semibold text-ink mb-4">Filters</h3>
                   <div className="grid grid-cols-2 gap-3">
-                    {filters.map((filter) => (
-                      <button
-                        key={filter.id}
-                        onClick={() => handleFilterToggle(filter.id)}
-                        className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
-                          activeFilters.includes(filter.id)
-                            ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30'
-                            : 'bg-white/5 hover:bg-white/10 border-transparent'
-                        }`}
-                      >
-                        <filter.icon className={`w-5 h-5 mb-2 ${
-                          activeFilters.includes(filter.id) ? 'text-cyan-400' : 'text-gray-400'
-                        }`} />
-                        <span className="text-xs text-center">{filter.label}</span>
-                      </button>
-                    ))}
+                    {filters.map((filter) => {
+                      const active = activeFilters.includes(filter.id);
+                      return (
+                        <button
+                          key={filter.id}
+                          onClick={() => handleFilterToggle(filter.id)}
+                          className="flex flex-col items-center justify-center p-3 rounded-xl border transition-all"
+                          style={active ? { background: `${PURPLE[2]}12`, borderColor: `${PURPLE[2]}55` } : { background: 'transparent', borderColor: 'rgba(0,0,0,0.06)' }}
+                        >
+                          <filter.icon className="w-5 h-5 mb-2" style={{ color: active ? PURPLE[0] : '#94A3B8' }} />
+                          <span className="text-xs text-center text-ink/70">{filter.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Apply Filters Button */}
                 <button
                   onClick={() => setIsMobileFilterOpen(false)}
-                  className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
+                  className="w-full py-3 text-white rounded-xl font-semibold transition-all"
+                  style={{ background: `linear-gradient(120deg, ${PURPLE[1]}, ${DEEP})` }}
                 >
                   Apply Filters
                 </button>

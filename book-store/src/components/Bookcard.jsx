@@ -1,10 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { HiShoppingBag, HiHeart, HiStar, HiEye, HiTrash } from 'react-icons/hi';
+import { HiShoppingBag, HiHeart, HiStar, HiEye, HiTrash, HiPlus } from 'react-icons/hi';
 import { motion } from 'framer-motion';
 import { useCart } from '../contexts/CartContext.jsx';
 import { useWishlist } from '../contexts/WishlistContext.jsx';
 import toast from 'react-hot-toast';
+
+// ---------------------------------------------------------------------
+// Same palette as Landingpage.jsx / ProductDetail.jsx / CategoryPage.jsx.
+// Consider moving this into a shared /lib/theme.js and importing it in
+// all four files instead of repeating the block.
+// ---------------------------------------------------------------------
+const PURPLE = ['#5B21B6', '#6D28D9', '#7C3AED', '#8B5CF6', '#A78BFA'];
+const AMBER = '#D97706';
+const DEEP = '#4C1D95';
+const DANGER = '#DC2626';
+
+const tintFor = (label = '') => {
+  let hash = 0;
+  for (let i = 0; i < label.length; i++) hash = label.charCodeAt(i) + ((hash << 5) - hash);
+  return PURPLE[Math.abs(hash) % PURPLE.length];
+};
+
+// Small circular icon button shared by the overlay and the price-row
+// cart action, so both places stay visually identical.
+const IconButton = ({ onClick, disabled, active, activeColor, idleColor = '#94A3B8', idleBg = 'rgba(255,255,255,0.9)', title, children, loading }) => (
+  <motion.button
+    onClick={onClick}
+    disabled={disabled}
+    title={title}
+    aria-label={title}
+    whileHover={{ scale: 1.08 }}
+    whileTap={{ scale: 0.92 }}
+    className="w-10 h-10 flex items-center justify-center rounded-full border shadow-sm transition-colors duration-200 flex-shrink-0"
+    style={
+      active
+        ? { background: activeColor, borderColor: activeColor, color: '#fff' }
+        : { background: idleBg, borderColor: 'rgba(0,0,0,0.08)', color: idleColor }
+    }
+  >
+    {loading ? <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" /> : children}
+  </motion.button>
+);
 
 const BookCard = ({ book = {} }) => {
   const { addToCart, removeFromCart, cart } = useCart();
@@ -16,6 +53,7 @@ const BookCard = ({ book = {} }) => {
 
   // Get book ID
   const bookId = book._id || book.id;
+  const tint = tintFor(book.category?.name || book.category || book.title);
 
   // Check if book is in cart
   useEffect(() => {
@@ -35,24 +73,20 @@ const BookCard = ({ book = {} }) => {
   const handleWishlist = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!bookId) {
       toast.error('Cannot add to wishlist: Book ID is missing');
       return;
     }
-    
+
     console.log('Wishlist clicked for book:', bookId, 'isLiked:', isLiked);
-    
+
     if (isLiked) {
       removeFromWishlist(bookId);
       setIsLiked(false);
       toast.success('Removed from wishlist', {
         icon: '💔',
-        style: {
-          background: '#1e293b',
-          color: '#fff',
-          border: '1px solid #334155'
-        }
+        style: { background: '#1E1B29', color: '#fff', border: '1px solid #4C1D95' }
       });
     } else {
       const added = addToWishlist(book);
@@ -60,11 +94,7 @@ const BookCard = ({ book = {} }) => {
         setIsLiked(true);
         toast.success('Added to wishlist!', {
           icon: '❤️',
-          style: {
-            background: '#1e293b',
-            color: '#fff',
-            border: '1px solid #334155'
-          }
+          style: { background: '#1E1B29', color: '#fff', border: '1px solid #4C1D95' }
         });
       }
     }
@@ -73,28 +103,27 @@ const BookCard = ({ book = {} }) => {
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     setIsAdding(true);
     addToCart(book);
     toast.success(`${book.title || 'Book'} added to cart!`);
-    
+
     setTimeout(() => setIsAdding(false), 800);
   };
 
   const handleRemoveFromCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     setIsAdding(true);
     removeFromCart(bookId);
     toast.success(`${book.title || 'Book'} removed from cart!`);
-    
+
     setTimeout(() => setIsAdding(false), 800);
   };
 
-  // Fix the conditional rendering for discount badge
   const discountBadge = book.discount && book.discount > 0 ? (
-    <span className="px-3 py-1.5 bg-gradient-to-r from-red-500/90 to-pink-500/90 text-white text-xs font-semibold rounded-full shadow-lg">
+    <span className="px-3 py-1.5 text-white text-xs font-semibold rounded-full shadow-sm" style={{ background: AMBER }}>
       {book.discount}% OFF
     </span>
   ) : null;
@@ -103,16 +132,21 @@ const BookCard = ({ book = {} }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -6 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="group relative"
     >
-      <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 backdrop-blur-xl border border-gray-800/50 rounded-2xl hover:border-cyan-500/30 transition-all duration-300 overflow-hidden">
+      <div
+        className="relative bg-white border border-black/[0.06] rounded-2xl overflow-hidden transition-all duration-300"
+        style={{ boxShadow: isHovered ? `0 16px 32px -12px ${tint}40` : '0 2px 10px rgba(30,27,41,0.05)' }}
+      >
+        <div className="h-[3px] w-full" style={{ background: tint }} />
+
         {/* Premium Badges */}
-        <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
+        <div className="absolute top-4 left-3 z-10 flex flex-col gap-2">
           {book.edition && (
-            <span className="px-3 py-1.5 bg-gradient-to-r from-cyan-500/90 to-blue-500/90 text-white text-xs font-semibold rounded-full shadow-lg">
+            <span className="px-3 py-1.5 text-white text-xs font-semibold rounded-full shadow-sm" style={{ background: `linear-gradient(120deg, ${tint}, ${DEEP})` }}>
               {book.edition}
             </span>
           )}
@@ -122,206 +156,167 @@ const BookCard = ({ book = {} }) => {
         {/* Wishlist Button */}
         <button
           onClick={handleWishlist}
-          className={`absolute top-3 right-3 z-10 p-2 rounded-full backdrop-blur-sm border shadow-md transition-all duration-200 ${
+          className="absolute top-3.5 right-3 z-10 p-1 flex items-center justify-center rounded-full backdrop-blur-sm border shadow-sm transition-all duration-200"
+          style={
             isLiked
-              ? 'bg-red-500/20 border-red-500/50 text-red-400'
-              : 'bg-gray-900/80 border-gray-700 text-gray-400 hover:text-red-400 hover:border-red-500/50'
-          }`}
+              ? { background: `${AMBER}18`, borderColor: `${AMBER}55`, color: AMBER }
+              : { background: 'rgba(255,255,255,0.9)', borderColor: 'rgba(0,0,0,0.08)', color: '#94A3B8' }
+          }
           aria-label={isLiked ? 'Remove from wishlist' : 'Add to wishlist'}
         >
           <HiHeart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
         </button>
 
         {/* Book Image */}
-        <Link to={`/product/${bookId}`} className="block">
-          <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-cyan-500/10 to-blue-500/10 cursor-pointer">
-            <div className="absolute inset-0 flex items-center justify-center p-4">
-              {/* 3D Book Effect */}
-              <div className="relative w-full h-full perspective-1000">
-                <motion.div
-                  animate={{
-                    rotateY: isHovered ? 20 : 0,
-                    rotateX: isHovered ? -5 : 0
-                  }}
-                  transition={{ duration: 0.3 }}
-                  className="relative w-full h-full transform-style-3d"
-                >
-                  <img 
-                    src={book.image || "https://placehold.co/128x192"} 
-                    alt={book.title || "Book Cover"} 
-                    className="absolute inset-0 w-full h-full object-cover rounded shadow-2xl" 
-                  />
-                </motion.div>
-              </div>
-            </div>
+        <Link to={`/product/${bookId}`} className="h-[200px]">
+          <div className="relative h-full overflow-hidden cursor-pointer" style={{ background: `${tint}0D` }}>
+            <motion.div
+              animate={{ rotateY: isHovered ? 14 : 0, rotateX: isHovered ? -4 : 0 }}
+              transition={{ duration: 0.2 }}
+              className="w-full h-full"
+            >
+              <img
+                src={book.image || "https://placehold.co/128x192"}
+                alt={book.title || "Book Cover"}
+                className="w-full h-full object-contain rounded shadow-lg"
+              />
+            </motion.div>
 
-            {/* Hover Overlay */}
+            {/* Hover Overlay — icon-only actions */}
             {isHovered && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col md:flex-row items-center justify-center gap-2"
+                className="hidden absolute inset-0 bg-ink/25 flex items-center justify-center gap-2.5"
               >
                 {isInCart ? (
-                  <motion.button
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.1 }}
-                    onClick={handleRemoveFromCart}
-                    disabled={isAdding}
-                    className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-red-500/25 transition-all flex items-center gap-2"
-                  >
-                    {isAdding ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Removing...
-                      </>
-                    ) : (
-                      <>
-                        <HiTrash className="w-4 h-4" />
-                        Remove
-                      </>
-                    )}
-                  </motion.button>
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1 }}>
+                    <IconButton
+                      onClick={handleRemoveFromCart}
+                      disabled={isAdding}
+                      active
+                      activeColor={DANGER}
+                      title="Remove from cart"
+                      loading={isAdding}
+                    >
+                      <HiTrash className="w-4.5 h-4.5" />
+                    </IconButton>
+                  </motion.div>
                 ) : (
-                  <motion.button
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.1 }}
-                    onClick={handleAddToCart}
-                    disabled={isAdding}
-                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2"
-                  >
-                    {isAdding ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Adding...
-                      </>
-                    ) : (
-                      <>
-                        <HiShoppingBag className="w-4 h-4" />
-                        Add to Cart
-                      </>
-                    )}
-                  </motion.button>
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1 }}>
+                    <IconButton
+                      onClick={handleAddToCart}
+                      disabled={isAdding}
+                      active
+                      activeColor={tint}
+                      title="Add to cart"
+                      loading={isAdding}
+                    >
+                      <HiShoppingBag className="w-4.5 h-4.5" />
+                    </IconButton>
+                  </motion.div>
                 )}
-                <Link 
-                  to={`/product/${bookId}`}
-                  className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg text-sm font-medium text-white hover:bg-white/20 transition-colors flex items-center gap-2"
-                >
-                  <HiEye className="w-4 h-4" />
-                  Quick View
-                </Link>
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.15 }}>
+                  <Link to={`/product/${bookId}`}>
+                    <IconButton title="Quick view" idleColor={DEEP}>
+                      <HiEye className="w-4.5 h-4.5" />
+                    </IconButton>
+                  </Link>
+                </motion.div>
               </motion.div>
             )}
           </div>
         </Link>
 
         {/* Book Details */}
-        <div className="p-5">
+        <div className="p-3">
           {/* Title */}
-          <h3 className="font-bold text-white text-sm mb-2 line-clamp-1 group-hover:text-cyan-400 transition-colors">
+          <h3 className="font-serif font-bold uppercase text-ink text-base mb-1">
             {book.title || 'Premium Book'}
           </h3>
 
           {/* Author */}
-          <p className="text-xs text-gray-400 mb-3 line-clamp-1">
+          <p className="text-xs text-ink/50 mb-1.5 line-clamp-1">
             by {book.author || 'Unknown Author'}
           </p>
 
+          {/* Rating */}
+          {book.rating > 0 && (
+            <div className="flex items-center gap-1 mb-2.5">
+              <div className="flex items-center gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <HiStar
+                    key={i}
+                    className={`w-3.5 h-3.5 ${i < Math.round(book.rating) ? 'fill-current' : 'text-ink/15'}`}
+                    style={i < Math.round(book.rating) ? { color: AMBER } : {}}
+                  />
+                ))}
+              </div>
+              <span className="text-xs text-ink/40">{book.rating.toFixed(1)}</span>
+            </div>
+          )}
+
           {/* Description */}
-          <p className="text-xs text-gray-500 mb-4 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-ink/40 mb-4 line-clamp-2 leading-relaxed">
             {book.description || 'Premium collector\'s edition with exquisite binding and features'}
           </p>
 
           {/* Price & Action */}
-          <div className="flex flex-wrap items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <div>
-              <div className="text-xs text-gray-500 mb-1">Price</div>
-              <div className="flex items-baseline gap-2">
+              <div className="text-[11px] text-ink/40">Price</div>
+              <div className="flex items-baseline gap-2 font-mono">
                 {book.discount && book.discount > 0 ? (
                   <>
-                    <span className="text-lg font-bold text-white">
-                      ₦{new Intl.NumberFormat('en-NG', {
-                        maximumFractionDigits: 0,
-                        minimumFractionDigits: 0
-                      }).format(book.price * (1 - book.discount/100))}
+                    <span className="text-lg font-bold text-ink">
+                      ₦{new Intl.NumberFormat('en-NG', { maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(book.price * (1 - book.discount / 100))}
                     </span>
-                    <span className="text-sm text-gray-500 line-through">
-                      ₦{new Intl.NumberFormat('en-NG', {
-                        maximumFractionDigits: 0,
-                        minimumFractionDigits: 0
-                      }).format(book.price)}
+                    <span className="text-sm text-ink/30 line-through">
+                      ₦{new Intl.NumberFormat('en-NG', { maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(book.price)}
                     </span>
                   </>
                 ) : (
-                  <span className="text-lg font-bold text-white">
-                    ₦{new Intl.NumberFormat('en-NG', {
-                      maximumFractionDigits: 0,
-                      minimumFractionDigits: 0
-                    }).format(book.price || 0)}
+                  <span className="text-lg font-bold text-ink">
+                    ₦{new Intl.NumberFormat('en-NG', { maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(book.price || 0)}
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Add/Remove Cart Button */}
+            {/* Add/Remove Cart — icon-only, mirrors the overlay action */}
             {isInCart ? (
-              <motion.button
+              <IconButton
                 onClick={handleRemoveFromCart}
                 disabled={isAdding}
-                whileTap={{ scale: 0.95 }}
-                className={`px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2 transition-all duration-200 ${
-                  isAdding
-                    ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                    : 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:shadow-lg hover:shadow-red-500/25'
-                }`}
+                active
+                activeColor={DANGER}
+                title="Remove from cart"
+                loading={isAdding}
               >
-                {isAdding ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Removing
-                  </>
-                ) : (
-                  <>
-                    <HiTrash className="w-4 h-4" />
-                    Remove
-                  </>
-                )}
-              </motion.button>
+                <HiTrash className="w-4.5 h-4.5" />
+              </IconButton>
             ) : (
-              <motion.button
+              <IconButton
                 onClick={handleAddToCart}
                 disabled={isAdding}
-                whileTap={{ scale: 0.95 }}
-                className={`px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2 transition-all duration-200 ${
-                  isAdding
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                    : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-lg hover:shadow-cyan-500/25'
-                }`}
+                active
+                activeColor={tint}
+                title="Add to cart"
+                loading={isAdding}
               >
-                {isAdding ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Adding
-                  </>
-                ) : (
-                  <>
-                    <HiShoppingBag className="w-4 h-4" />
-                    Add
-                  </>
-                )}
-              </motion.button>
+                <HiPlus className="w-5 h-5" />
+              </IconButton>
             )}
           </div>
 
           {/* Features */}
           {book.features && book.features.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-4 pt-4 border-t border-gray-800/50">
+            <div className="flex flex-wrap gap-1.5 mt-4 pt-4 border-t border-black/[0.06]">
               {book.features.slice(0, 2).map((feature, index) => (
                 <span
                   key={index}
-                  className="px-2 py-1 bg-cyan-500/10 text-cyan-400 text-xs rounded-full border border-cyan-500/20"
+                  className="px-2 py-1 text-xs rounded-full border"
+                  style={{ background: `${tint}12`, borderColor: `${tint}30`, color: DEEP }}
                 >
                   {feature}
                 </span>
@@ -329,9 +324,6 @@ const BookCard = ({ book = {} }) => {
             </div>
           )}
         </div>
-
-        {/* Shine Effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
       </div>
     </motion.div>
   );

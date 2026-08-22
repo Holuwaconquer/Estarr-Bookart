@@ -1,4 +1,4 @@
-const ApiResponse = require('../utils/apiResponse');
+const ApiResponse = require("../utils/apiResponse");
 
 // Not found middleware
 exports.notFound = (req, res, next) => {
@@ -13,36 +13,42 @@ exports.errorHandler = (err, req, res, next) => {
   let message = err.message;
 
   // Mongoose bad ObjectId
-  if (err.name === 'CastError') {
-    message = 'Resource not found';
+  if (err.name === "CastError") {
+    message = "Resource not found";
     statusCode = 404;
   }
 
   // Mongoose duplicate key
   if (err.code === 11000) {
-    message = 'Duplicate field value entered';
-    statusCode = 400;
+    const duplicateField = Object.keys(err.keyPattern || err.keyValue || {})[0];
+    message =
+      duplicateField === "name"
+        ? "A category with this name already exists"
+        : "Duplicate value entered";
+    statusCode = 409;
   }
 
   // Mongoose validation error
-  if (err.name === 'ValidationError') {
-    message = Object.values(err.errors).map(val => val.message).join(', ');
+  if (err.name === "ValidationError") {
+    message = Object.values(err.errors)
+      .map((val) => val.message)
+      .join(", ");
     statusCode = 400;
   }
 
   // JWT errors
-  if (err.name === 'JsonWebTokenError') {
-    message = 'Invalid token';
+  if (err.name === "JsonWebTokenError") {
+    message = "Invalid token";
     statusCode = 401;
   }
 
-  if (err.name === 'TokenExpiredError') {
-    message = 'Token expired';
+  if (err.name === "TokenExpiredError") {
+    message = "Token expired";
     statusCode = 401;
   }
 
   // Log error in development
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     console.error(err);
   }
 

@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
-import { Upload, X, Loader } from 'lucide-react';
-import { uploadImageToCloudinary, uploadMultipleImagesToCloudinary } from '../utils/cloudinary';
+import React, { useRef, useState } from "react";
+import { Upload, X, Loader } from "lucide-react";
+import { bookAPI } from "../services/api";
 
 /**
  * CloudinaryUpload Component
@@ -10,16 +10,16 @@ export const CloudinaryUpload = ({
   onUpload,
   multiple = false,
   maxSize = 5242880, // 5MB
-  folder = 'books',
-  className = '',
+  folder = "books",
+  className = "",
   children,
-  initialImages = [] // Add prop for initial images when editing
+  initialImages = [], // Add prop for initial images when editing
 }) => {
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedImages, setUploadedImages] = useState(initialImages);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Update when initialImages changes (e.g., when editing a book)
   React.useEffect(() => {
@@ -30,7 +30,7 @@ export const CloudinaryUpload = ({
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    setError('');
+    setError("");
     setUploading(true);
     setUploadProgress(0);
 
@@ -40,17 +40,33 @@ export const CloudinaryUpload = ({
         if (file.size > maxSize) {
           throw new Error(`File ${file.name} is too large. Max size is 5MB.`);
         }
-        if (!file.type.startsWith('image/')) {
+        if (!file.type.startsWith("image/")) {
           throw new Error(`File ${file.name} is not an image.`);
         }
       }
 
       let newImages;
       if (multiple && files.length > 1) {
-        newImages = await uploadMultipleImagesToCloudinary(files, { folder });
+        const uploadedFiles = await Promise.all(
+          files.map(async (file) => {
+            const response = await bookAPI.uploadBookImage(file);
+            return {
+              url: response.data.url,
+              publicId: response.data.publicId,
+              alt: file.name,
+            };
+          }),
+        );
+        newImages = uploadedFiles;
       } else {
-        const imageData = await uploadImageToCloudinary(files[0], { folder });
-        newImages = [imageData];
+        const response = await bookAPI.uploadBookImage(files[0]);
+        newImages = [
+          {
+            url: response.data.url,
+            publicId: response.data.publicId,
+            alt: files[0].name,
+          },
+        ];
       }
 
       // Append new images to existing ones instead of replacing
@@ -72,19 +88,21 @@ export const CloudinaryUpload = ({
         setUploadProgress(0);
       }, 1000);
     } catch (err) {
-      setError(err.message || 'Upload failed');
-      console.error('Upload error:', err);
+      setError(err.message || "Upload failed");
+      console.error("Upload error:", err);
     } finally {
       setUploading(false);
       // Reset file input
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   };
 
   const removeImage = (indexToRemove) => {
-    const newImages = uploadedImages.filter((_, index) => index !== indexToRemove);
+    const newImages = uploadedImages.filter(
+      (_, index) => index !== indexToRemove,
+    );
     setUploadedImages(newImages);
     if (onUpload) {
       if (multiple) {
@@ -98,24 +116,24 @@ export const CloudinaryUpload = ({
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.add('border-blue-500', 'bg-blue-50');
+    e.currentTarget.classList.add("border-blue-500", "bg-blue-50");
   };
 
   const handleDragLeave = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50');
+    e.currentTarget.classList.remove("border-blue-500", "bg-blue-50");
   };
 
   const handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50');
+    e.currentTarget.classList.remove("border-blue-500", "bg-blue-50");
 
     const files = Array.from(e.dataTransfer.files || []);
     if (fileInputRef.current) {
       const dataTransfer = new DataTransfer();
-      files.forEach(file => dataTransfer.items.add(file));
+      files.forEach((file) => dataTransfer.items.add(file));
       fileInputRef.current.files = dataTransfer.files;
       handleFileSelect({ target: fileInputRef.current });
     }
@@ -129,7 +147,7 @@ export const CloudinaryUpload = ({
         onDrop={handleDrop}
         onClick={() => !uploading && fileInputRef.current?.click()}
         className={`relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200 ${
-          uploading ? 'opacity-50 cursor-wait' : ''
+          uploading ? "opacity-50 cursor-wait" : ""
         }`}
       >
         <input
@@ -145,13 +163,18 @@ export const CloudinaryUpload = ({
         {uploading ? (
           <div className="flex flex-col items-center justify-center gap-3">
             <Loader className="w-8 h-8 text-blue-500 animate-spin" />
-            <p className="text-sm text-gray-600">Uploading... {uploadProgress}%</p>
+            <p className="text-sm text-gray-600">
+              Uploading... {uploadProgress}%
+            </p>
           </div>
         ) : uploadedImages.length > 0 ? (
           <div className="flex flex-col items-center gap-4">
             <div className="flex flex-wrap gap-3 justify-center">
               {uploadedImages.map((img, idx) => (
-                <div key={`${img.url || img.public_id}-${idx}`} className="relative group">
+                <div
+                  key={`${img.url || img.public_id}-${idx}`}
+                  className="relative group"
+                >
                   <img
                     src={img.url}
                     alt={img.alt || `Image ${idx + 1}`}
@@ -176,7 +199,8 @@ export const CloudinaryUpload = ({
               ))}
             </div>
             <p className="text-sm text-gray-600">
-              {uploadedImages.length} image{uploadedImages.length !== 1 ? 's' : ''} uploaded
+              {uploadedImages.length} image
+              {uploadedImages.length !== 1 ? "s" : ""} uploaded
             </p>
             {multiple && (
               <p className="text-xs text-blue-600 hover:text-blue-700">
@@ -189,9 +213,12 @@ export const CloudinaryUpload = ({
             <Upload className="w-8 h-8 text-gray-400" />
             <div>
               <p className="text-sm font-medium text-gray-700">
-                {children || `Click to upload ${multiple ? 'images' : 'an image'} or drag and drop`}
+                {children ||
+                  `Click to upload ${multiple ? "images" : "an image"} or drag and drop`}
               </p>
-              <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
+              <p className="text-xs text-gray-500 mt-1">
+                PNG, JPG, GIF up to 5MB
+              </p>
             </div>
           </div>
         )}

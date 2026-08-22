@@ -1,69 +1,52 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
-
-
 
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  display: none;
-}
-
-::-webkit-scrollbar-track {
-  background: #0A0A0A;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #D97706, #B45309);
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #F59E0B, #D97706);
-}
-
-/* Selection color */
+/* Selection color — matches primary */
 ::selection {
-  background: rgba(245, 158, 11, 0.3);
-  color: white;
+  background: rgba(91, 33, 182, 0.25);
+  color: #1E1B29;
 }
 
 :root {
-  --brand-primary: #7C3AED;
-  --brand-primary-dark: #5B21B6;
-  --brand-primary-light: #8B5CF6;
-  --brand-secondary: #10B981;
-  --brand-accent: #F59E0B;
+  /* Purple primary — five tonal steps, one hue */
+  --brand-primary: #5B21B6;
+  --brand-primary-dark: #4C1D95;
+  --brand-primary-light: #7C3AED;
+  --brand-primary-tint: #F5F3FF;
+
+  /* Two disciplined accents: amber for warmth/urgency, teal for trust */
+  --brand-accent: #D97706;
+  --brand-trust: #0F766E;
+
   --brand-surface: #FFFFFF;
-  --brand-surface-alt: #F8FAFC;
-  --brand-text-primary: #1E293B;
+  --brand-surface-alt: #FAFAFC;
+  --brand-text-primary: #1E1B29;
   --brand-text-secondary: #64748B;
-  --brand-border: #E2E8F0;
+  --brand-border: #E4E1EC;
 }
 
 * {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Public Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
+  font-family: 'Public Sans', sans-serif;
   background: var(--brand-surface-alt);
   color: var(--brand-text-primary);
+  overflow-x: hidden;
 }
 
 /* Premium animations */
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes shimmer {
@@ -81,17 +64,9 @@ body {
   50% { opacity: 0.5; }
 }
 
-.animate-fadeInUp {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-pulse {
-  animation: pulse 2s ease-in-out infinite;
-}
+.animate-fadeInUp { animation: fadeInUp 0.6s ease-out; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-pulse { animation: pulse 2s ease-in-out infinite; }
 
 /* Premium button hover effect */
 .hover-effect {
@@ -103,7 +78,7 @@ body {
 .hover-effect::before {
   content: '';
   position: absolute;
-  background: radial-gradient(circle at center, rgba(124, 58, 237, 0.2) 0%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(91, 33, 182, 0.18) 0%, transparent 70%);
   width: 200px;
   height: 200px;
   border-radius: 50%;
@@ -113,9 +88,7 @@ body {
   pointer-events: none;
 }
 
-.hover-effect:hover::before {
-  opacity: 1;
-}
+.hover-effect:hover::before { opacity: 1; }
 
 /* Directional hover effect */
 .btn-directional-hover {
@@ -127,18 +100,14 @@ body {
 .btn-directional-hover::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   transform: translateX(-100%);
   transition: transform 0.6s;
 }
 
-.btn-directional-hover:hover::before {
-  transform: translateX(100%);
-}
+.btn-directional-hover:hover::before { transform: translateX(100%); }
 
 /* Glass morphism */
 .glass {
@@ -149,8 +118,8 @@ body {
 
 /* Premium shadow system */
 .shadow-premium {
-  box-shadow: 0 10px 40px rgba(124, 58, 237, 0.08),
-              0 2px 10px rgba(124, 58, 237, 0.04),
+  box-shadow: 0 10px 40px rgba(91, 33, 182, 0.08),
+              0 2px 10px rgba(91, 33, 182, 0.04),
               inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
@@ -160,32 +129,21 @@ body {
 
 .shadow-card-hover:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 60px rgba(124, 58, 237, 0.12),
-              0 8px 30px rgba(124, 58, 237, 0.08);
+  box-shadow: 0 20px 60px rgba(91, 33, 182, 0.12),
+              0 8px 30px rgba(91, 33, 182, 0.08);
 }
 
 /* Responsive Typography */
 @media (max-width: 640px) {
-  html {
-    font-size: 14px;
-  }
+  html { font-size: 14px; }
 }
 
-/* Scrollbar Hide */
+/* Scrollbar hide (used explicitly via .scrollbar-hide) */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Smooth transitions */
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
 
 /* Better image rendering */
 img {
@@ -194,21 +152,10 @@ img {
   display: block;
 }
 
-/* Prevent horizontal scroll */
-body {
-  overflow-x: hidden;
-}
-
 /* Touch-friendly buttons */
 @media (hover: none) and (pointer: coarse) {
-  button, a {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  input, select, textarea {
-    font-size: 16px; /* Prevents iOS zoom */
-  }
+  button, a { min-height: 44px; min-width: 44px; }
+  input, select, textarea { font-size: 16px; } /* Prevents iOS zoom */
 }
 
 /* Swiper custom styles */
@@ -225,9 +172,7 @@ body {
 }
 
 .swiper-button-next,
-.swiper-button-prev {
-  color: white;
-}
+.swiper-button-prev { color: white; }
 
 /* Product card hover effects */
 .product-card {
@@ -236,13 +181,11 @@ body {
   transition-duration: 300ms;
 }
 
-.product-card:hover .product-image {
-  transform: scale(1.05);
-}
+.product-card:hover .product-image { transform: scale(1.05); }
 
-/* Gradient text */
+/* Gradient text — purple only */
 .gradient-text {
-  background-image: linear-gradient(to right, #2563eb, #06b6d4);
+  background-image: linear-gradient(to right, #5B21B6, #8B5CF6);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -255,27 +198,20 @@ body {
   animation: shimmer 1.5s infinite;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background-color: #f1f5f9;
-}
-
+/* Site-wide scrollbar — single purple gradient, no conflicting rules */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background-color: #F5F3FF; }
 ::-webkit-scrollbar-thumb {
-  background-image: linear-gradient(to bottom, #3b82f6, #06b6d4);
+  background-image: linear-gradient(to bottom, #7C3AED, #5B21B6);
   border-radius: 9999px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background-image: linear-gradient(to bottom, #2563eb, #0891b2);
+  background-image: linear-gradient(to bottom, #8B5CF6, #6D28D9);
 }
 
-/* Add these to your global CSS file */
+/* Navbar glass */
 .navbar-glass {
-  background: rgba(17, 24, 39, 0.8);
+  background: rgba(30, 27, 41, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -288,24 +224,13 @@ body {
   left: 0;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, #06b6d4, #3b82f6);
+  background: linear-gradient(90deg, #7C3AED, #5B21B6);
   border-radius: 2px;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
 /* Additional utility classes */
-.perspective-1000 {
-  perspective: 1000px;
-}
-
-.transform-style-3d {
-  transform-style: preserve-3d;
-}
-
+.perspective-1000 { perspective: 1000px; }
+.transform-style-3d { transform-style: preserve-3d; }
 
 /* Fix for Swiper width issues */
 .swiper {
@@ -321,19 +246,8 @@ html {
   display: block;
 }
 
-/* Ensure all swiper containers have proper constraints */
 .swiper-container {
   width: 100%;
   max-width: 100%;
   overflow: hidden;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Hide scrollbar for IE, Edge and Firefox */
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
 }

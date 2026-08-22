@@ -1,30 +1,54 @@
-const Book = require('../models/Book');
-const ApiResponse = require('../utils/apiResponse');
+const Book = require("../models/Book");
+const ApiResponse = require("../utils/apiResponse");
+const cloudinary = require("../config/cloudinary");
+
+const uploadImageToCloudinary = async (file, folder = "book-covers") => {
+  if (!file) {
+    throw new Error("No file provided");
+  }
+
+  const base64String = file.buffer.toString("base64");
+  const dataURI = `data:${file.mimetype};base64,${base64String}`;
+
+  const result = await cloudinary.uploader.upload(dataURI, {
+    folder,
+    resource_type: "image",
+    allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+  });
+
+  return {
+    url: result.secure_url,
+    publicId: result.public_id,
+    format: result.format,
+    size: result.bytes,
+    originalName: file.originalname,
+  };
+};
 
 // @desc    Get all books
 // @route   GET /api/books
 // @access  Public
 exports.getAllBooks = async (req, res, next) => {
   try {
-    const { 
-      category, 
-      featured, 
-      bestseller, 
-      minPrice, 
+    const {
+      category,
+      featured,
+      bestseller,
+      minPrice,
       maxPrice,
       search,
       page = 1,
       limit = 12,
-      sort = '-createdAt'
+      sort = "-createdAt",
     } = req.query;
 
     const query = {};
-    
+
     // Build query
     if (category) query.category = category;
-    if (featured === 'true') query.isFeatured = true;
-    if (bestseller === 'true') query.isBestseller = true;
-    
+    if (featured === "true") query.isFeatured = true;
+    if (bestseller === "true") query.isBestseller = true;
+
     // Price range
     if (minPrice || maxPrice) {
       query.price = {};
@@ -44,21 +68,17 @@ exports.getAllBooks = async (req, res, next) => {
 
     // Execute query with pagination
     const [books, total] = await Promise.all([
-      Book.find(query)
-        .sort(sort)
-        .skip(skip)
-        .limit(limitNum)
-        .select('-__v'),
-      Book.countDocuments(query)
+      Book.find(query).sort(sort).skip(skip).limit(limitNum).select("-__v"),
+      Book.countDocuments(query),
     ]);
 
     // Calculate final price for each book
-    const booksWithFinalPrice = books.map(book => ({
+    const booksWithFinalPrice = books.map((book) => ({
       ...book.toObject(),
-      finalPrice: book.finalPrice
+      finalPrice: book.finalPrice,
     }));
 
-    return ApiResponse.success(res, 'Books retrieved successfully', {
+    return ApiResponse.success(res, "Books retrieved successfully", {
       books: booksWithFinalPrice,
       pagination: {
         page: pageNum,
@@ -66,8 +86,8 @@ exports.getAllBooks = async (req, res, next) => {
         total,
         pages: Math.ceil(total / limitNum),
         hasNext: pageNum < Math.ceil(total / limitNum),
-        hasPrev: pageNum > 1
-      }
+        hasPrev: pageNum > 1,
+      },
     });
   } catch (error) {
     next(error);
@@ -79,18 +99,22 @@ exports.getAllBooks = async (req, res, next) => {
 // @access  Public
 exports.getBookById = async (req, res, next) => {
   try {
-    const book = await Book.findById(req.params.id).select('-__v');
-    
+    const book = await Book.findById(req.params.id).select("-__v");
+
     if (!book) {
-      return ApiResponse.error(res, 'Book not found', 404);
+      return ApiResponse.error(res, "Book not found", 404);
     }
 
     const bookWithFinalPrice = {
       ...book.toObject(),
-      finalPrice: book.finalPrice
+      finalPrice: book.finalPrice,
     };
 
-    return ApiResponse.success(res, 'Book retrieved successfully', bookWithFinalPrice);
+    return ApiResponse.success(
+      res,
+      "Book retrieved successfully",
+      bookWithFinalPrice,
+    );
   } catch (error) {
     next(error);
   }
@@ -102,16 +126,20 @@ exports.getBookById = async (req, res, next) => {
 exports.getFeaturedBooks = async (req, res, next) => {
   try {
     const books = await Book.find({ isFeatured: true })
-      .sort('-createdAt')
+      .sort("-createdAt")
       .limit(8)
-      .select('-__v');
+      .select("-__v");
 
-    const booksWithFinalPrice = books.map(book => ({
+    const booksWithFinalPrice = books.map((book) => ({
       ...book.toObject(),
-      finalPrice: book.finalPrice
+      finalPrice: book.finalPrice,
     }));
 
-    return ApiResponse.success(res, 'Featured books retrieved', booksWithFinalPrice);
+    return ApiResponse.success(
+      res,
+      "Featured books retrieved",
+      booksWithFinalPrice,
+    );
   } catch (error) {
     next(error);
   }
@@ -123,16 +151,20 @@ exports.getFeaturedBooks = async (req, res, next) => {
 exports.getBestsellers = async (req, res, next) => {
   try {
     const books = await Book.find({ isBestseller: true })
-      .sort('-rating')
+      .sort("-rating")
       .limit(8)
-      .select('-__v');
+      .select("-__v");
 
-    const booksWithFinalPrice = books.map(book => ({
+    const booksWithFinalPrice = books.map((book) => ({
       ...book.toObject(),
-      finalPrice: book.finalPrice
+      finalPrice: book.finalPrice,
     }));
 
-    return ApiResponse.success(res, 'Bestsellers retrieved', booksWithFinalPrice);
+    return ApiResponse.success(
+      res,
+      "Bestsellers retrieved",
+      booksWithFinalPrice,
+    );
   } catch (error) {
     next(error);
   }
@@ -143,17 +175,18 @@ exports.getBestsellers = async (req, res, next) => {
 // @access  Public
 exports.getNewArrivals = async (req, res, next) => {
   try {
-    const books = await Book.find()
-      .sort('-createdAt')
-      .limit(8)
-      .select('-__v');
+    const books = await Book.find().sort("-createdAt").limit(8).select("-__v");
 
-    const booksWithFinalPrice = books.map(book => ({
+    const booksWithFinalPrice = books.map((book) => ({
       ...book.toObject(),
-      finalPrice: book.finalPrice
+      finalPrice: book.finalPrice,
     }));
 
-    return ApiResponse.success(res, 'New arrivals retrieved', booksWithFinalPrice);
+    return ApiResponse.success(
+      res,
+      "New arrivals retrieved",
+      booksWithFinalPrice,
+    );
   } catch (error) {
     next(error);
   }
@@ -173,26 +206,26 @@ exports.getBooksByCategory = async (req, res, next) => {
 
     const [books, total] = await Promise.all([
       Book.find({ category })
-        .sort('-createdAt')
+        .sort("-createdAt")
         .skip(skip)
         .limit(limitNum)
-        .select('-__v'),
-      Book.countDocuments({ category })
+        .select("-__v"),
+      Book.countDocuments({ category }),
     ]);
 
-    const booksWithFinalPrice = books.map(book => ({
+    const booksWithFinalPrice = books.map((book) => ({
       ...book.toObject(),
-      finalPrice: book.finalPrice
+      finalPrice: book.finalPrice,
     }));
 
-    return ApiResponse.success(res, 'Category books retrieved', {
+    return ApiResponse.success(res, "Category books retrieved", {
       books: booksWithFinalPrice,
       pagination: {
         page: pageNum,
         limit: limitNum,
         total,
-        pages: Math.ceil(total / limitNum)
-      }
+        pages: Math.ceil(total / limitNum),
+      },
     });
   } catch (error) {
     next(error);
@@ -205,26 +238,60 @@ exports.getBooksByCategory = async (req, res, next) => {
 exports.getFlashDeals = async (req, res, next) => {
   try {
     const { limit = 4 } = req.query;
-    
-    console.log('🔥 Getting flash deals with limit:', limit);
+
+    console.log("🔥 Getting flash deals with limit:", limit);
 
     const books = await Book.find({ discount: { $gt: 0 } })
-      .sort('-discount')
+      .sort("-discount")
       .limit(parseInt(limit))
-      .select('-__v');
+      .select("-__v");
 
-    console.log('📊 Books with discounts found:', books.length);
+    console.log("📊 Books with discounts found:", books.length);
 
-    const booksWithFinalPrice = books.map(book => ({
+    const booksWithFinalPrice = books.map((book) => ({
       ...book.toObject(),
-      finalPrice: book.finalPrice
+      finalPrice: book.finalPrice,
     }));
 
-    console.log('✅ Flash deals response:', booksWithFinalPrice.map(b => ({ title: b.title, discount: b.discount })));
+    console.log(
+      "✅ Flash deals response:",
+      booksWithFinalPrice.map((b) => ({
+        title: b.title,
+        discount: b.discount,
+      })),
+    );
 
-    return ApiResponse.success(res, 'Flash deals retrieved', booksWithFinalPrice);
+    return ApiResponse.success(
+      res,
+      "Flash deals retrieved",
+      booksWithFinalPrice,
+    );
   } catch (error) {
-    console.error('❌ Error getting flash deals:', error);
+    console.error("❌ Error getting flash deals:", error);
+    next(error);
+  }
+};
+
+// @desc    Upload book image to Cloudinary (Admin only)
+// @route   POST /api/books/upload-image
+// @access  Private/Admin
+exports.uploadBookImage = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return ApiResponse.error(res, "No image file provided", 400);
+    }
+
+    const uploadResult = await uploadImageToCloudinary(req.file, "book-covers");
+
+    return ApiResponse.success(res, "Image uploaded successfully", {
+      url: uploadResult.url,
+      publicId: uploadResult.publicId,
+      format: uploadResult.format,
+      size: uploadResult.size,
+      originalName: uploadResult.originalName,
+    });
+  } catch (error) {
+    console.error("❌ Error uploading book image:", error);
     next(error);
   }
 };
@@ -236,7 +303,7 @@ exports.createBook = async (req, res, next) => {
   try {
     const book = await Book.create(req.body);
 
-    return ApiResponse.success(res, 'Book created successfully', book, 201);
+    return ApiResponse.success(res, "Book created successfully", book, 201);
   } catch (error) {
     next(error);
   }
@@ -249,25 +316,28 @@ exports.updateBook = async (req, res, next) => {
   try {
     const bookId = req.params.id;
     const updateData = req.body;
-    
-    console.log('📝 Updating book:', { bookId, updateData });
 
-    const book = await Book.findByIdAndUpdate(
-      bookId,
-      updateData,
-      { new: true, runValidators: true }
-    ).select('-__v');
+    console.log("📝 Updating book:", { bookId, updateData });
+
+    const book = await Book.findByIdAndUpdate(bookId, updateData, {
+      new: true,
+      runValidators: true,
+    }).select("-__v");
 
     if (!book) {
-      console.log('❌ Book not found:', bookId);
-      return ApiResponse.error(res, 'Book not found', 404);
+      console.log("❌ Book not found:", bookId);
+      return ApiResponse.error(res, "Book not found", 404);
     }
 
-    console.log('✅ Book updated successfully:', { bookId, discount: book.discount, price: book.price });
+    console.log("✅ Book updated successfully:", {
+      bookId,
+      discount: book.discount,
+      price: book.price,
+    });
 
-    return ApiResponse.success(res, 'Book updated successfully', book);
+    return ApiResponse.success(res, "Book updated successfully", book);
   } catch (error) {
-    console.error('❌ Error updating book:', error);
+    console.error("❌ Error updating book:", error);
     next(error);
   }
 };
@@ -280,10 +350,10 @@ exports.deleteBook = async (req, res, next) => {
     const book = await Book.findByIdAndDelete(req.params.id);
 
     if (!book) {
-      return ApiResponse.error(res, 'Book not found', 404);
+      return ApiResponse.error(res, "Book not found", 404);
     }
 
-    return ApiResponse.success(res, 'Book deleted successfully');
+    return ApiResponse.success(res, "Book deleted successfully");
   } catch (error) {
     next(error);
   }

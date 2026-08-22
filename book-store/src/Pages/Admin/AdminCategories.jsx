@@ -13,6 +13,7 @@ const AdminCategories = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -80,11 +81,13 @@ const AdminCategories = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.name.trim()) {
+      toast.error('Category name is required');
+      return;
+    }
+
     try {
-      if (!formData.name.trim()) {
-        toast.error('Category name is required');
-        return;
-      }
+      setSaving(true);
 
       if (editingCategory) {
         await categoryAPI.updateCategory(editingCategory._id, formData);
@@ -100,6 +103,8 @@ const AdminCategories = () => {
       setCategories(response.data || []);
     } catch (error) {
       toast.error(error.message || 'Failed to save category');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -326,9 +331,17 @@ const AdminCategories = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   type="submit"
-                  className="flex-1 px-6 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
+                  disabled={saving}
+                  className="flex-1 px-6 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {editingCategory ? 'Update' : 'Create'} Category
+                  {saving ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                      {editingCategory ? 'Updating...' : 'Creating...'}
+                    </span>
+                  ) : (
+                    `${editingCategory ? 'Update' : 'Create'} Category`
+                  )}
                 </motion.button>
               </div>
             </form>
