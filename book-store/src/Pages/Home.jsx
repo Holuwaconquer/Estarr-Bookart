@@ -41,7 +41,7 @@ const Home = () => {
           
           {/* Content */}
           <div className="relative z-10 text-center">
-            <h2 className='text-2xl font-bold'>Building readers</h2>
+            <h2 className='text-2xl font-bold'>Building Minds</h2>
             <p className='font-semibold text-[18px]'>EStarr Bookart Online Store</p>
           </div>
         </div>

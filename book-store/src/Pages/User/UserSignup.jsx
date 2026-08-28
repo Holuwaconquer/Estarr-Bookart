@@ -6,6 +6,64 @@ import { HiMail, HiLockClosed, HiUser, HiEye, HiEyeOff, HiArrowRight, HiCheckCir
 import toast from 'react-hot-toast';
 import AuthLayout from '../../components/AuthLayout';
 
+// ---------------------------------------------------------------------
+// Same palette as the rest of the app.
+// ---------------------------------------------------------------------
+const PURPLE = ['#5B21B6', '#6D28D9', '#7C3AED', '#8B5CF6', '#A78BFA'];
+const DEEP = '#4C1D95';
+const AMBER = '#D97706';
+const TEAL = '#0F766E';
+const DANGER = '#DC2626';
+
+// Same tab switcher as UserLogin.jsx — keep in sync (or extract shared).
+const AuthTabs = ({ active }) => {
+  const navigate = useNavigate();
+  const tabs = [
+    { id: 'login', label: 'Sign In', path: '/login' },
+    { id: 'signup', label: 'Create Account', path: '/register' },
+  ];
+
+  return (
+    <div className="relative flex bg-black/[0.04] rounded-xl p-1 mb-8">
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          onClick={() => tab.id !== active && navigate(tab.path)}
+          className="relative flex-1 py-2.5 text-sm font-semibold rounded-lg transition-colors z-10"
+          style={{ color: active === tab.id ? '#fff' : '#64748B' }}
+        >
+          {active === tab.id && (
+            <motion.div
+              layoutId="auth-tab-pill"
+              className="absolute inset-0 rounded-lg -z-10"
+              style={{ background: `linear-gradient(120deg, ${PURPLE[1]}, ${DEEP})` }}
+              transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+            />
+          )}
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// Strength colors mapped onto the same palette instead of the old
+// red/amber/blue/green mix, so the meter still reads weak→strong at a
+// glance without leaving the brand hue for "good".
+const strengthColor = (level) => {
+  if (level < 2) return DANGER;
+  if (level === 2) return AMBER;
+  if (level === 3) return PURPLE[2];
+  return TEAL;
+};
+const strengthLabel = (level) => {
+  if (level < 2) return 'Weak password';
+  if (level === 2) return 'Fair password';
+  if (level === 3) return 'Good password';
+  return 'Strong password';
+};
+
 const UserSignup = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -36,7 +94,7 @@ const UserSignup = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match');
       return;
@@ -54,14 +112,10 @@ const UserSignup = () => {
         email: formData.email,
         password: formData.password
       });
-      
+
       toast.success('Account created successfully! Please log in.', {
         icon: '🎉',
-        style: {
-          background: '#1e293b',
-          color: '#fff',
-          border: '1px solid #334155'
-        }
+        style: { background: '#1E1B29', color: '#fff', border: '1px solid #4C1D95' }
       });
       navigate('/login');
     } catch (error) {
@@ -79,14 +133,17 @@ const UserSignup = () => {
       <motion.form
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
+        transition={{ delay: 0.3 }}
         onSubmit={handleSignup}
-        className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-xl border border-gray-800/50 rounded-2xl p-8 shadow-2xl"
+        className="bg-white border border-black/[0.06] rounded-2xl p-8"
+        style={{ boxShadow: '0 10px 40px rgba(76,29,149,0.08)' }}
       >
+        <AuthTabs active="signup" />
+
         {/* Name Field */}
         <div className="mb-5">
-          <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
-            <HiUser className="w-4 h-4 text-cyan-400" />
+          <label className="flex items-center gap-2 text-sm font-semibold text-ink/70 mb-2">
+            <HiUser className="w-4 h-4" style={{ color: PURPLE[0] }} />
             Full Name
           </label>
           <input
@@ -96,14 +153,15 @@ const UserSignup = () => {
             onChange={handleChange}
             placeholder="John Doe"
             required
-            className="w-full px-4 py-3 bg-white/5 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 bg-black/[0.02] border border-black/[0.08] rounded-lg text-ink placeholder-ink/30 focus:outline-none focus:ring-2 focus:border-transparent transition-all"
+            style={{ '--tw-ring-color': `${PURPLE[2]}55` }}
           />
         </div>
 
         {/* Email Field */}
         <div className="mb-5">
-          <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
-            <HiMail className="w-4 h-4 text-cyan-400" />
+          <label className="flex items-center gap-2 text-sm font-semibold text-ink/70 mb-2">
+            <HiMail className="w-4 h-4" style={{ color: PURPLE[0] }} />
             Email Address
           </label>
           <input
@@ -113,14 +171,15 @@ const UserSignup = () => {
             onChange={handleChange}
             placeholder="your@email.com"
             required
-            className="w-full px-4 py-3 bg-white/5 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 bg-black/[0.02] border border-black/[0.08] rounded-lg text-ink placeholder-ink/30 focus:outline-none focus:ring-2 focus:border-transparent transition-all"
+            style={{ '--tw-ring-color': `${PURPLE[2]}55` }}
           />
         </div>
 
         {/* Password Field */}
         <div className="mb-5">
-          <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
-            <HiLockClosed className="w-4 h-4 text-cyan-400" />
+          <label className="flex items-center gap-2 text-sm font-semibold text-ink/70 mb-2">
+            <HiLockClosed className="w-4 h-4" style={{ color: PURPLE[0] }} />
             Password
           </label>
           <div className="relative">
@@ -131,12 +190,13 @@ const UserSignup = () => {
               onChange={handleChange}
               placeholder="••••••••"
               required
-              className="w-full px-4 py-3 bg-white/5 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-black/[0.02] border border-black/[0.08] rounded-lg text-ink placeholder-ink/30 focus:outline-none focus:ring-2 focus:border-transparent transition-all"
+              style={{ '--tw-ring-color': `${PURPLE[2]}55` }}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-cyan-400 transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-ink/30 hover:text-ink/60 transition-colors"
             >
               {showPassword ? <HiEyeOff className="w-5 h-5" /> : <HiEye className="w-5 h-5" />}
             </button>
@@ -149,28 +209,17 @@ const UserSignup = () => {
                 {[...Array(4)].map((_, i) => (
                   <div
                     key={i}
-                    className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                      i < passwordStrength
-                        ? 'bg-gradient-to-r from-cyan-500 to-blue-500'
-                        : 'bg-white/10'
-                    }`}
+                    className="h-1 flex-1 rounded-full transition-all duration-300"
+                    style={{ background: i < passwordStrength ? strengthColor(passwordStrength) : 'rgba(0,0,0,0.08)' }}
                   />
                 ))}
               </div>
               <div className="flex items-center gap-2">
-                <span className={`text-xs ${
-                  passwordStrength < 2 ? 'text-red-400' :
-                  passwordStrength === 2 ? 'text-amber-400' :
-                  passwordStrength === 3 ? 'text-blue-400' :
-                  'text-green-400'
-                }`}>
-                  {passwordStrength < 2 && 'Weak password'}
-                  {passwordStrength === 2 && 'Fair password'}
-                  {passwordStrength === 3 && 'Good password'}
-                  {passwordStrength === 4 && 'Strong password'}
+                <span className="text-xs font-medium" style={{ color: strengthColor(passwordStrength) }}>
+                  {strengthLabel(passwordStrength)}
                 </span>
                 {passwordStrength >= 3 && (
-                  <HiCheckCircle className="w-4 h-4 text-green-400" />
+                  <HiCheckCircle className="w-4 h-4" style={{ color: TEAL }} />
                 )}
               </div>
             </div>
@@ -179,8 +228,8 @@ const UserSignup = () => {
 
         {/* Confirm Password Field */}
         <div className="mb-6">
-          <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
-            <HiLockClosed className="w-4 h-4 text-cyan-400" />
+          <label className="flex items-center gap-2 text-sm font-semibold text-ink/70 mb-2">
+            <HiLockClosed className="w-4 h-4" style={{ color: PURPLE[0] }} />
             Confirm Password
           </label>
           <div className="relative">
@@ -191,18 +240,19 @@ const UserSignup = () => {
               onChange={handleChange}
               placeholder="••••••••"
               required
-              className="w-full px-4 py-3 bg-white/5 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 bg-black/[0.02] border border-black/[0.08] rounded-lg text-ink placeholder-ink/30 focus:outline-none focus:ring-2 focus:border-transparent transition-all"
+              style={{ '--tw-ring-color': `${PURPLE[2]}55` }}
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-cyan-400 transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-ink/30 hover:text-ink/60 transition-colors"
             >
               {showConfirmPassword ? <HiEyeOff className="w-5 h-5" /> : <HiEye className="w-5 h-5" />}
             </button>
           </div>
           {formData.confirmPassword && formData.password === formData.confirmPassword && (
-            <p className="text-xs text-green-400 mt-2 flex items-center gap-1">
+            <p className="text-xs mt-2 flex items-center gap-1" style={{ color: TEAL }}>
               <HiCheckCircle className="w-4 h-4" /> Passwords match
             </p>
           )}
@@ -214,13 +264,13 @@ const UserSignup = () => {
             type="checkbox"
             id="terms"
             required
-            className="w-4 h-4 mt-1 rounded border-gray-700/50 bg-white/5 focus:ring-cyan-500"
+            className="w-4 h-4 mt-1 rounded border-black/20 text-purple-600 focus:ring-0"
           />
-          <label htmlFor="terms" className="text-sm text-gray-300">
+          <label htmlFor="terms" className="text-sm text-ink/60">
             I agree to the{' '}
-            <a href="#" className="text-cyan-400 hover:text-cyan-300">Terms of Service</a>
+            <a href="#" className="font-medium" style={{ color: PURPLE[0] }}>Terms of Service</a>
             {' '}and{' '}
-            <a href="#" className="text-cyan-400 hover:text-cyan-300">Privacy Policy</a>
+            <a href="#" className="font-medium" style={{ color: PURPLE[0] }}>Privacy Policy</a>
           </label>
         </div>
 
@@ -230,7 +280,8 @@ const UserSignup = () => {
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={loading}
-          className="w-full px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-bold hover:shadow-lg hover:shadow-cyan-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full px-6 py-3 text-white rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          style={{ background: `linear-gradient(120deg, ${PURPLE[1]}, ${DEEP})`, boxShadow: `0 10px 24px ${PURPLE[1]}40` }}
         >
           {loading ? (
             <>
@@ -245,9 +296,9 @@ const UserSignup = () => {
         </motion.button>
 
         {/* Login Link */}
-        <p className="text-center mt-8 text-gray-400">
+        <p className="text-center mt-6 text-ink/50">
           Already have an account?{' '}
-          <Link to="/login" className="text-cyan-400 font-semibold hover:text-cyan-300 transition-colors">
+          <Link to="/login" className="font-semibold transition-colors" style={{ color: PURPLE[0] }}>
             Sign in
           </Link>
         </p>
