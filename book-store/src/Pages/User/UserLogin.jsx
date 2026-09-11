@@ -79,7 +79,11 @@ const UserLogin = () => {
     // But keep it as a safety check
     if (authenticated && user) {
       console.log('User already authenticated, redirecting...');
-      const redirectPath = user?.role === 'admin' ? '/admin/dashboard' : '/dashboard';
+      const requestedPath = new URLSearchParams(location.search).get('next');
+      const nextPath = requestedPath && requestedPath.startsWith('/') && !requestedPath.startsWith('//')
+        ? requestedPath
+        : null;
+      const redirectPath = user?.role === 'admin' ? '/admin/dashboard' : (nextPath || '/dashboard');
       const timer = setTimeout(() => {
         navigate(redirectPath, { replace: true });
       }, 100);
@@ -115,7 +119,12 @@ const UserLogin = () => {
           console.log('✅ User saved to localStorage with role:', result.data.role);
         }
 
-        // Check user role and redirect accordingly
+        const requestedPath = new URLSearchParams(location.search).get('next');
+        const nextPath = requestedPath && requestedPath.startsWith('/') && !requestedPath.startsWith('//')
+          ? requestedPath
+          : null;
+
+        // Check user role and redirect to the requested internal page when available.
         if (result.data?.role === 'admin') {
           toast.success('Redirecting to admin dashboard...');
           console.log('🔄 Admin logged in via user login, redirecting to:', '/admin/dashboard');
@@ -124,9 +133,10 @@ const UserLogin = () => {
           }, 500);
         } else {
           toast.success('Welcome back!');
-          console.log('🔄 User logged in, redirecting to:', '/dashboard');
+          const destination = nextPath || '/dashboard';
+          console.log('🔄 User logged in, redirecting to:', destination);
           setTimeout(() => {
-            navigate('/dashboard', { replace: true });
+            navigate(destination, { replace: true });
           }, 500);
         }
       }

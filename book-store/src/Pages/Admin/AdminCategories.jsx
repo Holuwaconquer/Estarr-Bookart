@@ -4,6 +4,7 @@ import { HiPlus, HiPencil, HiTrash, HiSearch, HiX } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import AdminSidebar from '../../components/AdminSidebar';
 import AdminHeader from '../../components/AdminHeader';
+import AdminSubmitButton from '../../components/AdminSubmitButton';
 import { categoryAPI } from '../../services/api';
 
 const AdminCategories = () => {
@@ -125,7 +126,7 @@ const AdminCategories = () => {
   );
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
+    <div className="admin-page flex h-screen bg-[#faf9f7] text-[#28202f] overflow-hidden">
       {/* Sidebar */}
       <AdminSidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
@@ -139,16 +140,17 @@ const AdminCategories = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between md:items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+              <p className="admin-kicker">Catalog architecture</p>
+              <h1 className="text-4xl font-semibold text-[#28202f]">
                 Manage Categories
               </h1>
-              <p className="text-gray-400 mt-2">Create and manage book categories</p>
+              <p className="text-[#7b7180] mt-2">Create a clear path through your collection.</p>
             </div>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleAddCategory}
-              className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
+              className="admin-primary-action flex items-center gap-2 bg-[#5b21b6] text-white px-5 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
             >
               <HiPlus className="w-5 h-5" />
               Add Category
@@ -327,22 +329,13 @@ const AdminCategories = () => {
                 >
                   Cancel
                 </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <AdminSubmitButton
                   type="submit"
-                  disabled={saving}
-                  className="flex-1 px-6 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60"
+                  loading={saving}
+                  className="flex-1 px-6 py-2 bg-[#5b21b6] text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
                 >
-                  {saving ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                      {editingCategory ? 'Updating...' : 'Creating...'}
-                    </span>
-                  ) : (
-                    `${editingCategory ? 'Update' : 'Create'} Category`
-                  )}
-                </motion.button>
+                  {editingCategory ? 'Update Category' : 'Create Category'}
+                </AdminSubmitButton>
               </div>
             </form>
           </motion.div>

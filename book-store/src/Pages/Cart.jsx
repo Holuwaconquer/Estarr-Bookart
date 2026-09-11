@@ -83,7 +83,7 @@ const Cart = () => {
 
   const handleCheckout = () => {
     if (!authenticated) {
-      navigate("/login", { state: { returnTo: "/checkout" } });
+      navigate(`/login?next=${encodeURIComponent('/checkout')}`);
       return;
     }
     navigate("/checkout");

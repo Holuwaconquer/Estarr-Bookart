@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   HiUserGroup, 
   HiShoppingBag, 
@@ -15,12 +15,15 @@ import {
   HiExclamationCircle
 } from 'react-icons/hi';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import AdminSidebar from '../../components/AdminSidebar';
 import AdminHeader from '../../components/AdminHeader';
 import { orderAPI, userAPI, bookAPI } from '../../services/api';
+import { AuthContext } from '../../AuthContext';
 import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
+  const { user } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [timeRange, setTimeRange] = useState('week');
   const [dashboardStats, setDashboardStats] = useState({
@@ -182,7 +185,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="admin-page flex h-screen bg-[#faf9f7] overflow-hidden">
       {/* Sidebar - Hidden on mobile, visible on desktop */}
       <div className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 md:left-0 md:z-40 md:bg-white md:border-r md:border-gray-200">
         <AdminSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
@@ -215,7 +218,7 @@ const AdminDashboard = () => {
         <AdminHeader isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
         {/* Content Area */}
-        <main className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 via-blue-50 to-cyan-50">
+        <main className="flex-1 overflow-auto">
           <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
             {loading ? (
               <div className="flex items-center justify-center h-96">
@@ -231,22 +234,23 @@ const AdminDashboard = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-12"
+                  className="admin-hero mb-8 overflow-hidden rounded-[24px] border border-[#e8e3dc] bg-[#28202f] p-6 text-white shadow-premium sm:p-8"
                 >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                  <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
-                      <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-                        Admin Dashboard
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[#d7f36a]">Store command center</p>
+                      <h1 className="font-serif text-4xl font-semibold leading-tight text-white lg:text-5xl">
+                        Good morning, {user?.name || 'Admin'}
                       </h1>
-                      <p className="text-gray-600 text-lg">Welcome back! Here's your store overview.</p>
+                      <p className="mt-3 max-w-xl text-sm leading-6 text-white/65 sm:text-base">A clear view of your books, customers, orders, and the momentum behind your store.</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
-                      <div className="flex items-center gap-2 bg-gray-200/50 border border-gray-300/50 rounded-lg px-4 py-2 backdrop-blur-sm">
-                        <HiCalendar className="w-4 h-4 text-cyan-400" />
+                      <div className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
+                        <HiCalendar className="w-4 h-4 text-[#d7f36a]" />
                         <select 
                           value={timeRange}
                           onChange={(e) => setTimeRange(e.target.value)}
-                          className="bg-transparent border-none focus:ring-0 text-sm text-black"
+                          className="border-none bg-transparent text-sm text-white focus:ring-0"
                         >
                           <option value="week" className="bg-white">Last 7 days</option>
                           <option value="month" className="bg-white">Last 30 days</option>
@@ -257,13 +261,14 @@ const AdminDashboard = () => {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="px-4 py-2 bg-gray-200/50 border border-gray-300/50 rounded-lg hover:border-cyan-500/50 transition-all flex items-center gap-2 text-gray-700 hover:text-gray-900"
+                        className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-white/15"
                       >
                         <HiDownload className="w-4 h-4" />
                         Export
                       </motion.button>
                     </div>
                   </div>
+                  <div className="admin-hero-lines" aria-hidden="true" />
                 </motion.div>
 
                 {/* Stats Grid */}
@@ -275,13 +280,13 @@ const AdminDashboard = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
                       whileHover={{ y: -5 }}
-                      className="bg-gradient-to-br from-blue-50 to-cyan-50 backdrop-blur-xl border border-gray-200/50 rounded-xl p-6 shadow-lg hover:border-cyan-500/30 transition-all"
+                      className="admin-stat-card rounded-2xl border border-[#e8e3dc] bg-white p-6 shadow-card transition-all hover:-translate-y-1 hover:shadow-premium"
                     >
                       <div className="flex items-start justify-between mb-4">
-                        <div className={`p-3 rounded-lg bg-gradient-to-r ${stat.color}`}>
-                          <stat.icon className="w-6 h-6 text-white" />
+                        <div className="rounded-xl bg-[#f0eafb] p-3">
+                          <stat.icon className="w-6 h-6 text-[#5b21b6]" />
                         </div>
-                        <div className="text-sm font-medium text-green-400 bg-green-500/20 px-2 py-1 rounded border border-green-500/30">
+                        <div className="rounded-full bg-[#f3fbd2] px-2.5 py-1 text-xs font-bold text-[#506000]">
                           {stat.change}
                         </div>
                       </div>
@@ -300,12 +305,12 @@ const AdminDashboard = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.6 }}
-                    className="lg:col-span-2 bg-gradient-to-br from-blue-50 to-cyan-50 backdrop-blur-xl border border-gray-200/50 rounded-xl p-6 shadow-lg"
+                    className="lg:col-span-2 rounded-2xl border border-[#e8e3dc] bg-white p-6 shadow-card"
                   >
                     <div className="flex items-center justify-between mb-6">
                       <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Recent Orders</h2>
-                        <p className="text-sm text-gray-600">Latest customer transactions</p>
+                        <h2 className="font-serif text-2xl font-semibold text-[#28202f]">Recent Orders</h2>
+                          <p className="text-sm text-[#7b7180]">Latest customer transactions</p>
                       </div>
                       <HiShoppingBag className="w-6 h-6 text-cyan-400" />
                     </div>
@@ -317,21 +322,21 @@ const AdminDashboard = () => {
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.05 }}
-                          className="p-4 bg-gray-100 border border-gray-300/50 rounded-lg hover:border-cyan-500/30 transition-all flex items-center justify-between"
+                          className="flex items-center justify-between rounded-xl border border-[#eee9e3] bg-[#fcfbfa] p-4 transition-all hover:border-[#d7f36a] hover:bg-[#fbfdf2]"
                         >
                           <div className="flex-1">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center">
-                                <HiShoppingBag className="w-5 h-5 text-cyan-400" />
+                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f0eafb]">
+                                <HiShoppingBag className="w-5 h-5 text-[#5b21b6]" />
                               </div>
                               <div>
-                                <p className="font-semibold text-dark">{order.customer}</p>
-                                <p className="text-xs text-gray-500">{order.date}</p>
+                                <p className="font-semibold text-[#28202f]">{order.customer}</p>
+                                <p className="text-xs text-[#7b7180]">{order.date}</p>
                               </div>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="font-bold text-dark mb-1">{order.amount}</p>
+                            <p className="mb-1 font-bold text-[#28202f]">{order.amount}</p>
                             <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded ${getStatusColor(order.status)}`}>
                               {getStatusIcon(order.status)}
                               {order.status}
@@ -341,12 +346,12 @@ const AdminDashboard = () => {
                       ))}
                     </div>
 
-                    <motion.button
+                    <motion.div
                       whileHover={{ scale: 1.02 }}
-                      className="w-full mt-6 py-3 bg-cyan-500/10 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-400 rounded-lg font-semibold transition-all"
+                      className="mt-6 block w-full rounded-xl border border-[#e8e3dc] bg-[#faf9f7] py-3 text-center font-semibold text-[#5b21b6] transition-all hover:border-[#5b21b6] hover:bg-[#f0eafb]"
                     >
-                      View All Orders
-                    </motion.button>
+                      <Link to="/admin/orders">View All Orders</Link>
+                    </motion.div>
                   </motion.div>
 
                   {/* Quick Stats */}
@@ -354,42 +359,42 @@ const AdminDashboard = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.6 }}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
                     {/* Active Users */}
-                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 backdrop-blur-xl border border-gray-200/50 rounded-xl p-6 shadow-lg">
+                    <div className="rounded-2xl border border-[#e8e3dc] bg-white p-6 shadow-card">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-gray-900">Active Users</h3>
-                        <div className="w-10 h-10 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
-                          <HiUserGroup className="w-5 h-5 text-cyan-400" />
+                        <h3 className="font-serif text-lg font-semibold text-[#28202f]">Active Users</h3>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f0eafb]">
+                          <HiUserGroup className="w-5 h-5 text-[#5b21b6]" />
                         </div>
                       </div>
                       <p className="text-3xl font-bold mb-2">{dashboardStats.totalUsers}</p>
-                      <p className="text-sm text-green-400">+5.2% from last week</p>
+                      <p className="text-sm text-[#587000]">+5.2% from last week</p>
                     </div>
 
                     {/* Conversion Rate */}
-                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 backdrop-blur-xl border border-gray-200/50 rounded-xl p-6 shadow-lg">
+                    <div className="rounded-2xl border border-[#e8e3dc] bg-white p-6 shadow-card">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-gray-900">Conversion</h3>
-                        <div className="w-10 h-10 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center">
-                          <HiTrendingUp className="w-5 h-5 text-purple-400" />
+                        <h3 className="font-serif text-lg font-semibold text-[#28202f]">Conversion</h3>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f3fbd2]">
+                          <HiTrendingUp className="w-5 h-5 text-[#587000]" />
                         </div>
                       </div>
                       <p className="text-3xl font-bold mb-2">3.24%</p>
-                      <p className="text-sm text-green-400">+0.5% from last week</p>
+                      <p className="text-sm text-[#587000]">+0.5% from last week</p>
                     </div>
 
                     {/* Pending Orders */}
-                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 backdrop-blur-xl border border-gray-200/50 rounded-xl p-6 shadow-lg">
+                    <div className="rounded-2xl border border-[#e8e3dc] bg-white p-6 shadow-card">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-gray-900">Pending Orders</h3>
-                        <div className="w-10 h-10 rounded-lg bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center">
-                          <HiClock className="w-5 h-5 text-yellow-400" />
+                        <h3 className="font-serif text-lg font-semibold text-[#28202f]">Pending Orders</h3>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff3da]">
+                          <HiClock className="w-5 h-5 text-[#b45309]" />
                         </div>
                       </div>
                       <p className="text-3xl font-bold mb-2">{dashboardStats.pendingOrders}</p>
-                      <p className="text-sm text-yellow-400">Need attention</p>
+                      <p className="text-sm text-[#b45309]">Need attention</p>
                     </div>
                   </motion.div>
                 </div>

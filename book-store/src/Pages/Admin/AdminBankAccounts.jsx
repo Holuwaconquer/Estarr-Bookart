@@ -4,12 +4,14 @@ import { HiPlus, HiPencil, HiTrash, HiSearch, HiX, HiCheck } from 'react-icons/h
 import toast from 'react-hot-toast';
 import AdminSidebar from '../../components/AdminSidebar';
 import AdminHeader from '../../components/AdminHeader';
+import AdminSubmitButton from '../../components/AdminSubmitButton';
 import { bankAccountAPI } from '../../services/api';
 
 const AdminBankAccounts = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
@@ -172,6 +174,7 @@ const AdminBankAccounts = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       if (!formData.accountName.trim()) {
         toast.error('Account name is required');
@@ -198,6 +201,8 @@ const AdminBankAccounts = () => {
       fetchAccounts();
     } catch (error) {
       toast.error(error.message || 'Failed to save bank account');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -230,7 +235,7 @@ const AdminBankAccounts = () => {
   );
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
+    <div className="admin-page flex h-screen bg-[#faf9f7] text-[#28202f] overflow-hidden">
       {/* Sidebar */}
       <AdminSidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
@@ -244,10 +249,11 @@ const AdminBankAccounts = () => {
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+              <p className="admin-kicker">Financial operations</p>
+              <h1 className="text-4xl font-semibold text-[#28202f]">
                 Bank Accounts
               </h1>
-              <p className="text-gray-400 mt-2">Manage payment bank accounts for orders</p>
+              <p className="text-[#7b7180] mt-2">Manage trusted payment destinations for customer orders.</p>
             </div>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -495,12 +501,13 @@ const AdminBankAccounts = () => {
                 >
                   Cancel
                 </button>
-                <button
+                <AdminSubmitButton
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all"
+                  loading={saving}
+                  className="flex-1 px-4 py-2 bg-[#5b21b6] text-white rounded-lg font-medium transition-all"
                 >
                   {editingAccount ? 'Update' : 'Create'}
-                </button>
+                </AdminSubmitButton>
               </div>
             </form>
           </motion.div>

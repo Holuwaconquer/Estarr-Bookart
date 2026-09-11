@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import AdminSidebar from '../../components/AdminSidebar';
 import AdminHeader from '../../components/AdminHeader';
 import CloudinaryUpload from '../../components/CloudinaryUpload';
+import AdminSubmitButton from '../../components/AdminSubmitButton';
 import { blogAPI } from '../../services/api';
 
 const AdminBlog = () => {
@@ -30,6 +31,7 @@ const AdminBlog = () => {
     published: false
   });
   const [tagInput, setTagInput] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const categories = ['technology', 'business', 'lifestyle', 'news', 'tutorial', 'review', 'other'];
 
@@ -95,6 +97,7 @@ const AdminBlog = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       if (editingBlog) {
         await blogAPI.updateBlog(editingBlog._id, formData);
@@ -109,6 +112,8 @@ const AdminBlog = () => {
       setBlogs(response.data?.blogs || []);
     } catch (error) {
       toast.error(error.message || 'Failed to save blog');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -135,7 +140,7 @@ const AdminBlog = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-950">
+    <div className="admin-page flex h-screen bg-[#faf9f7]">
       <AdminSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -151,16 +156,17 @@ const AdminBlog = () => {
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                  <p className="admin-kicker">Editorial studio</p>
+                  <h1 className="text-4xl font-semibold text-[#28202f]">
                     Blog Management
                   </h1>
-                  <p className="text-gray-400">Create and manage blog posts</p>
+                  <p className="mt-2 text-[#7b7180]">Publish useful stories that bring readers back to the store.</p>
                 </div>
                 <motion.button
                   onClick={handleAddBlog}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-lg font-semibold transition-all"
+                  className="admin-primary-action flex items-center gap-2 px-5 py-3 bg-[#5b21b6] hover:bg-[#4c1d95] text-white rounded-xl font-semibold transition-all"
                 >
                   <HiPlus className="w-5 h-5" />
                   New Post
@@ -518,13 +524,13 @@ const AdminBlog = () => {
                 >
                   Cancel
                 </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
+                <AdminSubmitButton
                   type="submit"
-                  className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-semibold transition-all"
+                  loading={saving}
+                  className="px-6 py-2 bg-[#5b21b6] text-white rounded-lg font-semibold transition-all"
                 >
                   {editingBlog ? 'Update Post' : 'Create Post'}
-                </motion.button>
+                </AdminSubmitButton>
               </div>
             </form>
           </motion.div>

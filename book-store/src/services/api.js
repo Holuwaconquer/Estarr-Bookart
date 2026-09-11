@@ -81,6 +81,8 @@ const request = async (path, options = {}) => {
       const body = await parseJSON(res);
       const message =
         (body && body.message) ||
+        (body && body.error) ||
+        (body && body.errors && Object.values(body.errors).map((item) => item.message).join(', ')) ||
         (typeof body === "string" ? body : "Request failed");
       const error = new Error(message);
       error.status = res.status;

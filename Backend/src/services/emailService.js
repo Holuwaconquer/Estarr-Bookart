@@ -242,9 +242,16 @@ const sendOrderConfirmationEmail = async (order, user) => {
   try {
     const itemsList = order.items.map(item => `
       <tr>
-        <td style="padding: 8px;">${item.title}</td>
-        <td style="padding: 8px; text-align: center;">${item.quantity}</td>
-        <td style="padding: 8px; text-align: right;">₦${(item.price * item.quantity).toLocaleString()}</td>
+        <td style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb; width: 64px;">
+          <img src="${item.image || 'https://estarrbookart.com.ng/estarr.jpeg'}" alt="${item.title}" style="width: 48px; height: 64px; object-fit: cover; border-radius: 6px;" />
+        </td>
+        <td style="padding: 12px 8px; border-bottom: 1px solid #e5e7eb;">
+          <strong>${item.title}</strong><br />
+          <span style="color: #6b7280; font-size: 12px;">by ${item.author || 'EStarr Bookart'}</span>
+        </td>
+        <td style="padding: 12px 8px; text-align: center; border-bottom: 1px solid #e5e7eb;">${item.quantity}</td>
+        <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">₦${item.price?.toLocaleString() || 0}</td>
+        <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #e5e7eb; white-space: nowrap;"><strong>₦${(item.price * item.quantity).toLocaleString()}</strong></td>
       </tr>
     `).join('');
 
@@ -275,7 +282,7 @@ const sendOrderConfirmationEmail = async (order, user) => {
         <body>
           <div class="container">
             <div class="header">
-              <h1>✅ Order Confirmed!</h1>
+              <h1>✅ Order Received!</h1>
             </div>
             <div class="content">
               <p>Hello <strong>${user.name || 'Valued Customer'}</strong>,</p>
@@ -283,12 +290,24 @@ const sendOrderConfirmationEmail = async (order, user) => {
               <div class="order-info">
                 <p><strong>Order #:</strong> ${order.orderNumber || order._id.slice(-8)}</p>
                 <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+                <p><strong>Status:</strong> ${order.status || 'pending'}</p>
+                <p><strong>Payment method:</strong> ${order.paymentMethod || 'N/A'}</p>
               </div>
               <h3>Order Summary</h3>
               <table>
-                <tr><th>Item</th><th>Qty</th><th>Total</th></tr>
+                <tr>
+                  <th style="text-align: left;">Image</th>
+                  <th style="text-align: left;">Product</th>
+                  <th style="text-align: center;">Qty</th>
+                  <th style="text-align: right;">Unit price</th>
+                  <th style="text-align: right;">Total</th>
+                </tr>
                 ${itemsList}
               </table>
+              <div class="order-info">
+                <p><strong>Shipping to:</strong></p>
+                <p>${order.shippingAddress?.street || 'N/A'}, ${order.shippingAddress?.city || 'N/A'}, ${order.shippingAddress?.state || 'N/A'}</p>
+              </div>
               <div class="total">Total: ₦${order.total?.toLocaleString()}</div>
               <p style="margin-top: 20px;">We'll notify you once your order ships.</p>
               <p>Happy reading!<br>EStarr Bookart Team</p>
@@ -315,7 +334,49 @@ const sendOrderConfirmationEmail = async (order, user) => {
   }
 };
 
+const sendOrderStatusUpdateEmail = async (order, user, previousStatus) => {
+  try {
+    if (!user?.email || previousStatus === order.status) return false;
+
+    const orderReference = order.orderNumber || order._id.toString().slice(-8);
+    const statusLabel = order.status.charAt(0).toUpperCase() + order.status.slice(1);
+    const { error } = await resend.emails.send({
+      from: 'EStarr Bookart <orders@estarrbookart.com.ng>',
+      to: user.email,
+      subject: `Order #${orderReference} status update: ${statusLabel}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #28202f; background: #faf9f7; padding: 28px;">
+          <div style="background: #28202f; color: #fff; border-radius: 16px 16px 0 0; padding: 24px;">
+            <p style="margin: 0 0 8px; color: #d7f36a; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;">Estarr Bookart</p>
+            <h1 style="margin: 0; font-size: 24px;">Your order has been updated</h1>
+          </div>
+          <div style="background: #fff; padding: 28px; border: 1px solid #e8e3dc; border-top: 0; border-radius: 0 0 16px 16px;">
+            <p>Hello ${user.name || 'Valued Customer'},</p>
+            <p>Your order <strong>#${orderReference}</strong> has moved from <strong>${previousStatus}</strong> to:</p>
+            <p style="display: inline-block; background: #f0eafb; color: #5b21b6; border-radius: 999px; padding: 8px 16px; font-weight: 700;">${statusLabel}</p>
+            <p>Total: <strong>₦${order.total?.toLocaleString() || 0}</strong></p>
+            <p>We will keep you informed as your order progresses.</p>
+            <p style="margin-bottom: 0;">Thank you for shopping with us,<br />EStarr Bookart Team</p>
+          </div>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error('Order status email error:', error);
+      return false;
+    }
+
+    console.log('Order status email sent:', { orderId: order._id, status: order.status, email: user.email });
+    return true;
+  } catch (error) {
+    console.error('Failed to send order status email:', error);
+    return false;
+  }
+};
+
 module.exports = {
   sendOrderNotificationEmail,
-  sendOrderConfirmationEmail
+  sendOrderConfirmationEmail,
+  sendOrderStatusUpdateEmail
 };

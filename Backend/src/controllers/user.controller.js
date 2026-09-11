@@ -216,7 +216,14 @@ const userSignUp = async (req, res) => {
     });
   } catch (err) {
     if (err.code === 11000) {
-      return res.status(400).json({ error: "Duplicate field: email already exists" });
+      return res.status(400).json({
+        status: false,
+        message: "An account with this email already exists. Please log in or use another email."
+      });
+    }
+    if (err.name === 'ValidationError') {
+      const message = Object.values(err.errors).map((error) => error.message).join(', ');
+      return res.status(400).json({ status: false, message });
     }
     console.log('there is an error saving user in catch block', err);
     return res.status(500).json({ message: 'server error' });

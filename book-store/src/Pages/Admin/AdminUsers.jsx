@@ -4,12 +4,15 @@ import { HiPencil, HiTrash, HiSearch, HiX, HiShieldCheck, HiUser } from 'react-i
 import toast from 'react-hot-toast';
 import AdminSidebar from '../../components/AdminSidebar';
 import AdminHeader from '../../components/AdminHeader';
+import AdminSubmitButton from '../../components/AdminSubmitButton';
 import { userAPI } from '../../services/api';
 
 const AdminUsers = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [savingRole, setSavingRole] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [showModal, setShowModal] = useState(false);
@@ -72,6 +75,7 @@ const AdminUsers = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       if (!editingUser) return;
 
@@ -91,6 +95,8 @@ const AdminUsers = () => {
       fetchUsers();
     } catch (error) {
       toast.error(error.message || 'Failed to update user');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -115,6 +121,7 @@ const AdminUsers = () => {
   const handleChangeRole = async () => {
     try {
       if (!roleChangeUser) return;
+      setSavingRole(true);
 
       await userAPI.updateUserRole(roleChangeUser._id, newRole);
       toast.success(`User role changed to ${newRole}`);
@@ -124,6 +131,8 @@ const AdminUsers = () => {
       fetchUsers();
     } catch (error) {
       toast.error('Failed to change user role');
+    } finally {
+      setSavingRole(false);
     }
   };
 
@@ -148,7 +157,7 @@ const AdminUsers = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
+    <div className="admin-page flex h-screen bg-[#faf9f7] text-[#28202f] overflow-hidden">
       {/* Sidebar */}
       <AdminSidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
@@ -162,10 +171,11 @@ const AdminUsers = () => {
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+              <p className="admin-kicker">People & access</p>
+              <h1 className="text-4xl font-semibold text-[#28202f]">
                 Users Management
               </h1>
-              <p className="text-gray-400 mt-2">Manage platform users and their roles</p>
+              <p className="text-[#7b7180] mt-2">Understand your community and keep access well governed.</p>
             </div>
           </div>
 
@@ -451,12 +461,13 @@ const AdminUsers = () => {
                 >
                   Cancel
                 </button>
-                <button
+                <AdminSubmitButton
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all"
+                  loading={saving}
+                  className="flex-1 px-4 py-2 bg-[#5b21b6] text-white rounded-lg font-medium transition-all"
                 >
                   Update User
-                </button>
+                </AdminSubmitButton>
               </div>
             </form>
           </motion.div>
@@ -507,12 +518,13 @@ const AdminUsers = () => {
               >
                 Cancel
               </button>
-              <button
+              <AdminSubmitButton
                 onClick={handleChangeRole}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all"
+                loading={savingRole}
+                className="flex-1 px-4 py-2 bg-[#5b21b6] text-white rounded-lg font-medium transition-all"
               >
                 Change Role
-              </button>
+              </AdminSubmitButton>
             </div>
           </motion.div>
         </div>

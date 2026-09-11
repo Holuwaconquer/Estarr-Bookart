@@ -6,6 +6,7 @@ const cloudinary = require("../config/cloudinary");
 const {
   sendOrderNotificationEmail,
   sendOrderConfirmationEmail,
+  sendOrderStatusUpdateEmail,
 } = require("../services/emailService");
 const User = require("../models/User");
 
@@ -421,11 +422,19 @@ exports.updateOrderStatus = async (req, res, next) => {
       return ApiResponse.error(res, "Order not found", 404);
     }
 
+    const previousStatus = order.status;
     order.status = status;
     if (adminNotes) {
       order.adminNotes = adminNotes;
     }
     await order.save();
+
+    if (previousStatus !== status) {
+      const user = await User.findById(order.user).select("name email");
+      sendOrderStatusUpdateEmail(order, user, previousStatus).catch((err) => {
+        console.error("Background order status email error:", err);
+      });
+    }
 
     return ApiResponse.success(res, "Order status updated successfully", order);
   } catch (error) {

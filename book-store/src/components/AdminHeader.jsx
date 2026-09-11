@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   HiMenuAlt3,
@@ -14,9 +14,23 @@ import { AuthContext } from '../AuthContext';
 
 const AdminHeader = ({ isOpen, setIsOpen, onMenuClick }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useContext(AuthContext);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const pageLabels = {
+    dashboard: 'Overview',
+    products: 'Book inventory',
+    categories: 'Categories',
+    'flash-sales': 'Flash sales',
+    orders: 'Orders',
+    blog: 'Editorial studio',
+    users: 'Customer directory',
+    'shipping-locations': 'Shipping network',
+    'bank-accounts': 'Payment accounts'
+  };
+  const activeSection = Object.keys(pageLabels).find((section) => location.pathname.includes(`/${section}`));
 
   const handleLogout = () => {
     logout();
@@ -32,25 +46,31 @@ const AdminHeader = ({ isOpen, setIsOpen, onMenuClick }) => {
     <motion.header
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="sticky top-0 z-30 bg-gradient-to-r from-gray-900 via-gray-950 to-gray-900 border-b border-gray-800/50 backdrop-blur-xl"
+      className="admin-header sticky top-0 z-30 bg-[#faf9f7]/90 border-b border-[#e8e3dc] backdrop-blur-xl"
     >
       <div className="flex items-center justify-between h-20 px-6">
         {/* Left Section - Menu Toggle */}
-        <div className="md:hidden">
+        <div className="flex items-center gap-3">
+          <div className="md:hidden">
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => {
               if (typeof onMenuClick === 'function') return onMenuClick();
               if (typeof setIsOpen === 'function') return setIsOpen(!isOpen);
             }}
-            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-[#f0ece7] rounded-xl transition-colors"
           >
             {isOpen ? (
-              <HiX className="w-6 h-6 text-white" />
+              <HiX className="w-6 h-6 text-[#28202f]" />
             ) : (
-              <HiMenuAlt3 className="w-6 h-6 text-white" />
+              <HiMenuAlt3 className="w-6 h-6 text-[#28202f]" />
             )}
           </motion.button>
+          </div>
+          <div className="hidden md:block">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#9a909f]">Admin workspace</p>
+            <p className="mt-1 font-serif text-lg font-semibold text-[#28202f]">{pageLabels[activeSection] || 'Overview'}</p>
+          </div>
         </div>
 
         {/* Center Section - Search */}
@@ -62,9 +82,9 @@ const AdminHeader = ({ isOpen, setIsOpen, onMenuClick }) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search books, orders, users..."
-                className="w-full px-4 py-2 pl-10 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-all"
+                className="w-full px-4 py-2.5 pl-10 bg-white border border-[#e8e3dc] rounded-xl text-[#28202f] placeholder-[#9a909f] focus:outline-none focus:border-[#5b21b6] transition-all"
               />
-              <HiSearch className="absolute left-3 top-2.5 w-5 h-5 text-gray-500" />
+              <HiSearch className="absolute left-3 top-3 w-5 h-5 text-[#7b7180]" />
             </div>
           </form>
         </div>
@@ -75,10 +95,10 @@ const AdminHeader = ({ isOpen, setIsOpen, onMenuClick }) => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="relative p-2 hover:bg-gray-800/50 rounded-lg transition-colors"
+            className="relative p-2 hover:bg-[#f0ece7] rounded-xl transition-colors"
           >
-            <HiBell className="w-6 h-6 text-gray-400 hover:text-cyan-400" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+            <HiBell className="w-6 h-6 text-[#5b21b6]" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-[#d97706] rounded-full" />
           </motion.button>
 
           {/* User Menu */}
@@ -87,12 +107,12 @@ const AdminHeader = ({ isOpen, setIsOpen, onMenuClick }) => {
               onClick={() => setShowUserMenu(!showUserMenu)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800/50 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-2 hover:bg-[#f0ece7] rounded-xl transition-colors"
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold text-sm">
+              <div className="w-8 h-8 rounded-xl bg-[#5b21b6] flex items-center justify-center text-white font-bold text-sm">
                 {user?.name?.[0]?.toUpperCase() || 'A'}
               </div>
-              <span className="text-sm font-medium text-white hidden sm:inline">{user?.name}</span>
+              <span className="text-sm font-medium text-[#28202f] hidden sm:inline">{user?.name}</span>
             </motion.button>
 
             {/* Dropdown Menu */}
@@ -101,11 +121,11 @@ const AdminHeader = ({ isOpen, setIsOpen, onMenuClick }) => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-800 rounded-lg shadow-lg overflow-hidden"
+                className="absolute right-0 mt-2 w-52 bg-white border border-[#e8e3dc] rounded-xl shadow-xl overflow-hidden"
               >
-                <div className="px-4 py-3 border-b border-gray-800">
-                  <p className="text-sm text-gray-400">Signed in as</p>
-                  <p className="font-semibold text-white text-sm truncate">{user?.email}</p>
+                <div className="px-4 py-3 border-b border-[#e8e3dc]">
+                  <p className="text-sm text-[#7b7180]">Signed in as</p>
+                  <p className="font-semibold text-[#28202f] text-sm truncate">{user?.email}</p>
                 </div>
 
                 <nav className="py-2">
@@ -114,19 +134,19 @@ const AdminHeader = ({ isOpen, setIsOpen, onMenuClick }) => {
                       navigate('/admin/settings');
                       setShowUserMenu(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-gray-800/50 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2 text-[#51475a] hover:bg-[#f5f2ee] transition-colors"
                   >
                     <HiCog className="w-4 h-4" />
                     <span>Settings</span>
                   </button>
                 </nav>
 
-                <div className="border-t border-gray-800 p-2">
+                <div className="border-t border-[#e8e3dc] p-2">
                   <motion.button
                     onClick={handleLogout}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2 text-[#b42318] hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <HiLogout className="w-4 h-4" />
                     <span>Logout</span>

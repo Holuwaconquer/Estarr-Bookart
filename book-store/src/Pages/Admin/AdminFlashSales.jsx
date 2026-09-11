@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { AuthContext } from '../../AuthContext';
 import AdminSidebar from '../../components/AdminSidebar';
 import AdminHeader from '../../components/AdminHeader';
+import AdminSubmitButton from '../../components/AdminSubmitButton';
 
 const AdminFlashSalesManagement = () => {
   const { user, token: contextToken } = useContext(AuthContext);
@@ -13,6 +14,7 @@ const AdminFlashSalesManagement = () => {
   const [allBooks, setAllBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -129,6 +131,8 @@ const AdminFlashSalesManagement = () => {
       return;
     }
 
+    setSaving(true);
+
     try {
       const selectedBook = allBooks.find(b => b._id === formData.bookId);
       if (!selectedBook) {
@@ -183,6 +187,8 @@ const AdminFlashSalesManagement = () => {
     } catch (error) {
       console.error('❌ Error adding flash sale product:', error);
       toast.error(error.message || 'Error adding product to flash sales');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -273,7 +279,7 @@ const AdminFlashSalesManagement = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-gray-50">
+      <div className="admin-page flex h-screen bg-[#faf9f7]">
         <div className="animate-pulse flex-1 p-6">
           <div className="h-96 bg-gray-200 rounded-lg"></div>
         </div>
@@ -282,7 +288,7 @@ const AdminFlashSalesManagement = () => {
   }
 
   return (
-    <div className="w-full flex h-screen bg-gray-50 overflow-x-auto">
+    <div className="admin-page w-full flex h-screen bg-[#faf9f7] overflow-x-auto">
       {/* Sidebar */}
       <div className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 md:left-0 md:z-40 md:bg-white md:border-r md:border-gray-200">
         <AdminSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
@@ -317,14 +323,18 @@ const AdminFlashSalesManagement = () => {
         <main className="flex-1 overflow-auto">
           <div className="p-6 space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between">
+            <div className="admin-page-heading flex flex-col md:flex-row md:items-end justify-between gap-5">
               <div className="flex items-center gap-3">
-                <HiFire className="w-8 h-8 text-orange-500" />
-                <h2 className="text-2xl font-bold text-gray-800">Flash Sales Management</h2>
+                <div className="admin-heading-icon bg-[#fff3da] text-[#b45309]"><HiFire className="w-6 h-6" /></div>
+                <div>
+                  <p className="admin-kicker">Merchandising</p>
+                  <h2 className="text-3xl font-semibold text-[#28202f]">Flash sales</h2>
+                  <p className="mt-1 text-sm text-[#7b7180]">Create urgency with a curated selection of limited-time offers.</p>
+                </div>
               </div>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors"
+                className="admin-primary-action bg-[#5b21b6] hover:bg-[#4c1d95] text-white px-5 py-3 rounded-xl font-semibold flex items-center gap-2 transition-colors"
               >
                 <HiPlus className="w-5 h-5" />
                 Add Product
@@ -426,13 +436,13 @@ const AdminFlashSalesManagement = () => {
                       >
                         Cancel
                       </button>
-                      <button
+                      <AdminSubmitButton
                         type="submit"
-                        className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium flex items-center justify-center gap-2"
+                        loading={saving}
+                        className="flex-1 px-4 py-2 bg-[#5b21b6] text-white rounded-lg transition-colors font-medium"
                       >
-                        <HiCheck className="w-5 h-5" />
                         Add to Flash Sales
-                      </button>
+                      </AdminSubmitButton>
                     </div>
                   </form>
                 </motion.div>
@@ -440,7 +450,7 @@ const AdminFlashSalesManagement = () => {
             )}
 
             {/* Current Flash Sales */}
-            <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
+            <div className="admin-surface bg-white rounded-2xl shadow-card overflow-x-auto">
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-800">
                   Current Flash Sales ({flashSalesProducts.length})

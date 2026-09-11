@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { HiHeart, HiShoppingBag, HiStar, HiArrowLeft, HiCheckCircle, HiTruck, HiShieldCheck, HiFire, HiPlus, HiMinus, HiTrash } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import { useWishlist } from '../contexts/WishlistContext';
+import BookCard from '../components/Bookcard';
 
 // ---------------------------------------------------------------------
 // Same palette as Landingpage.jsx — purple does the work, amber marks
@@ -24,6 +25,9 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { addToCart, removeFromCart, cart } = useCart();
   const [book, setBook] = useState(null);
+  const [allBooks, setAllBooks] = useState([]);
+  const [recentlyViewedBooks, setRecentlyViewedBooks] = useState([]);
+  const [similarBooks, setSimilarBooks] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -54,6 +58,7 @@ const ProductDetail = () => {
         setLoading(true);
         const allBooks = await bookAPI.getAllBooks({ limit: 100 });
         const books = allBooks.data?.books || allBooks.data || [];
+        setAllBooks(books);
 
         const foundBook = books.find(b => b._id === id || b.id === id);
 
@@ -79,7 +84,11 @@ const ProductDetail = () => {
           });
         }
 
-        // Track recently viewed products
+        const currentBook = foundBook || null;
+        const currentCategory = (currentBook?.category?.name || currentBook?.category || '').toString().trim().toLowerCase();
+        const bookId = currentBook?._id || currentBook?.id || id;
+
+        // Track recently viewed products and resolve their full book records.
         const viewed = localStorage.getItem('recentlyViewed');
         let viewedList = [];
         try {
@@ -88,15 +97,32 @@ const ProductDetail = () => {
           viewedList = [];
         }
 
-        if (!viewedList.includes(id)) {
-          viewedList.unshift(id);
+        if (!viewedList.includes(bookId)) {
+          viewedList.unshift(bookId);
         } else {
-          viewedList = viewedList.filter(item => item !== id);
-          viewedList.unshift(id);
+          viewedList = viewedList.filter(item => item !== bookId);
+          viewedList.unshift(bookId);
         }
 
         viewedList = viewedList.slice(0, 10);
         localStorage.setItem('recentlyViewed', JSON.stringify(viewedList));
+
+        setRecentlyViewedBooks(
+          viewedList
+            .map(viewedId => books.find(item => (item._id || item.id) === viewedId))
+            .filter(item => item && (item._id || item.id) !== bookId)
+            .slice(0, 6)
+        );
+
+        setSimilarBooks(
+          books
+            .filter(item => {
+              const itemId = item._id || item.id;
+              const itemCategory = (item.category?.name || item.category || '').toString().trim().toLowerCase();
+              return itemId !== bookId && currentCategory && itemCategory === currentCategory;
+            })
+            .slice(0, 6)
+        );
       } catch (error) {
         console.error('Failed to fetch product:', error);
         toast.error('Failed to load product');
@@ -164,6 +190,10 @@ const ProductDetail = () => {
       </div>
     );
   }
+
+  const recommendationBooks = similarBooks.length > 0
+    ? similarBooks
+    : allBooks.filter(item => (item._id || item.id) !== (book._id || book.id)).slice(0, 6);
 
   const avgRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
@@ -529,6 +559,65 @@ const ProductDetail = () => {
             </div>
           )}
         </motion.div>
+
+        {recommendationBooks.length > 0 && (
+          <section className="mt-16" aria-labelledby="more-like-this-heading">
+            <div className="mb-6 flex items-end justify-between gap-4">
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: PURPLE[0] }}>
+                  Curated for you
+                </p>
+                <h2 id="more-like-this-heading" className="font-serif text-3xl font-semibold text-ink sm:text-4xl">
+                  More books like this
+                </h2>
+                <p className="mt-2 max-w-xl text-sm text-ink/55">
+                  Continue exploring stories selected from the same shelf.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/category')}
+                className="hidden text-sm font-semibold sm:block"
+                style={{ color: PURPLE[0] }}
+              >
+                Browse all books
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+              {recommendationBooks.map((recommendedBook, index) => (
+                <BookCard key={recommendedBook._id || recommendedBook.id} book={recommendedBook} index={index} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {recentlyViewedBooks.length > 0 && (
+          <section className="mt-16" aria-labelledby="recently-viewed-heading">
+            <div className="mb-6 flex items-end justify-between gap-4">
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: AMBER }}>
+                  Pick up where you left off
+                </p>
+                <h2 id="recently-viewed-heading" className="font-serif text-3xl font-semibold text-ink sm:text-4xl">
+                  Recently viewed
+                </h2>
+              </div>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('recentlyViewed');
+                  setRecentlyViewedBooks([]);
+                }}
+                className="text-sm font-semibold text-ink/50 transition-colors hover:text-ink"
+              >
+                Clear history
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+              {recentlyViewedBooks.map((recentBook, index) => (
+                <BookCard key={recentBook._id || recentBook.id} book={recentBook} index={index} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

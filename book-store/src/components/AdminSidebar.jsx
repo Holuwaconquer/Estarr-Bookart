@@ -96,32 +96,32 @@ const AdminSidebar = (props) => {
         initial={{ x: 0 }}
         animate={{ x: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="h-full w-64 hidden md:block bg-white text-gray-900 z-40 md:relative md:translate-x-0 shadow-lg border-r border-gray-200 overflow-y-auto"
+        className="admin-sidebar hidden h-full w-64 flex-col bg-[#28202f] text-white z-40 md:relative md:flex md:translate-x-0 shadow-2xl border-r border-white/10 overflow-hidden"
       >
         {/* Logo Section */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-white/10">
           <Link to="/admin/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-              <HiBookOpen className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-[#d7f36a] flex items-center justify-center">
+              <HiBookOpen className="w-6 h-6 text-[#28202f]" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+              <h1 className="text-xl font-serif font-semibold text-white">
                 EStarr Bookart
               </h1>
-              <p className="text-xs text-gray-400">Admin Panel</p>
+              <p className="text-xs uppercase tracking-[0.16em] text-white/45">Admin workspace</p>
             </div>
           </Link>
         </div>
 
         {/* User Info */}
-        <div className="p-4 border-b border-gray-200 mx-4 mt-4 rounded-lg bg-gray-100/50">
-          <p className="text-xs text-gray-600">Logged in as</p>
-          <p className="font-semibold text-gray-900 text-sm truncate">{user?.name}</p>
-          <p className="text-xs text-cyan-600 uppercase tracking-wider font-bold">Admin</p>
+        <div className="p-4 border border-white/10 mx-4 mt-4 rounded-xl bg-white/5">
+          <p className="text-xs text-white/45">Logged in as</p>
+          <p className="font-semibold text-white text-sm truncate">{user?.name}</p>
+          <p className="text-xs text-[#d7f36a] uppercase tracking-wider font-bold">Admin</p>
         </div>
 
         {/* Menu Items */}
-        <nav className="mt-8 px-4 space-y-2">
+        <nav className="mt-8 flex-1 overflow-y-auto px-4 pb-6 space-y-2">
           {menuItems.map((item) => (
             <div key={item.label}>
               {item.submenu ? (
@@ -130,8 +130,8 @@ const AdminSidebar = (props) => {
                     onClick={() => setExpandedMenu(expandedMenu === item.label ? null : item.label)}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
                       isSubmenuActive(item.submenu)
-                        ? 'bg-cyan-100 text-cyan-700 border border-cyan-300'
-                        : 'text-gray-700 hover:bg-gray-100/50'
+                        ? 'bg-[#d7f36a] text-[#28202f] border border-[#d7f36a]'
+                        : 'text-white/65 hover:bg-white/10 hover:text-white'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -159,8 +159,8 @@ const AdminSidebar = (props) => {
                           to={subitem.path}
                           className={`block px-4 py-2 rounded-lg text-sm transition-all ${
                             isActive(subitem.path)
-                              ? 'bg-cyan-100 text-cyan-700 border-l-2 border-cyan-700'
-                              : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'
+                              ? 'bg-white/10 text-[#d7f36a] border-l-2 border-[#d7f36a]'
+                              : 'text-white/55 hover:text-white hover:bg-white/10'
                           }`}
                         >
                           {subitem.label}
@@ -174,8 +174,8 @@ const AdminSidebar = (props) => {
                   to={item.path}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                     isActive(item.path)
-                      ? 'bg-cyan-100 text-cyan-700 border border-cyan-300'
-                      : 'text-gray-700 hover:bg-gray-100/50'
+                      ? 'bg-[#d7f36a] text-[#28202f] border border-[#d7f36a]'
+                      : 'text-white/65 hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   <item.icon className="w-5 h-5" />
@@ -191,7 +191,7 @@ const AdminSidebar = (props) => {
           onClick={handleLogout}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="absolute bottom-6 left-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg bg-red-100/50 text-red-700 hover:bg-red-100 transition-all border border-red-300"
+          className="mx-4 mb-5 mt-auto flex shrink-0 items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white/65 transition-all hover:bg-white/10 hover:text-white"
         >
           <HiLogout className="w-5 h-5" />
           <span className="font-medium">Logout</span>
@@ -206,32 +206,32 @@ const AdminSidebar = (props) => {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -300, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed top-0 left-0 bottom-0 w-64 bg-white text-gray-900 z-50 md:hidden shadow-lg border-r border-gray-200 overflow-y-auto"
+          className="admin-sidebar fixed top-0 left-0 bottom-0 z-50 flex w-64 flex-col bg-[#28202f] text-white shadow-2xl border-r border-white/10 overflow-hidden md:hidden"
         >
           {/* Logo Section */}
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b border-white/10">
             <Link to="/admin/dashboard" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-                <HiBookOpen className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-[#d7f36a] flex items-center justify-center">
+                <HiBookOpen className="w-6 h-6 text-[#28202f]" />
               </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                <h1 className="text-xl font-serif font-semibold text-white">
                   EStarr Bookart
                 </h1>
-                <p className="text-xs text-gray-400">Admin Panel</p>
+                <p className="text-xs uppercase tracking-[0.16em] text-white/45">Admin workspace</p>
               </div>
             </Link>
           </div>
 
           {/* User Info */}
-          <div className="p-4 border-b border-gray-200 mx-4 mt-4 rounded-lg bg-gray-100/50">
-            <p className="text-xs text-gray-600">Logged in as</p>
-            <p className="font-semibold text-gray-900 text-sm truncate">{user?.name}</p>
-            <p className="text-xs text-cyan-600 uppercase tracking-wider font-bold">Admin</p>
+          <div className="p-4 border border-white/10 mx-4 mt-4 rounded-xl bg-white/5">
+            <p className="text-xs text-white/45">Logged in as</p>
+            <p className="font-semibold text-white text-sm truncate">{user?.name}</p>
+            <p className="text-xs text-[#d7f36a] uppercase tracking-wider font-bold">Admin</p>
           </div>
 
           {/* Menu Items (mobile) */}
-          <nav className="mt-8 px-4 space-y-2 pb-24">
+          <nav className="mt-8 flex-1 overflow-y-auto px-4 pb-6 space-y-2">
             {menuItems.map((item) => (
               <div key={item.label}>
                 {item.submenu ? (
@@ -240,8 +240,8 @@ const AdminSidebar = (props) => {
                       onClick={() => setExpandedMenu(expandedMenu === item.label ? null : item.label)}
                       className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
                         isSubmenuActive(item.submenu)
-                          ? 'bg-cyan-100 text-cyan-700 border border-cyan-300'
-                          : 'text-gray-700 hover:bg-gray-100/50'
+                          ? 'bg-[#d7f36a] text-[#28202f] border border-[#d7f36a]'
+                          : 'text-white/65 hover:bg-white/10 hover:text-white'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -264,8 +264,8 @@ const AdminSidebar = (props) => {
                             onClick={() => setIsOpen(false)}
                             className={`block px-4 py-2 rounded-lg text-sm transition-all ${
                               isActive(subitem.path)
-                                ? 'bg-cyan-100 text-cyan-700 border-l-2 border-cyan-700'
-                                : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'
+                                ? 'bg-white/10 text-[#d7f36a] border-l-2 border-[#d7f36a]'
+                                : 'text-white/55 hover:text-white hover:bg-white/10'
                             }`}
                           >
                             {subitem.label}
@@ -280,8 +280,8 @@ const AdminSidebar = (props) => {
                     onClick={() => setIsOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                       isActive(item.path)
-                        ? 'bg-cyan-100 text-cyan-700 border border-cyan-300'
-                        : 'text-gray-700 hover:bg-gray-100/50'
+                        ? 'bg-[#d7f36a] text-[#28202f] border border-[#d7f36a]'
+                        : 'text-white/65 hover:bg-white/10 hover:text-white'
                     }`}
                   >
                     <item.icon className="w-5 h-5" />
@@ -297,7 +297,7 @@ const AdminSidebar = (props) => {
             onClick={() => { handleLogout(); setIsOpen(false); }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="absolute bottom-6 left-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg bg-red-100/50 text-red-700 hover:bg-red-100 transition-all border border-red-300"
+            className="mx-4 mb-5 mt-auto flex shrink-0 items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white/65 transition-all hover:bg-white/10 hover:text-white"
           >
             <HiLogout className="w-5 h-5" />
             <span className="font-medium">Logout</span>

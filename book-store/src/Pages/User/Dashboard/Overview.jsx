@@ -112,7 +112,7 @@ const Overview = () => {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-slate-600 text-sm font-medium mb-1">Total Spent</p>
-              <p className="text-3xl font-bold text-slate-900">₦{(stats.totalSpent / 1000).toFixed(1)}K</p>
+              <p className="text-3xl font-bold text-slate-900">₦{stats.totalSpent.toLocaleString('en-NG')}</p>
               <p className="text-xs text-slate-500 mt-2">{stats.totalSpent > 0 ? '✓ Verified' : 'No spending'}</p>
             </div>
             <div className="bg-cyan-100 p-3 rounded-lg">

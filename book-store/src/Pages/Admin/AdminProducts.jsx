@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import AdminSidebar from "../../components/AdminSidebar";
 import AdminHeader from "../../components/AdminHeader";
 import CloudinaryUpload from "../../components/CloudinaryUpload";
+import AdminSubmitButton from "../../components/AdminSubmitButton";
 import { bookAPI, categoryAPI } from "../../services/api";
 
 const AdminProducts = () => {
@@ -236,7 +237,7 @@ const AdminProducts = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="admin-page flex h-screen bg-[#faf9f7]">
       <AdminSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -252,16 +253,17 @@ const AdminProducts = () => {
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                  <p className="admin-kicker">Catalog operations</p>
+                  <h1 className="text-4xl font-semibold text-[#28202f]">
                     Manage Books
                   </h1>
-                  <p className="text-gray-600">Manage your book inventory</p>
+                  <p className="mt-2 text-[#7b7180]">Keep your collection accurate, discoverable, and ready to ship.</p>
                 </div>
                 <motion.button
                   onClick={handleAddBook}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-lg font-semibold transition-all"
+                  className="admin-primary-action flex items-center gap-2 px-5 py-3 bg-[#5b21b6] hover:bg-[#4c1d95] text-white rounded-xl font-semibold transition-all"
                 >
                   <HiPlus className="w-5 h-5" />
                   Add New Book
@@ -748,23 +750,13 @@ const AdminProducts = () => {
                 >
                   Cancel
                 </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
+                <AdminSubmitButton
                   type="submit"
-                  disabled={saving}
-                  className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                  loading={saving}
+                  className="px-6 py-2 bg-[#5b21b6] text-white rounded-lg font-semibold transition-all"
                 >
-                  {saving ? (
-                    <span className="flex items-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                      {editingBook ? "Updating..." : "Creating..."}
-                    </span>
-                  ) : editingBook ? (
-                    "Update Book"
-                  ) : (
-                    "Create Book"
-                  )}
-                </motion.button>
+                  {editingBook ? "Update Book" : "Create Book"}
+                </AdminSubmitButton>
               </div>
             </form>
           </motion.div>

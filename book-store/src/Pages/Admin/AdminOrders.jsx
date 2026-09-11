@@ -151,7 +151,7 @@ const AdminOrders = () => {
   }, [proofImageDataUrl]);
 
   return (
-    <div className="flex h-screen bg-gray-950">
+    <div className="admin-page flex h-screen bg-[#faf9f7]">
       <AdminSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -167,10 +167,11 @@ const AdminOrders = () => {
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                  <p className="admin-kicker">Fulfillment workspace</p>
+                  <h1 className="text-4xl font-semibold text-[#28202f]">
                     Orders
                   </h1>
-                  <p className="text-gray-400">Manage customer orders</p>
+                  <p className="mt-2 text-[#7b7180]">Review, update, and move every customer order forward.</p>
                 </div>
               </div>
             </motion.div>
@@ -375,16 +376,16 @@ const AdminOrders = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gray-900 border border-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="admin-orders-modal bg-white border border-[#e8e3dc] text-[#28202f] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
           >
-            <div className="sticky top-0 flex items-center justify-between p-6 border-b border-gray-800 bg-gray-900/95">
-              <h2 className="text-2xl font-bold text-white">Order Details</h2>
+            <div className="sticky top-0 flex items-center justify-between p-6 border-b border-[#e8e3dc] bg-white/95 backdrop-blur">
+              <h2 className="text-2xl font-bold text-[#28202f]">Order Details</h2>
               <motion.button
                 onClick={() => setShowDetails(false)}
                 whileHover={{ scale: 1.1 }}
-                className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                className="p-2 hover:bg-[#f5f2ee] rounded-lg transition-colors"
               >
-                <HiX className="w-6 h-6 text-gray-400" />
+                <HiX className="w-6 h-6 text-[#7b7180]" />
               </motion.button>
             </div>
 
