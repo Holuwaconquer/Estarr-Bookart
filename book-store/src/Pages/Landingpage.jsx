@@ -153,7 +153,6 @@ const Landingpage = () => {
     const [isInCart, setIsInCart] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const tint = tintFor(book?.category?.name || book?.category || book?.title);
-
     useEffect(() => {
       if (book?._id && cart) {
         setIsInCart(cart.some((item) => item.id === book._id || item._id === book._id || item.book === book._id));

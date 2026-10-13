@@ -159,7 +159,7 @@ const CategoryPage = () => {
 
   // Fetch categories and books from API
   useEffect(() => {
-    document.title = 'Books Page | EStarr Bookart Hub';
+    document.title = 'Books Page | EStarr Bookart';
     window.scrollTo(0, 0);
 
     const fetchData = async () => {

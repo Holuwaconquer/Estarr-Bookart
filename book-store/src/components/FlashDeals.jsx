@@ -169,7 +169,7 @@ const FlashDeals = () => {
                 </div>
               </div>
             </div>
-{/* 
+            {/* 
             <Link 
               to="/category?filter=discount" 
               className="bg-white text-[12px] py-2 px-4 text-red-600 rounded-[4px] font-bold hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl whitespace-nowrap"

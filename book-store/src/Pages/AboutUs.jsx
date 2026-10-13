@@ -33,7 +33,7 @@ const AboutUs = () => {
   ];
 
   useEffect(() => {
-    document.title = 'About Us | EStarr Bookart Hub';
+    document.title = 'About Us | EStarr Bookart';
     window.scrollTo(0, 0);
 
   }, [])
@@ -94,10 +94,10 @@ const AboutUs = () => {
             className="text-center"
           >
             <h1 className="text-3xl md:text-6xl font-bold bg-gradient-to-r from-purple-400 to-purple-700 bg-clip-text text-transparent">
-              Welcome to EStarr Bookart Hub
+              Welcome to EStarr Bookart
             </h1>
             <p className="text-[14px] md:text-2xl italic text-gray-600 max-w-3xl mx-auto">
-              More than a bookstore — a hub for growth, purpose, and impact through reading
+              More than a bookstore — a store for growth, purpose, and impact through reading
             </p>
           </motion.div>
         </div>
@@ -145,16 +145,16 @@ const AboutUs = () => {
               <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                 <img 
                   src="/estarr.jpeg" 
-                  alt="EStarr Bookart Hub" 
+                  alt="EStarr Bookart" 
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/600x400?text=EStarr+Bookart+Hub';
+                    e.target.src = 'https://via.placeholder.com/600x400?text=EStarr+Bookart';
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
                   <div className="text-white">
                     <p className="text-lg font-semibold">"Invest in books, invest in yourself"</p>
-                    <p className="text-sm opacity-80">- EStarr Bookart Hub</p>
+                    <p className="text-sm opacity-80">- EStarr Bookart</p>
                   </div>
                 </div>
               </div>
@@ -234,7 +234,7 @@ const AboutUs = () => {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Vision</h3>
               <p className="text-gray-600 leading-relaxed">
-                Preserving lives. To become the leading hub for book lovers across the world and trusted book brand for royals. People’s lives get better here and that’s our testimony.
+                To become the leading for book lovers across the world and trusted book brand for royals. People’s lives get better here and that’s our testimony.
               </p>
             </motion.div>
           </div>
@@ -292,7 +292,7 @@ const AboutUs = () => {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Why Choose EStarr Bookart Hub?
+              Why Choose EStarr Bookart?
             </h2>
             <p className="text-lg text-gray-300 max-w-2xl mx-auto">
               We go beyond just selling books — we create exceptional experiences
@@ -411,7 +411,7 @@ const AboutUs = () => {
             
             <div className="flex justify-center gap-6 mb-12">
               <a 
-                href="https://www.instagram.com/estarrbookart.hub" 
+                href="https://www.instagram.com/estarrbookart" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="p-4 bg-white/20 rounded-full hover:bg-white/30 transition-all hover:scale-110"

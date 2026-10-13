@@ -6,7 +6,7 @@ import useCanonicalUrl from '../../../useCanonicalUrl';
 const TermsOfService = () => {
   useCanonicalUrl();
   useEffect(() => {
-    document.title = 'Terms of Service | EStarr Bookart Hub';
+    document.title = 'Terms of Service | EStarr Bookart';
     window.scrollTo(0, 0);
   }, []);
 
@@ -59,7 +59,7 @@ const TermsOfService = () => {
     {
       icon: HiShieldCheck,
       title: 'Intellectual Property',
-      content: `All content on this website, including text, graphics, logos, images, and software, is the property of EStarr Bookart Hub and protected by Nigerian and international copyright laws. You may not:
+      content: `All content on this website, including text, graphics, logos, images, and software, is the property of EStarr Bookart and protected by Nigerian and international copyright laws. You may not:
         • Republish, distribute, or reproduce our content without permission
         • Use our trademarks or logos without authorization
         • Scrape or copy product information for commercial use
@@ -87,7 +87,7 @@ const TermsOfService = () => {
             <div className="p-8 md:p-12">
               <div className="bg-amber-50 border-l-4 border-amber-500 p-4 mb-8 rounded-r-lg">
                 <p className="text-amber-800 text-sm">
-                  <strong>Important:</strong> These terms of service constitute a legally binding agreement between you and EStarr Bookart Hub. By using our services, you acknowledge that you have read, understood, and agree to be bound by these terms.
+                  <strong>Important:</strong> These terms of service constitute a legally binding agreement between you and EStarr Bookart. By using our services, you acknowledge that you have read, understood, and agree to be bound by these terms.
                 </p>
               </div>
 

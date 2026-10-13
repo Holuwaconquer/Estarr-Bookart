@@ -5,15 +5,15 @@ import RightReserved from '../components/RightReserved'
 import Navbar from '../components/Navbar'
 
 const Home = () => {
-  document.title = "EStarr Bookart Hub | Premium Bookstore in Nigeria | Buy Books Online";
+  document.title = "EStarr Bookart | Premium Bookstore in Nigeria | Buy Books Online";
   
   let metaDescription = document.querySelector('meta[name="description"]');
   if (metaDescription) {
-    metaDescription.setAttribute("content", "EStarr Bookart Hub - Nigeria's premier bookstore. Shop fiction, non-fiction, educational books online with free delivery across Nigeria on orders over ₦5,000.");
+    metaDescription.setAttribute("content", "EStarr Bookart - Nigeria's premier bookstore. Shop fiction, non-fiction, educational books online with free delivery across Nigeria on orders over ₦5,000.");
   } else {
     metaDescription = document.createElement('meta');
     metaDescription.name = "description";
-    metaDescription.content = "EStarr Bookart Hub - Nigeria's premier bookstore. Shop fiction, non-fiction, educational books online with free delivery across Nigeria on orders over ₦5,000.";
+    metaDescription.content = "EStarr Bookart - Nigeria's premier bookstore. Shop fiction, non-fiction, educational books online with free delivery across Nigeria on orders over ₦5,000.";
     document.head.appendChild(metaDescription);
   }
 

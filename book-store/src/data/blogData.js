@@ -44,7 +44,7 @@ export const blogPosts = [
       <h3>Reading Challenge for 2026</h3>
       <p>Set a reading goal for yourself. Whether it's 12 books or 50, having a target keeps you motivated. Track your progress and share recommendations with fellow readers.</p>
       
-      <p>Happy reading from all of us at EStarr Bookart Hub! Visit our bookstore to find these titles and many more. We offer free delivery across Nigeria on orders over ₦5,000.</p>
+      <p>Happy reading from all of us at EStarr Bookart! Visit our bookstore to find these titles and many more. We offer free delivery across Nigeria on orders over ₦5,000.</p>
     `,
     category: "Book Recommendations",
     tags: ["reading list", "2026 books", "recommendations", "best books"],
@@ -99,7 +99,7 @@ export const blogPosts = [
       <h3>How to Start Your Daily Reading Habit</h3>
       <p>Start small - just 10-15 minutes a day. Keep a book on your nightstand, carry one in your bag, and replace social media scrolling with reading time. Join a book club for accountability and discussion.</p>
       
-      <p>Ready to start your reading journey? Visit EStarr Bookart Hub to discover books that will transform your life. We have something for every reader at every level.</p>
+      <p>Ready to start your reading journey? Visit EStarr Bookart to discover books that will transform your life. We have something for every reader at every level.</p>
     `,
     category: "Reading Tips",
     tags: ["reading habits", "self-improvement", "benefits", "daily routine"],
@@ -154,7 +154,7 @@ export const blogPosts = [
       <p><strong>Must read:</strong> "Freshwater" - A powerful exploration of identity, trauma, and the self</p>
       
       <h3>Building Your Nigerian Literature Collection</h3>
-      <p>At EStarr Bookart Hub, we stock works by these incredible writers and many more. Visit us to discover the richness of Nigerian storytelling. Whether you're looking for classics or contemporary voices, we have something for every reader.</p>
+      <p>At EStarr Bookart, we stock works by these incredible writers and many more. Visit us to discover the richness of Nigerian storytelling. Whether you're looking for classics or contemporary voices, we have something for every reader.</p>
       
       <p><strong>Special Offer:</strong> Get 15% off when you purchase any two books by Nigerian authors. Use code: NAIJA15 at checkout.</p>
     `,
@@ -219,7 +219,7 @@ export const blogPosts = [
       <strong>Solution:</strong> Designate a facilitator to keep things on track</p>
       
       <h3>Ready to Start?</h3>
-      <p>EStarr Bookart Hub supports book clubs! Contact us for group discounts and curated reading lists. We can provide discussion guides and help you source multiple copies of your chosen books.</p>
+      <p>EStarr Bookart supports book clubs! Contact us for group discounts and curated reading lists. We can provide discussion guides and help you source multiple copies of your chosen books.</p>
     `,
     category: "Book Clubs",
     tags: ["book club", "reading group", "community", "discussion"],
@@ -279,7 +279,7 @@ export const blogPosts = [
       <strong>Ages 6-8:</strong> Early chapter books with illustrations<br/>
       <strong>Ages 9-12:</strong> Middle grade novels with complex characters</p>
       
-      <p>Visit EStarr Bookart Hub to discover our extensive children's section. We carry books for all ages and interests, with knowledgeable staff to help you find the perfect titles for your young reader.</p>
+      <p>Visit EStarr Bookart to discover our extensive children's section. We carry books for all ages and interests, with knowledgeable staff to help you find the perfect titles for your young reader.</p>
     `,
     category: "Parenting",
     tags: ["children's books", "parenting", "early literacy", "family reading"],

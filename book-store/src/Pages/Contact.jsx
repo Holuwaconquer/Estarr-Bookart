@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 const Contact = () => {
   useEffect(() => {
-    document.title = 'Contact Us | EStarr Bookart Hub';
+    document.title = 'Contact Us | EStarr Bookart';
     window.scrollTo(0, 0);
   }, []);
 
@@ -58,7 +58,7 @@ const Contact = () => {
     {
       icon: HiLocationMarker,
       title: 'Visit Us',
-      details: ['EStarr Bookart Hub', 'Obafemi Awolowo University', 'Ile-Ife, Osun State, Nigeria'],
+      details: ['EStarr Bookart', 'Obafemi Awolowo University', 'Ile-Ife, Osun State, Nigeria'],
       action: 'https://maps.google.com'
     },
     {
@@ -70,7 +70,7 @@ const Contact = () => {
   ];
 
   const socialLinks = [
-    { icon: FaInstagram, name: 'Instagram', url: 'https://instagram.com/estarrbookart.hubafrika', color: 'hover:text-pink-600' },
+    { icon: FaInstagram, name: 'Instagram', url: 'https://instagram.com/estarrbookartafrika', color: 'hover:text-pink-600' },
     { icon: FaFacebook, name: 'Facebook', url: 'https://facebook.com/estarrbookart', color: 'hover:text-blue-600' },
     { icon: FaLinkedin, name: 'Twitter', url: 'https://twitter.com/estarrbookart', color: 'hover:text-blue-400' }
   ];
@@ -261,7 +261,7 @@ const Contact = () => {
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="EStarr Bookart Hub Location Map"
+                  title="EStarr Bookart Location Map"
                 ></iframe>
               </div>
             </div>

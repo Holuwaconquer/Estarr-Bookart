@@ -54,9 +54,12 @@ const Checkout = () => {
     const price = Number(item.price) || 0;
     const discount = Number(item.discount) || 0;
     const finalPrice = Number(item.finalPrice) || 0;
+    const originalPrice = Number(item.originalPrice) || 0;
 
-    // Use finalPrice if available, otherwise calculate from discount
-    if (finalPrice > 0 && finalPrice < price) {
+    if (originalPrice > price) {
+      return price;
+    }
+    if (finalPrice > 0) {
       return finalPrice;
     } else if (discount > 0) {
       return price * (1 - discount / 100);
@@ -102,7 +105,7 @@ const Checkout = () => {
       return savings;
     }, 0) || 0;
   useEffect(() => {
-    document.title = "Checkout Page | EStarr Bookart Hub";
+    document.title = "Checkout Page | EStarr Bookart";
     window.scrollTo(0, 0);
   }, []);
 

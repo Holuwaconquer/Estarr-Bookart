@@ -54,6 +54,14 @@ const BookCard = ({ book = {} }) => {
   // Get book ID
   const bookId = book._id || book.id;
   const tint = tintFor(book.category?.name || book.category || book.title);
+  const price = Number(book.price) || 0;
+  const discount = Number(book.discount) || 0;
+  const originalPrice = Number(book.originalPrice) || 0;
+  const displayedPrice =
+    originalPrice > price
+      ? price
+      : Number(book.finalPrice) || price * (1 - discount / 100);
+  const comparisonPrice = originalPrice > price ? originalPrice : price;
 
   // Check if book is in cart
   useEffect(() => {
@@ -266,14 +274,16 @@ const BookCard = ({ book = {} }) => {
             <div>
               <div className="text-[11px] text-ink/40">Price</div>
               <div className="flex items-baseline gap-2 font-mono">
-                {book.discount && book.discount > 0 ? (
+                {discount > 0 ? (
                   <>
                     <span className="text-lg font-bold text-ink">
-                      ₦{new Intl.NumberFormat('en-NG', { maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(book.price * (1 - book.discount / 100))}
+                      ₦{new Intl.NumberFormat('en-NG', { maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(displayedPrice)}
                     </span>
-                    <span className="text-sm text-ink/30 line-through">
-                      ₦{new Intl.NumberFormat('en-NG', { maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(book.price)}
-                    </span>
+                    {comparisonPrice > displayedPrice && (
+                      <span className="text-sm text-ink/30 line-through">
+                        ₦{new Intl.NumberFormat('en-NG', { maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(comparisonPrice)}
+                      </span>
+                    )}
                   </>
                 ) : (
                   <span className="text-lg font-bold text-ink">

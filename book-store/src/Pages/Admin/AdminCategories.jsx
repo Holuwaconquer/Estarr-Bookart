@@ -150,7 +150,7 @@ const AdminCategories = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleAddCategory}
-              className="admin-primary-action flex items-center gap-2 bg-[#5b21b6] text-white px-5 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+              className="admin-primary-action flex items-center gap-2 bg-[#5b21b6] text-white! px-5 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
             >
               <HiPlus className="w-5 h-5" />
               Add Category
@@ -261,10 +261,10 @@ const AdminCategories = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-gray-800 rounded-xl border border-gray-700 max-w-2xl w-full p-8 shadow-2xl"
+            className="bg-white rounded-xl border border-gray-700 max-w-2xl w-full p-8 shadow-2xl"
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white">
+              <h2 className="text-2xl font-bold text-gray-800">
                 {editingCategory ? 'Edit Category' : 'Add New Category'}
               </h2>
               <button
@@ -278,26 +278,26 @@ const AdminCategories = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Category Name *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category Name *</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., Fiction"
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+                  className="w-full px-4 py-2 bg-gray-100 border border-gray-400 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
                   required
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Brief description of this category"
                   rows="3"
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 resize-none"
+                  className="w-full px-4 py-2 bg-gray-100 border border-gray-400 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 resize-none"
                 />
               </div>
               
@@ -306,11 +306,11 @@ const AdminCategories = () => {
 
                 {/* Active Status */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                   <select
                     value={formData.isActive ? 'active' : 'inactive'}
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'active' })}
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                    className="w-full px-4 py-2 bg-gray-100 border border-gray-400 rounded-lg text-gray-800 focus:outline-none focus:border-cyan-500"
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -325,7 +325,7 @@ const AdminCategories = () => {
                   whileTap={{ scale: 0.95 }}
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-6 py-2 border border-gray-600 text-white rounded-lg hover:border-gray-500 transition-colors"
+                  className="flex-1 px-6 py-2 border border-gray-400 text-gray-800 rounded-lg hover:border-gray-500 transition-colors"
                 >
                   Cancel
                 </motion.button>

@@ -215,7 +215,7 @@ const sendOrderNotificationEmail = async (order, user) => {
             </div>
             
             <div class="footer">
-              <p>EStarr Bookart Hub | Automated Order Notification</p>
+              <p>EStarr Bookart | Automated Order Notification</p>
               <p>📍 OAU, Ile-Ife, Osun State, Nigeria</p>
             </div>
           </div>

@@ -11,7 +11,7 @@ const sendWelcomeEmail = async (userEmail, userName) => {
     const { data, error } = await resend.emails.send({
       from: 'EStarr Bookart <	noreply@estarrbookart.com.ng>',
       to: userEmail,
-      subject: 'Welcome to EStarr Bookart Hub! ',
+      subject: 'Welcome to EStarr Bookart! ',
       html: `
         <!DOCTYPE html>
         <html>
@@ -120,7 +120,7 @@ const sendWelcomeEmail = async (userEmail, userName) => {
                 Hello <strong class="highlight">${userName || 'Book Lover'}!</strong>
               </div>
               
-              <p>Welcome to <strong>EStarr Bookart Hub</strong> - Nigeria's premier destination for quality books!</p>
+              <p>Welcome to <strong>EStarr Bookart</strong> - Nigeria's premier destination for quality books!</p>
               
               <p>We're thrilled to have you join our community of readers who believe in the power of books to transform lives, ignite imagination, and foster growth.</p>
               
@@ -158,17 +158,17 @@ const sendWelcomeEmail = async (userEmail, userName) => {
             </div>
             
             <div class="footer">
-              <p>EStarr Bookart Hub | Your Trusted Bookstore in Nigeria</p>
+              <p>EStarr Bookart | Your Trusted Bookstore in Nigeria</p>
               <p>📍 OAU, Ile-Ife, Osun State, Nigeria</p>
               <div class="social-links">
-                <a href="https://www.instagram.com/estarrbookart.hub/">📷 Instagram</a>
+                <a href="https://www.instagram.com/estarrbookart/">📷 Instagram</a>
                 <a href="https://threads.net/@i_am_jaszi">💬 Threads</a>
               </div>
               <p style="margin-top: 15px;">
                 Need help? Contact us at <a href="mailto:estarrbookart@gmail.com" style="color: #06b6d4;">estarrbookart@gmail.com</a>
               </p>
               <p style="margin-top: 10px; font-size: 11px;">
-                © ${new Date().getFullYear()} EStarr Bookart Hub. All rights reserved.
+                © ${new Date().getFullYear()} EStarr Bookart. All rights reserved.
               </p>
             </div>
           </div>

@@ -259,7 +259,7 @@ const AdminBankAccounts = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleAddAccount}
-              className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
+              className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white! px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
             >
               <HiPlus className="w-5 h-5" />
               Add Bank Account

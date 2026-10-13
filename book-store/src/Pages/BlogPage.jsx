@@ -20,12 +20,12 @@ const BlogPage = () => {
   
   useEffect(() => {
     // Update meta tags for blog page
-    document.title = 'Blog | EStarr Bookart Hub - Latest News and Articles';
+    document.title = 'Blog | EStarr Bookart - Latest News and Articles';
     window.scrollTo(0, 0);
     
     let metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
-      metaDesc.setAttribute('content', 'Discover the latest book reviews, reading tips, and literary news at EStarr Bookart Hub Blog. Stay updated with our latest articles and recommendations.');
+      metaDesc.setAttribute('content', 'Discover the latest book reviews, reading tips, and literary news at EStarr Bookart Blog. Stay updated with our latest articles and recommendations.');
     }
     
     // Load categories

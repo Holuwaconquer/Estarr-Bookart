@@ -263,7 +263,7 @@ const AdminProducts = () => {
                   onClick={handleAddBook}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="admin-primary-action flex items-center gap-2 px-5 py-3 bg-[#5b21b6] hover:bg-[#4c1d95] text-white rounded-xl font-semibold transition-all"
+                  className="admin-primary-action flex items-center gap-2 px-5 py-3 bg-[#5b21b6] hover:bg-[#4c1d95] text-white! rounded-xl font-semibold transition-all"
                 >
                   <HiPlus className="w-5 h-5" />
                   Add New Book

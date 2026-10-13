@@ -6,7 +6,7 @@ import useCanonicalUrl from '../../../useCanonicalUrl';
 const ReturnsPolicy = () => {
   useCanonicalUrl()
   useEffect(() => {
-    document.title = 'Returns Policy | EStarr Bookart Hub';
+    document.title = 'Returns Policy | EStarr Bookart';
     window.scrollTo(0, 0);
   }, []);
 

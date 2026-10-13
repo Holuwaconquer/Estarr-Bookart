@@ -22,7 +22,7 @@ const Cart = () => {
   const { authenticated } = useContext(AuthContext);
 
   useEffect(() => {
-    document.title = "Shopping Cart | EStarr Bookart Hub";
+    document.title = "Shopping Cart | EStarr Bookart";
     window.scrollTo(0, 0);
   }, []);
 
@@ -48,8 +48,12 @@ const Cart = () => {
     const price = Number(item.price) || 0;
     const discount = Number(item.discount) || 0;
     const finalPrice = Number(item.finalPrice) || 0;
+    const originalPrice = Number(item.originalPrice) || 0;
 
-    if (finalPrice > 0 && finalPrice < price) {
+    if (originalPrice > price) {
+      return price;
+    }
+    if (finalPrice > 0) {
       return finalPrice;
     } else if (discount > 0) {
       return price * (1 - discount / 100);

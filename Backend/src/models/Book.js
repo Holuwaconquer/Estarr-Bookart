@@ -105,7 +105,12 @@ const bookSchema = new mongoose.Schema(
 // Virtual for final price
 bookSchema.virtual("finalPrice").get(function () {
   if (this.discount > 0) {
-    return this.price * (1 - this.discount / 100);
+    if (this.originalPrice > this.price) {
+      return this.price;
+    }
+
+    const basePrice = this.originalPrice || this.price;
+    return basePrice * (1 - this.discount / 100);
   }
   return this.price;
 });

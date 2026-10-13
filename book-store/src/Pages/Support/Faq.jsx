@@ -4,7 +4,7 @@ import { HiChevronDown, HiShoppingBag, HiCreditCard, HiTruck, HiRefresh, HiUser,
 
 const Faq = () => {
   useEffect(() => {
-    document.title = 'FAQ | EStarr Bookart Hub';
+    document.title = 'FAQ | EStarr Bookart';
     window.scrollTo(0, 0);
   }, []);
 

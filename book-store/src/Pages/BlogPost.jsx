@@ -16,7 +16,7 @@ const BlogPost = () => {
   const [likesCount, setLikesCount] = useState(0);
   
   useEffect(() => {
-    document.title = `${post?.title || "Blog Post"} | EStarr Bookart Hub`;
+    document.title = `${post?.title || "Blog Post"} | EStarr Bookart`;
     window.scrollTo(0, 0);
   }, [post])
   
@@ -33,7 +33,7 @@ const BlogPost = () => {
       setRelatedPosts(related);
       
       // Update document title and meta tags for SEO
-      document.title = `${foundPost.title} | EStarr Bookart Hub Blog`;
+      document.title = `${foundPost.title} | EStarr Bookart Blog`;
       
       // Update meta description
       let metaDescription = document.querySelector('meta[name="description"]');
@@ -49,11 +49,11 @@ const BlogPost = () => {
       // Update OG tags
       let ogTitle = document.querySelector('meta[property="og:title"]');
       if (ogTitle) {
-        ogTitle.setAttribute('content', `${foundPost.title} | EStarr Bookart Hub`);
+        ogTitle.setAttribute('content', `${foundPost.title} | EStarr Bookart`);
       } else {
         ogTitle = document.createElement('meta');
         ogTitle.setAttribute('property', 'og:title');
-        ogTitle.setAttribute('content', `${foundPost.title} | EStarr Bookart Hub`);
+        ogTitle.setAttribute('content', `${foundPost.title} | EStarr Bookart`);
         document.head.appendChild(ogTitle);
       }
       
@@ -164,7 +164,7 @@ const BlogPost = () => {
           },
           "publisher": {
             "@type": "Organization",
-            "name": "EStarr Bookart Hub",
+            "name": "EStarr Bookart",
             "logo": {
               "@type": "ImageObject",
               "url": `${window.location.origin}/estarr.jpeg`
@@ -282,9 +282,9 @@ const BlogPost = () => {
               <div>
                 <h4 className="font-bold text-gray-800">About {post.author.name}</h4>
                 <p className="text-gray-600 text-sm">
-                  {post.author.name === "Esther Adeleke" 
-                    ? "Founder of EStarr Bookart Hub. Passionate about fostering a reading culture and empowering minds through literature."
-                    : "Creative Director at EStarr Bookart Hub. Driving creative vision and community engagement initiatives."
+                  {post.author.name === "Esther Adesina" 
+                    ? "Founder of EStarr Bookart. Passionate about fostering a reading culture and empowering minds through literature."
+                    : "Creative Director at EStarr Bookart. Driving creative vision and community engagement initiatives."
                   }
                 </p>
               </div>

@@ -5,11 +5,11 @@ import useCanonicalUrl from '../../../useCanonicalUrl';
 const BrandPage = () => {
     useCanonicalUrl()
   useEffect(() => {
-    document.title = "About Estarr Bookart - Also Known as Esther Bookart | EStarr Bookart Hub";
+    document.title = "About Estarr Bookart - Also Known as Esther Bookart | EStarr Bookart";
     
     let metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
-      metaDescription.setAttribute("content", "Estarr Bookart (also known as Esther Bookart or EStarr Bookart Hub) is Nigeria's premier bookstore founded by Esther Adeleke. Quality books, free delivery across Nigeria.");
+      metaDescription.setAttribute("content", "Estarr Bookart (also known as Esther Bookart or EStarr Bookart) is Nigeria's premier bookstore founded by Esther Adesina. Quality books, free delivery across Nigeria.");
     }
   }, []);
 
@@ -23,20 +23,19 @@ const BrandPage = () => {
           
           <div className="prose prose-lg max-w-none">
             <p className="text-xl text-gray-600 mb-6">
-              <strong>Estarr Bookart</strong> (also known as <strong>Esther Bookart</strong> or <strong>EStarr Bookart Hub</strong>) is Nigeria's premier online bookstore, founded by Esther Adeleke.
+              <strong>Estarr Bookart</strong> (also known as <strong>Esther Bookart</strong> or <strong>EStarr Bookart</strong>) is Nigeria's premier online bookstore, founded by Esther Adesina.
             </p>
             
             <h2 className="text-2xl font-bold text-gray-800 mt-8 mb-4">Who is Estarr Bookart?</h2>
             <p>
               Estarr Bookart (Esther Bookart) is a passion project turned into Nigeria's most trusted bookstore. 
-              Founded by Esther Adeleke, the brand has grown to become a hub for book lovers across Nigeria, 
+              Founded by Esther Adesina, the brand has grown to become a hub for book lovers across Nigeria, 
               particularly with strong connections to Obafemi Awolowo University (OAU), Ile-Ife.
             </p>
             
             <h2 className="text-2xl font-bold text-gray-800 mt-8 mb-4">Why Choose Estarr Bookart?</h2>
             <ul>
               <li>Quality authentic books from trusted publishers</li>
-              <li>Free delivery across Nigeria on orders over ₦5,000</li>
               <li>Wide selection of fiction, non-fiction, educational books</li>
               <li>Affordable prices with regular discounts</li>
               <li>Excellent customer service</li>

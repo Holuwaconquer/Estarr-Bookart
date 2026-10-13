@@ -140,11 +140,17 @@ const AdminFlashSalesManagement = () => {
         return;
       }
 
+      const originalPrice =
+        selectedBook.discount > 0 &&
+        selectedBook.originalPrice > selectedBook.price
+          ? selectedBook.originalPrice
+          : selectedBook.price;
+
       console.log('🔥 Adding to flash sales:', { 
         bookId: formData.bookId,
         discount: formData.discountPercentage,
-        originalPrice: selectedBook.price,
-        salePrice: selectedBook.price * (1 - formData.discountPercentage / 100)
+        originalPrice,
+        salePrice: originalPrice * (1 - formData.discountPercentage / 100)
       });
 
       // Update book with discount
@@ -153,8 +159,8 @@ const AdminFlashSalesManagement = () => {
         headers: getAuthHeaders(),
         body: JSON.stringify({
           discount: formData.discountPercentage,
-          originalPrice: selectedBook.price,
-          price: selectedBook.price * (1 - formData.discountPercentage / 100),
+          originalPrice,
+          price: originalPrice * (1 - formData.discountPercentage / 100),
           flashSaleStartDate: formData.startDate,
           flashSaleEndDate: formData.endDate
         })
@@ -334,7 +340,7 @@ const AdminFlashSalesManagement = () => {
               </div>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="admin-primary-action bg-[#5b21b6] hover:bg-[#4c1d95] text-white px-5 py-3 rounded-xl font-semibold flex items-center gap-2 transition-colors"
+                className="admin-primary-action bg-[#5b21b6] hover:bg-[#4c1d95] text-white! px-5 py-3 rounded-xl font-semibold flex items-center gap-2 transition-colors"
               >
                 <HiPlus className="w-5 h-5" />
                 Add Product
@@ -439,7 +445,7 @@ const AdminFlashSalesManagement = () => {
                       <AdminSubmitButton
                         type="submit"
                         loading={saving}
-                        className="flex-1 px-4 py-2 bg-[#5b21b6] text-white rounded-lg transition-colors font-medium"
+                        className="flex-1 px-4 py-2 bg-[#5b21b6] text-white! rounded-lg transition-colors font-medium"
                       >
                         Add to Flash Sales
                       </AdminSubmitButton>

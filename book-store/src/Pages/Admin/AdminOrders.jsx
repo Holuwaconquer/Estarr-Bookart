@@ -161,7 +161,7 @@ const AdminOrders = () => {
           <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
             {/* Header */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 1, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-8"
             >
@@ -178,7 +178,7 @@ const AdminOrders = () => {
 
             {/* Filters */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 1, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               className="mb-6 flex flex-col sm:flex-row gap-4"
@@ -210,7 +210,7 @@ const AdminOrders = () => {
 
             {/* Table */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 1, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 border border-gray-800/50 rounded-xl overflow-hidden shadow-lg"
@@ -245,9 +245,9 @@ const AdminOrders = () => {
                       {orders.map((order) => (
                         <motion.tr
                           key={order._id}
-                          initial={{ opacity: 0 }}
+                          initial={{ opacity: 1 }}
                           animate={{ opacity: 1 }}
-                          className="border-b border-gray-700/30 hover:bg-gray-800/30 transition-all"
+                          className="border-b border-gray-700/30 bg-gray-100 hover:bg-gray-100 transition-all"
                         >
                           <td className="px-6 py-4">
                             <p className="text-white font-medium font-mono text-sm">{order._id.slice(-8)}</p>
@@ -374,7 +374,7 @@ const AdminOrders = () => {
       {showDetails && selectedOrder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 1, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="admin-orders-modal bg-white border border-[#e8e3dc] text-[#28202f] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
           >

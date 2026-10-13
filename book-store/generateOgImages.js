@@ -116,7 +116,7 @@ async function generateOgImage(post, outputPath) {
   // Logo text
   ctx.font = '24px "Poppins", Arial, sans-serif';
   ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-  ctx.fillText('EStarr Bookart Hub', 80, height - 80);
+  ctx.fillText('EStarr Bookart', 80, height - 80);
   
   // Website URL
   ctx.font = '18px "Poppins", Arial, sans-serif';
@@ -146,7 +146,7 @@ async function generateAllOgImages() {
   // Also generate a default OG image
   const defaultOutputPath = path.join(__dirname, '../public/og-image.jpg');
   await generateOgImage(
-    { title: 'EStarr Bookart Hub', category: 'Premium Bookstore in Nigeria' },
+    { title: 'EStarr Bookart', category: 'Premium Bookstore in Nigeria' },
     defaultOutputPath
   );
   

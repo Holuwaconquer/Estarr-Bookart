@@ -6,7 +6,7 @@ import useCanonicalUrl from '../../../useCanonicalUrl';
 const ShippingInfo = () => {
   useCanonicalUrl()
   useEffect(() => {
-    document.title = 'Shipping Information | EStarr Bookart Hub';
+    document.title = 'Shipping Information | EStarr Bookart';
     window.scrollTo(0, 0);
   }, []);
 

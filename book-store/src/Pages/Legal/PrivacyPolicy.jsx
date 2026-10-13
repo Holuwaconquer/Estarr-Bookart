@@ -6,7 +6,7 @@ import useCanonicalUrl from '../../../useCanonicalUrl';
 const PrivacyPolicy = () => {
   useCanonicalUrl()
   useEffect(() => {
-    document.title = 'Privacy Policy | EStarr Bookart Hub';
+    document.title = 'Privacy Policy | EStarr Bookart';
     window.scrollTo(0, 0);
   }, []);
 
@@ -70,7 +70,7 @@ const PrivacyPolicy = () => {
       content: `If you have questions about this Privacy Policy or our data practices, please contact us at:
         • Email: estarrbookart@gmail.com
         • Phone: 08145157410, 07016267055
-        • Address: EStarr Bookart Hub, OAU, Ile-Ife, Osun State, Nigeria`
+        • Address: EStarr Bookart, OAU, Ile-Ife, Osun State, Nigeria`
     }
   ];
 
@@ -93,7 +93,7 @@ const PrivacyPolicy = () => {
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div className="p-8 md:p-12">
               <p className="text-gray-600 mb-8 leading-relaxed">
-                At EStarr Bookart Hub, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or make purchases from us. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the site.
+                At EStarr Bookart, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or make purchases from us. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the site.
               </p>
 
               <div className="space-y-8">

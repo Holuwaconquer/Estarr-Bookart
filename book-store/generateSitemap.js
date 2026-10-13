@@ -111,7 +111,7 @@ function generateSitemap(routes) {
 
 // Generate robots.txt
 function generateRobotsTxt() {
-  return `# SEO Configuration for EStarr Bookart Hub
+  return `# SEO Configuration for EStarr Bookart
 User-agent: *
 Allow: /
 Disallow: /admin/
@@ -168,7 +168,7 @@ function generateBlogSitemap(blogs) {
     if (new Date(blog.createdAt) > new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)) {
       xml += '    <news:news>\n';
       xml += '      <news:publication>\n';
-      xml += '        <news:name>EStarr Bookart Hub Blog</news:name>\n';
+      xml += '        <news:name>EStarr Bookart Blog</news:name>\n';
       xml += '        <news:language>en</news:language>\n';
       xml += '      </news:publication>\n';
       xml += `      <news:publication_date>${new Date(blog.createdAt).toISOString()}</news:publication_date>\n`;
