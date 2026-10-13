@@ -30,6 +30,8 @@ const bookSchema = new mongoose.Schema(
       min: 0,
       max: 100,
     },
+    flashSaleStartDate: Date,
+    flashSaleEndDate: Date,
     category: {
       type: String,
       required: [true, "Category is required"],
@@ -105,6 +107,17 @@ const bookSchema = new mongoose.Schema(
 // Virtual for final price
 bookSchema.virtual("finalPrice").get(function () {
   if (this.discount > 0) {
+    const now = Date.now();
+    const startsAt = this.flashSaleStartDate?.getTime();
+    const endsAt = this.flashSaleEndDate?.getTime();
+
+    if (
+      (startsAt && now < startsAt) ||
+      (endsAt && now >= endsAt)
+    ) {
+      return this.originalPrice || this.price;
+    }
+
     if (this.originalPrice > this.price) {
       return this.price;
     }

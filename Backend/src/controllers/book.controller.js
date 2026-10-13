@@ -238,11 +238,39 @@ exports.getBooksByCategory = async (req, res, next) => {
 exports.getFlashDeals = async (req, res, next) => {
   try {
     const { limit = 4 } = req.query;
+    const now = new Date();
 
     console.log("🔥 Getting flash deals with limit:", limit);
 
-    const books = await Book.find({ discount: { $gt: 0 } })
-      .sort("-discount")
+    const expiredSales = await Book.find({
+      discount: { $gt: 0 },
+      flashSaleEndDate: { $lte: now },
+    }).select("_id originalPrice price");
+
+    if (expiredSales.length > 0) {
+      await Book.bulkWrite(
+        expiredSales.map((book) => ({
+          updateOne: {
+            filter: { _id: book._id },
+            update: {
+              $set: { price: book.originalPrice ?? book.price, discount: 0 },
+              $unset: {
+                originalPrice: "",
+                flashSaleStartDate: "",
+                flashSaleEndDate: "",
+              },
+            },
+          },
+        })),
+      );
+    }
+
+    const books = await Book.find({
+      discount: { $gt: 0 },
+      flashSaleStartDate: { $lte: now },
+      flashSaleEndDate: { $gt: now },
+    })
+      .sort("flashSaleEndDate")
       .limit(parseInt(limit))
       .select("-__v");
 

@@ -7,6 +7,11 @@ import AdminSidebar from '../../components/AdminSidebar';
 import AdminHeader from '../../components/AdminHeader';
 import AdminSubmitButton from '../../components/AdminSubmitButton';
 
+const toLocalDateTimeInput = (date) => {
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 16);
+};
+
 const AdminFlashSalesManagement = () => {
   const { user, token: contextToken } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -21,8 +26,8 @@ const AdminFlashSalesManagement = () => {
   const [formData, setFormData] = useState({
     bookId: '',
     discountPercentage: 10,
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    startDate: toLocalDateTimeInput(new Date()),
+    endDate: toLocalDateTimeInput(new Date(Date.now() + 24 * 60 * 60 * 1000)),
     priority: 1
   });
 
@@ -131,6 +136,15 @@ const AdminFlashSalesManagement = () => {
       return;
     }
 
+    if (
+      !formData.startDate ||
+      !formData.endDate ||
+      new Date(formData.endDate) <= new Date(formData.startDate)
+    ) {
+      toast.error('End time must be later than start time');
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -161,8 +175,8 @@ const AdminFlashSalesManagement = () => {
           discount: formData.discountPercentage,
           originalPrice,
           price: originalPrice * (1 - formData.discountPercentage / 100),
-          flashSaleStartDate: formData.startDate,
-          flashSaleEndDate: formData.endDate
+          flashSaleStartDate: new Date(formData.startDate).toISOString(),
+          flashSaleEndDate: new Date(formData.endDate).toISOString()
         })
       });
 
@@ -182,8 +196,8 @@ const AdminFlashSalesManagement = () => {
       setFormData({
         bookId: '',
         discountPercentage: 10,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        startDate: toLocalDateTimeInput(new Date()),
+        endDate: toLocalDateTimeInput(new Date(Date.now() + 24 * 60 * 60 * 1000)),
         priority: 1
       });
       
@@ -217,7 +231,10 @@ const AdminFlashSalesManagement = () => {
         headers: getAuthHeaders(),
         body: JSON.stringify({ 
           discount: 0,
-          price: bookToRemove.originalPrice || bookToRemove.price
+          price: bookToRemove.originalPrice || bookToRemove.price,
+          originalPrice: null,
+          flashSaleStartDate: null,
+          flashSaleEndDate: null
         })
       });
 
@@ -413,7 +430,7 @@ const AdminFlashSalesManagement = () => {
                         Start Date
                       </label>
                       <input
-                        type="date"
+                        type="datetime-local"
                         value={formData.startDate}
                         onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -426,7 +443,7 @@ const AdminFlashSalesManagement = () => {
                         End Date
                       </label>
                       <input
-                        type="date"
+                        type="datetime-local"
                         value={formData.endDate}
                         onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"

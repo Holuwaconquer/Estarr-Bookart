@@ -1,127 +1,99 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { HiFire, HiClock } from 'react-icons/hi';
-import { bookAPI } from '../services/api';
+import { HiFire } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import { FaTags } from "react-icons/fa6";
 
 const FlashDeals = () => {
   const [deals, setDeals] = useState([]);
-  const [timeLeft, setTimeLeft] = useState({
-    hours: 24,
-    minutes: 0,
-    seconds: 0
-  });
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(Date.now());
+  const refreshedExpiredDeals = useRef(new Set());
   const API_URL = import.meta.env.VITE_API_URL;
-  // Fetch flash deals from backend
-  useEffect(() => {
-    const fetchFlashDeals = async () => {
-      try {
-        setLoading(true);
-        console.log('🔥 Fetching flash deals from:', `${API_URL}/api/books/flash/deals?limit=4`);
-        
-        const response = await fetch(`${API_URL}/api/books/flash/deals?limit=4`);
-        console.log('📦 Flash deals response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log('✅ Flash deals result:', result);
-        
-        if (result.success && result.data && result.data.length > 0) {
-          console.log('📊 Flash deals count:', result.data.length);
-          const flashDeals = result.data.map((book) => ({
-            id: book._id,
-            title: book.title,
-            discount: book.discount || 0,
-            price: book.price,
-            originalPrice: book.originalPrice || (book.discount ? book.price / (1 - book.discount / 100) : book.price),
-            image: book.image
-          }));
-          
-          setDeals(flashDeals);
-        } else {
-          console.warn('⚠️ No flash deals from API, using fallback');
-          throw new Error('No flash deals found');
-        }
-      } catch (error) {
-        console.error('❌ Error fetching flash deals:', error);
-        console.log('📌 Using fallback static data');
-        setDeals([
-          { 
-            id: 1, 
-            discount: 50, 
-            title: 'Bestseller Bundle', 
-            price: 4500,
-            originalPrice: 9000,
-            image: 'https://images.unsplash.com/photo-1507842217343-583f7270bfba?q=80&w=500',
-          },
-          { 
-            id: 2, 
-            discount: 45, 
-            title: 'Romance Collection', 
-            price: 5500,
-            originalPrice: 10000,
-            image: 'https://images.unsplash.com/photo-1502933691298-84fc14542831?q=80&w=500',
-          },
-          { 
-            id: 3, 
-            discount: 60, 
-            title: 'Sci-Fi Pack', 
-            price: 3999,
-            originalPrice: 9999,
-            image: 'https://images.unsplash.com/photo-1543002588-d4d13a6f2e5f?q=80&w=500',
-          },
-          { 
-            id: 4, 
-            discount: 35, 
-            title: 'Biography Set', 
-            price: 6499,
-            originalPrice: 9999,
-            image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=500',
-          },
-        ]);
-      } finally {
-        setLoading(false);
+  const fetchFlashDeals = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/books/flash/deals?limit=20`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
 
-    fetchFlashDeals();
+      const result = await response.json();
+      if (!result.success || !Array.isArray(result.data)) {
+        throw new Error('Invalid flash deals response');
+      }
+
+      setDeals(result.data.map((book) => ({
+        id: book._id,
+        title: book.title,
+        discount: book.discount || 0,
+        price: book.price,
+        originalPrice: book.originalPrice || book.price,
+        image: book.image,
+        startDate: book.flashSaleStartDate,
+        endDate: book.flashSaleEndDate,
+      })));
+    } catch (error) {
+      console.error('❌ Error fetching flash deals:', error);
+      toast.error('Failed to load flash deals');
+      setDeals([]);
+    } finally {
+      setLoading(false);
+    }
   }, [API_URL]);
 
-  // Countdown timer
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft(prev => {
-        let { hours, minutes, seconds } = prev;
-        
-        if (seconds > 0) {
-          seconds--;
-        } else if (minutes > 0) {
-          minutes--;
-          seconds = 59;
-        } else if (hours > 0) {
-          hours--;
-          minutes = 59;
-          seconds = 59;
-        } else {
-          hours = 24;
-          minutes = 0;
-          seconds = 0;
-        }
-        
-        return { hours, minutes, seconds };
-      });
-    }, 1000);
+    fetchFlashDeals();
+  }, [fetchFlashDeals]);
 
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  const formatTime = (value) => String(value).padStart(2, '0');
+  const activeDeals = deals.filter((deal) => {
+    const startsAt = new Date(deal.startDate).getTime();
+    const endsAt = new Date(deal.endDate).getTime();
+    return Number.isFinite(startsAt) && Number.isFinite(endsAt) &&
+      startsAt <= now && endsAt > now;
+  });
+
+  useEffect(() => {
+    const expiredDeal = deals.find(
+      (deal) =>
+        new Date(deal.endDate).getTime() <= now &&
+        !refreshedExpiredDeals.current.has(deal.id),
+    );
+
+    if (expiredDeal) {
+      refreshedExpiredDeals.current.add(expiredDeal.id);
+      fetchFlashDeals();
+    }
+  }, [deals, fetchFlashDeals, now]);
+
+  const formatTime = (endDate) => {
+    const endsAt = new Date(endDate).getTime();
+    if (!Number.isFinite(endsAt)) {
+      return '00h :00m :00s';
+    }
+
+    const remainingSeconds = Math.max(
+      0,
+      Math.ceil((endsAt - now) / 1000),
+    );
+    const hours = Math.floor(remainingSeconds / 3600);
+    const minutes = Math.floor((remainingSeconds % 3600) / 60);
+    const seconds = remainingSeconds % 60;
+    return `${String(hours).padStart(2, '0')}h :${String(minutes).padStart(2, '0')}m :${String(seconds).padStart(2, '0')}s`;
+  };
+
+  const nextEndingDeal = activeDeals.reduce(
+    (soonest, deal) =>
+      !soonest || new Date(deal.endDate) < new Date(soonest.endDate)
+        ? deal
+        : soonest,
+    null,
+  );
 
   if (loading) {
     return (
@@ -131,6 +103,10 @@ const FlashDeals = () => {
         </div>
       </div>
     );
+  }
+
+  if (activeDeals.length === 0) {
+    return null;
   }
 
   return (
@@ -155,18 +131,12 @@ const FlashDeals = () => {
             {/* Timer */}
             <div className="flex items-center gap-4">
               <div className="text-center flex items-center gap-2">
-                <p className="md:text-2xl text-white/90">Ends In:</p>
-                <div className="flex gap-2">
-                  <div className="">
-                    <span className="text-[14px] md:text-2xl font-bold text-white">{formatTime(timeLeft.hours)}h :</span>
-                  </div>
-                  <div className="">
-                    <span className="text-[14px] md:text-2xl font-bold text-white">{formatTime(timeLeft.minutes)}m :</span>
-                  </div>
-                  <div className="">
-                    <span className="text-[14px] md:text-2xl font-bold text-white">{formatTime(timeLeft.seconds)}s</span>
-                  </div>
-                </div>
+                <p className="md:text-2xl text-white/90">
+                  {nextEndingDeal?.title} ends in:
+                </p>
+                <span className="text-[14px] md:text-2xl font-bold text-white">
+                  {formatTime(nextEndingDeal?.endDate)}
+                </span>
               </div>
             </div>
             {/* 
@@ -180,7 +150,7 @@ const FlashDeals = () => {
 
           {/* Deal Cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-[32px] md:overflow-visible">
-            {deals.map((deal) => (
+            {activeDeals.map((deal) => (
               <motion.div
                 key={deal.id}
                 whileHover={{ scale: 1.05 }}
@@ -216,7 +186,7 @@ const FlashDeals = () => {
                           ₦{Math.round(deal.originalPrice).toLocaleString()}
                         </span>
                       </div>
-                      <p className="text-xs text-gray/70">Ends in {formatTime(timeLeft.hours)}h :{formatTime(timeLeft.minutes)}m :{formatTime(timeLeft.seconds)}s</p>
+                      <p className="text-xs text-gray/70">Ends in {formatTime(deal.endDate)}</p>
                     </div>
                   </div>
                 </Link>
