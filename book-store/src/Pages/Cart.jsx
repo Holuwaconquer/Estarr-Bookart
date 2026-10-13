@@ -61,6 +61,12 @@ const Cart = () => {
     return price;
   };
 
+  const getOriginalPrice = (item) => {
+    const price = Number(item.price) || 0;
+    const originalPrice = Number(item.originalPrice) || 0;
+    return originalPrice > price ? originalPrice : price;
+  };
+
   const getItemTotal = (item) => {
     const discountedPrice = getDiscountedPrice(item);
     const quantity = item.quantity || 1;
@@ -76,7 +82,7 @@ const Cart = () => {
 
   const totalSavings =
     items?.reduce((savings, item) => {
-      const originalPrice = Number(item.price) || 0;
+      const originalPrice = getOriginalPrice(item);
       const discountedPrice = getDiscountedPrice(item);
       const quantity = item.quantity || 1;
       if (originalPrice > discountedPrice) {
@@ -166,7 +172,7 @@ const Cart = () => {
               {items?.map((item, index) => {
                 const itemKey =
                   item._id || item.id || item.book || `cart-item-${index}`;
-                const originalPrice = Number(item.price) || 0;
+                const originalPrice = getOriginalPrice(item);
                 const discountedPrice = getDiscountedPrice(item);
                 const isDiscounted = originalPrice > discountedPrice;
 
