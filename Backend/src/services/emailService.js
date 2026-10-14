@@ -375,8 +375,69 @@ const sendOrderStatusUpdateEmail = async (order, user, previousStatus) => {
   }
 };
 
+const sendNewsletterSubscriptionEmail = async (email) => {
+  const safeEmail = email.replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[character]);
+
+  const { error } = await resend.emails.send({
+    from: 'EStarr Bookart <noreply@estarrbookart.com.ng>',
+    to: 'holuwaconquer488@gmail.com',
+    subject: 'New newsletter subscriber | EStarr Bookart',
+    text: `NEW NEWSLETTER SUBSCRIBER\n\nSomeone has joined the EStarr Bookart reading list.\n\nSubscriber email: ${email}\n\nYou can reply directly to this email address to contact them.`,
+    html: `
+      <!doctype html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>New newsletter subscriber</title>
+        </head>
+        <body style="margin:0; padding:32px 16px; background-color:#f4f1f8; font-family:Arial,Helvetica,sans-serif; color:#28202f;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px; margin:0 auto; background-color:#ffffff; border:1px solid #e8e2f0; border-radius:12px; overflow:hidden;">
+            <tr>
+              <td style="padding:28px 32px; background-color:#4c1d95; color:#ffffff;">
+                <p style="margin:0 0 8px; color:#e9ddff; font-size:12px; font-weight:bold; letter-spacing:2px; text-transform:uppercase;">EStarr Bookart</p>
+                <h1 style="margin:0; font-size:24px; line-height:1.3;">A new reader has joined your list</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px;">
+                <p style="margin:0 0 20px; color:#51485c; font-size:16px; line-height:1.6;">Someone just subscribed to the EStarr Bookart newsletter. Here are their details:</p>
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#faf8fd; border:1px solid #eee8f5; border-radius:8px;">
+                  <tr>
+                    <td style="padding:18px 20px;">
+                      <p style="margin:0 0 6px; color:#766b82; font-size:12px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">Subscriber email</p>
+                      <a href="mailto:${safeEmail}" style="color:#5b21b6; font-size:17px; font-weight:bold; text-decoration:none; word-break:break-word;">${safeEmail}</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:24px 0 0; color:#766b82; font-size:14px; line-height:1.6;">You can reply directly to this notification to contact the subscriber.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:18px 32px; border-top:1px solid #eee8f5; color:#8a8194; font-size:12px; line-height:1.5;">
+                This is an automatic notification from the EStarr Bookart website.
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>
+    `,
+  });
+
+  if (error) {
+    throw new Error(`Newsletter notification email failed: ${error.message}`);
+  }
+};
+
 module.exports = {
   sendOrderNotificationEmail,
   sendOrderConfirmationEmail,
-  sendOrderStatusUpdateEmail
+  sendOrderStatusUpdateEmail,
+  sendNewsletterSubscriptionEmail,
 };

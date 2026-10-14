@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { HiFire } from 'react-icons/hi';
+import { HiShoppingCart, HiTrash } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import { FaTags } from "react-icons/fa6";
+import { useCart } from '../contexts/CartContext';
 
 const FlashDeals = () => {
+  const { cart, addToCart, removeFromCart } = useCart();
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pendingDealId, setPendingDealId] = useState(null);
   const [now, setNow] = useState(Date.now());
   const refreshedExpiredDeals = useRef(new Set());
   const API_URL = import.meta.env.VITE_API_URL;
@@ -26,10 +29,15 @@ const FlashDeals = () => {
       setDeals(result.data.map((book) => ({
         id: book._id,
         title: book.title,
+        author: book.author,
         discount: book.discount || 0,
         price: book.price,
         originalPrice: book.originalPrice || book.price,
+        finalPrice: book.finalPrice,
         image: book.image,
+        description: book.description,
+        category: book.category,
+        features: book.features,
         startDate: book.flashSaleStartDate,
         endDate: book.flashSaleEndDate,
       })));
@@ -95,6 +103,28 @@ const FlashDeals = () => {
     null,
   );
 
+  const handleCartToggle = async (deal) => {
+    if (pendingDealId === deal.id) return;
+
+    setPendingDealId(deal.id);
+    try {
+      const isInCart = cart.some(
+        (item) =>
+          item.id === deal.id ||
+          item._id === deal.id ||
+          item.book === deal.id,
+      );
+
+      if (isInCart) {
+        await removeFromCart(deal.id);
+      } else {
+        await addToCart(deal);
+      }
+    } finally {
+      setPendingDealId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="py-8 px-4 bg-gradient-to-r from-red-500 to-orange-500">
@@ -131,9 +161,21 @@ const FlashDeals = () => {
             {/* Timer */}
             <div className="flex items-center gap-4">
               <div className="text-center flex items-center gap-2">
-                <p className="md:text-2xl text-white/90">
-                  {nextEndingDeal?.title} ends in:
-                </p>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5 text-white md:w-6 md:h-6"
+                  aria-label="Timer icon"
+                >
+                  <circle cx="12" cy="13" r="8" />
+                  <path d="M12 9v4l3 2" />
+                  <path d="M9 2h6" />
+                </svg>
                 <span className="text-[14px] md:text-2xl font-bold text-white">
                   {formatTime(nextEndingDeal?.endDate)}
                 </span>
@@ -150,15 +192,24 @@ const FlashDeals = () => {
 
           {/* Deal Cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-[32px] md:overflow-visible">
-            {activeDeals.map((deal) => (
-              <motion.div
-                key={deal.id}
-                whileHover={{ scale: 1.05 }}
-                className="bg-white rounded-[4px] overflow-hidden shadow-md hover:border-white/50 transition-all cursor-pointer group"
-              >
-                <Link 
+            {activeDeals.map((deal) => {
+              const isInCart = cart.some(
+                (item) =>
+                  item.id === deal.id ||
+                  item._id === deal.id ||
+                  item.book === deal.id,
+              );
+              const isPending = pendingDealId === deal.id;
+
+              return (
+                <motion.div
+                  key={deal.id}
+                  whileHover={{ scale: 1.05 }}
+                  className="flex h-full flex-col bg-white rounded-[4px] overflow-hidden shadow-md hover:border-white/50 transition-all group"
+                >
+                <Link
                   to={`/product/${deal.id}`}
-                  className="block h-full"
+                  className="flex flex-1 flex-col"
                 >
                   {/* Image */}
                   <div className="relative h-52 overflow-hidden bg-white">
@@ -173,8 +224,8 @@ const FlashDeals = () => {
                   </div>
 
                   {/* Content */}
-                  <div className="p-4">
-                    <h3 className="text-black font-semibold text-sm line-clamp-2">
+                  <div className="flex flex-1 flex-col p-4">
+                    <h3 className="text-black font-semibold text-sm">
                       {deal.title}
                     </h3>
                     <div className="space-y-2">
@@ -190,8 +241,34 @@ const FlashDeals = () => {
                     </div>
                   </div>
                 </Link>
-              </motion.div>
-            ))}
+                  <button
+                    type="button"
+                    onClick={() => handleCartToggle(deal)}
+                    disabled={isPending}
+                    aria-label={isInCart ? `Remove ${deal.title} from cart` : `Add ${deal.title} to cart`}
+                    className={`flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white transition-colors disabled:cursor-wait disabled:opacity-60 ${
+                      isInCart
+                        ? 'bg-red-600 hover:bg-red-700'
+                        : 'bg-purple-700 hover:bg-purple-800'
+                    }`}
+                  >
+                    {isPending ? (
+                      'Updating cart...'
+                    ) : isInCart ? (
+                      <>
+                        <HiTrash className="h-4 w-4" />
+                        Remove from cart
+                      </>
+                    ) : (
+                      <>
+                        <HiShoppingCart className="h-4 w-4" />
+                        Add to cart
+                      </>
+                    )}
+                  </button>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>

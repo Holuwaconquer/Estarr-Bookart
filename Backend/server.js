@@ -19,6 +19,7 @@ const reviewRoutes = require('./src/routes/review');
 const categoryRoutes = require('./src/routes/categories');
 const bankAccountRoutes = require('./src/routes/bankAccounts');
 const shippingLocationRoutes = require('./src/routes/shippingLocations');
+const emailRoutes = require('./src/routes/emails');
 const userRoutes = require('./src/routes/users');
 
 const app = express();
@@ -139,6 +140,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/bank-accounts', bankAccountRoutes);
 app.use('/api/shipping-locations', shippingLocationRoutes);
+app.use('/api/emails', emailRoutes);
 
 // Health check endpoint for Render
 app.get('/health', (req, res) => {

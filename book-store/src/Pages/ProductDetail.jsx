@@ -487,11 +487,11 @@ const ProductDetail = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-4 border-t border-black/[0.06]">
-                <motion.div whileHover={{ y: -2 }} className="p-3 bg-white border border-black/[0.06] rounded-lg text-center">
+                {/* <motion.div whileHover={{ y: -2 }} className="p-3 bg-white border border-black/[0.06] rounded-lg text-center">
                   <HiTruck className="w-5 h-5 mx-auto mb-1" style={{ color: PURPLE[1] }} />
                   <p className="text-xs text-ink/60">Free Shipping</p>
                   <p className="text-xs text-ink/40">On orders over ₦5,000</p>
-                </motion.div>
+                </motion.div> */}
                 <motion.div whileHover={{ y: -2 }} className="p-3 bg-white border border-black/[0.06] rounded-lg text-center">
                   <HiShieldCheck className="w-5 h-5 mx-auto mb-1" style={{ color: TEAL }} />
                   <p className="text-xs text-ink/60">30-day Returns</p>

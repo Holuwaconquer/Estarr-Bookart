@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { HiSparkles, HiShoppingCart, HiHeart, HiOutlineHeart, HiEye, HiTrash } from 'react-icons/hi';
 import { MdLocalShipping, MdSecurity, MdHeadsetMic } from 'react-icons/md';
 import { bookAPI, categoryAPI } from '../services/api';
+import { emailAPI } from '../services/email.service';
 import toast from 'react-hot-toast';
 import FlashDeals from '../components/FlashDeals';
 import { useCart } from '../contexts/CartContext';
@@ -53,6 +54,7 @@ const Landingpage = () => {
   const [loading, setLoading] = useState(true);
   const [wishlist, setWishlist] = useState(new Set());
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -143,6 +145,24 @@ const Landingpage = () => {
     setSelectedCategory(categoryName === selectedCategory ? '' : categoryName);
   };
 
+  const handleNewsletterSubscribe = async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const email = new FormData(form).get('email');
+
+    try {
+      setIsSubscribing(true);
+      await emailAPI.subscribeNewsletter(email);
+      toast.success('Thanks for subscribing!');
+      form.reset();
+    } catch (error) {
+      console.error('Newsletter subscription failed:', error);
+      toast.error(error.message || 'Failed to subscribe. Please try again.');
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
+
   // ---------------------------------------------------------------------
   // Book card. `eager` = animate on mount (used for the first, above-fold
   // grid so it's guaranteed to play without waiting for scroll). Every
@@ -187,7 +207,7 @@ const Landingpage = () => {
         transition={{ delay: Math.min(index * 0.05, 0.6), type: 'spring', stiffness: 200, damping: 22 }}
         whileHover={{ y: -8 }}
         onClick={() => navigate(`/product/${book?._id}`)}
-        className="group relative bg-white rounded-2xl overflow-hidden border border-black/[0.06] transition-all duration-300 cursor-pointer"
+        className="group relative flex h-full flex-col bg-white rounded-2xl overflow-hidden border border-black/[0.06] transition-all duration-300 cursor-pointer"
         style={{ boxShadow: '0 2px 10px rgba(30,27,41,0.05)' }}
         onMouseEnter={(e) => { e.currentTarget.style.boxShadow = `0 16px 32px -12px ${tint}40`; e.currentTarget.style.borderColor = `${tint}66`; }}
         onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 2px 10px rgba(30,27,41,0.05)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)'; }}
@@ -198,7 +218,7 @@ const Landingpage = () => {
           <motion.img
             src={book?.image || book?.coverImage || `https://via.placeholder.com/250x300?text=${encodeURIComponent(book?.title || 'Book')}`}
             alt={book?.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full! object-cover"
             whileHover={{ scale: 1.06 }}
             transition={{ duration: 0.4 }}
             onError={(e) => { e.target.src = 'https://via.placeholder.com/250x300?text=No+Image'; }}
@@ -226,15 +246,17 @@ const Landingpage = () => {
           </div>
         </div>
 
-        <div className="p-4">
-          <h3 className="font-serif text-[17px] leading-snug text-ink line-clamp-1">{book?.title || 'Unknown'}</h3>
-          <p className="text-xs text-ink/50 mt-1 mb-3 truncate">{book?.author || 'Unknown author'}</p>
+        <div className="flex flex-1 flex-col justify-between p-4">
+          <div>
+            <h3 className="font-serif text-[17px] leading-snug text-ink font-bold">{book?.title || 'Unknown'}</h3>
+            <p className="text-xs text-ink/50 mt-1 mb-3 truncate">{book?.author || 'Unknown author'}</p>
 
-          <div className="flex items-center gap-2 mb-3">
-            <p className="font-mono text-base font-bold text-ink">&#8358;{(book?.price || 0).toLocaleString()}</p>
-            {book?.originalPrice && (
-              <p className="font-mono text-xs text-ink/30 line-through">&#8358;{book.originalPrice.toLocaleString()}</p>
-            )}
+            <div className="flex items-center gap-2 mb-3">
+              <p className="font-mono text-base font-bold text-ink">&#8358;{(book?.price || 0).toLocaleString()}</p>
+              {book?.originalPrice && (
+                <p className="font-mono text-xs text-ink/30 line-through">&#8358;{book.originalPrice.toLocaleString()}</p>
+              )}
+            </div>
           </div>
 
           {isInCart ? (
@@ -453,17 +475,18 @@ const Landingpage = () => {
             <h2 className="font-serif text-4xl md:text-5xl text-white mb-4">New arrivals, in your inbox.</h2>
             <p className="text-white/80 mb-8">One email, once a week — new titles, quiet discounts, nothing else.</p>
             <form
-              onSubmit={(e) => { e.preventDefault(); toast.success('Subscribed'); }}
+              onSubmit={handleNewsletterSubscribe}
               className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
             >
               <input
                 type="email"
+                name="email"
                 required
                 placeholder="you@email.com"
                 className="flex-1 px-5 py-4 rounded-full bg-white/15 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/60"
               />
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" className="bg-white px-7 py-4 rounded-full font-bold" style={{ color: DEEP }}>
-                Subscribe
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" disabled={isSubscribing} className="bg-white px-7 py-4 rounded-full font-bold disabled:opacity-60" style={{ color: DEEP }}>
+                {isSubscribing ? 'Subscribing...' : 'Subscribe'}
               </motion.button>
             </form>
           </motion.div>

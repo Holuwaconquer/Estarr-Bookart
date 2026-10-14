@@ -64,11 +64,18 @@ export const emailAPI = {
 
   // Subscribe to newsletter
   subscribeNewsletter: async (email) => {
-    return fetch(`${API_BASE_URL}/emails/newsletter-subscribe`, {
+    const response = await fetch(`${API_BASE_URL}/emails/newsletter-subscribe`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
-    }).then(res => res.json());
+    });
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Failed to subscribe to newsletter');
+    }
+
+    return result;
   }
 };
 

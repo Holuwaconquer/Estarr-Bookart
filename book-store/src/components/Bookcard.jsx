@@ -244,7 +244,7 @@ const BookCard = ({ book = {} }) => {
           </h3>
 
           {/* Author */}
-          <p className="text-xs text-ink/50 mb-1.5 line-clamp-1">
+          <p className="text-xs text-ink/50 mb-1.5">
             by {book.author || 'Unknown Author'}
           </p>
 

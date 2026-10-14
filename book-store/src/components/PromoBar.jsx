@@ -8,7 +8,6 @@ const PromoBar = () => {
   const { setPromoBarVisible } = useContext(PromoBarContext) || {};
 
   const promos = [
-    "🚚 Free shipping on orders above ₦5,000",
     "⚡ Flash deals ending soon!",
     "🎁 Free gift with every purchase above ₦10,000",
     "💳 Pay on delivery available nationwide"
