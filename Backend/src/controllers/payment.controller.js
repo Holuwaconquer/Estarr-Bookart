@@ -3,8 +3,7 @@ const Order = require('../models/Order');
 const BankAccount = require('../models/BankAccount');
 const ApiResponse = require('../utils/apiResponse');
 const korapayService = require('../services/korapay.service');
-const fs = require('fs').promises;
-const path = require('path');
+const cloudinary = require('../config/cloudinary');
 
 // @desc    Initialize Korapay payment
 // @route   POST /api/payments/korapay/initialize
@@ -231,45 +230,36 @@ exports.uploadProofOfPayment = async (req, res, next) => {
     // Validate file type (only images and PDF)
     const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
     if (!allowedMimes.includes(req.file.mimetype)) {
-      // Clean up uploaded file
-      await fs.unlink(req.file.path).catch(() => {});
       return ApiResponse.error(res, 'Only images and PDF files are allowed', 400);
     }
 
-    // Validate file size (max 5MB)
-    if (req.file.size > 5 * 1024 * 1024) {
-      await fs.unlink(req.file.path).catch(() => {});
-      return ApiResponse.error(res, 'File size exceeds 5MB limit', 400);
+    // Keep uploads below Vercel's request-body limit.
+    if (req.file.size > 4 * 1024 * 1024) {
+      return ApiResponse.error(res, 'File size exceeds 4MB limit', 400);
     }
 
     // Find payment
     const payment = await Payment.findById(paymentId);
     if (!payment) {
-      await fs.unlink(req.file.path).catch(() => {});
       return ApiResponse.error(res, 'Payment not found', 404);
     }
 
     // Check authorization
     if (payment.user.toString() !== userId) {
-      await fs.unlink(req.file.path).catch(() => {});
       return ApiResponse.error(res, 'Not authorized', 403);
     }
 
-    // Delete old proof if exists
-    if (payment.proofOfPayment?.url) {
-      try {
-        const oldPath = path.join(process.cwd(), 'public', 'uploads', payment.proofOfPayment.filename);
-        await fs.unlink(oldPath).catch(() => {});
-      } catch (e) {
-        // Ignore error
-      }
-    }
+    const dataURI = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    const uploadedProof = await cloudinary.uploader.upload(dataURI, {
+      folder: 'payment-proofs',
+      resource_type: 'auto',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'pdf'],
+    });
 
-    // Save file info
     payment.proofOfPayment = {
-      filename: req.file.filename,
-      url: `/uploads/payments/${req.file.filename}`,
-      uploadedAt: new Date()
+      filename: uploadedProof.public_id,
+      url: uploadedProof.secure_url,
+      uploadedAt: new Date(),
     };
     payment.status = 'processing';
 
@@ -280,10 +270,6 @@ exports.uploadProofOfPayment = async (req, res, next) => {
       url: payment.proofOfPayment.url
     });
   } catch (error) {
-    // Clean up file on error
-    if (req.file?.path) {
-      await fs.unlink(req.file.path).catch(() => {});
-    }
     next(error);
   }
 };

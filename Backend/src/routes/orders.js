@@ -19,7 +19,7 @@ const storage = multer.memoryStorage();
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 4 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
     if (allowedMimes.includes(file.mimetype)) {
@@ -34,7 +34,7 @@ const upload = multer({
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'FILE_TOO_LARGE') {
-      return res.status(400).json({ success: false, message: 'File size exceeds 5MB limit' });
+      return res.status(400).json({ success: false, message: 'File size exceeds 4MB limit' });
     }
     return res.status(400).json({ success: false, message: `Upload error: ${err.message}` });
   } else if (err) {

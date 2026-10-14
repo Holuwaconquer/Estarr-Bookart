@@ -3,6 +3,51 @@
 QuestPay hosted bank transfer is currently the only payment method available
 for new checkout orders. Manual bank transfer is disabled for new orders.
 
+## Deploy the backend to Vercel
+
+Create a separate Vercel project for the backend and set its **Root Directory**
+to `Backend`. Vercel detects and deploys the exported Express app in `app.js`
+as a serverless function. Do not set a static output directory, rewrite, or
+frontend build command. The local `npm start` command continues to run the
+same app as a long-lived Express server.
+
+Add the following environment variables to the Vercel project (Production and
+Preview as appropriate):
+
+- `MONGODB_URI` — MongoDB Atlas connection string. Configure database network
+  access for the Vercel deployment and use a dedicated database user.
+- `JWT_SECRET` and, optionally, `JWT_EXPIRE`.
+- `FRONTEND_URL` — exact storefront origin, including `https://`.
+- `PRODUCTION_URL` — production storefront origin.
+- `BACKEND_URL` — deployed backend origin, used by the legacy Korapay
+  notification URL.
+- `QUESTPAY_API_KEY` and optionally `QUESTPAY_BASE_URL`.
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
+  `CLOUDINARY_API_SECRET` for book images and payment proofs.
+- `RESEND_API_KEY` for email delivery.
+- `KORAPAY_PUBLIC_KEY` and `KORAPAY_SECRET_KEY` only if the legacy Korapay
+  routes are used.
+- `NODE_ENV=production`.
+
+Deploy, then set QuestPay's webhook URL to
+`https://<your-backend-domain>/api/webhooks/questpay`. The webhook-specific
+`express.raw()` middleware runs before JSON parsing so it can verify the
+original request bytes. Keep `QUESTPAY_WEBHOOK_PATH` at its default unless the
+provider is configured with the same custom path.
+
+Vercel functions have ephemeral filesystems and a request-body size limit.
+Uploaded book images and payment proofs are stored in Cloudinary rather than
+local disk. Multipart uploads are capped at 4 MB to stay below Vercel's request
+limit. The deployment excludes `public/uploads/` so legacy files are not
+published as public CDN assets. Any old `/uploads/...` links from another host
+are not migrated automatically; move assets to durable storage such as
+Cloudinary and update their stored URLs if they are still in use.
+
+The API's in-memory rate limiter is per function instance and is not a
+distributed abuse-control mechanism. Use Vercel Firewall or a shared rate-limit
+store for production-wide limits. MongoDB sessions/transactions used by
+checkout require a replica set (MongoDB Atlas supports this).
+
 ## Backend configuration
 
 Set these variables in the backend deployment environment:

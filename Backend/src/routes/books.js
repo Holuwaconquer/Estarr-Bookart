@@ -19,7 +19,7 @@ const { protect, authorize } = require("../middleware/auth");
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 4 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowedMimes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (allowedMimes.includes(file.mimetype)) {
@@ -39,7 +39,7 @@ const handleMulterError = (err, req, res, next) => {
     if (err.code === "LIMIT_FILE_SIZE") {
       return res
         .status(400)
-        .json({ success: false, message: "Image size exceeds 5MB limit" });
+        .json({ success: false, message: "Image size exceeds 4MB limit" });
     }
     return res.status(400).json({ success: false, message: err.message });
   }
