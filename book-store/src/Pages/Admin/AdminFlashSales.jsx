@@ -103,13 +103,13 @@ const AdminFlashSalesManagement = () => {
     try {
       console.log('📥 Fetching flash sales from:', `${API_URL}/api/books/flash/deals?limit=20`);
       const response = await fetch(`${API_URL}/api/books/flash/deals?limit=20`);
-      console.log('📦 Flash sales response status:', response.status);
+      // console.log('📦 Flash sales response status:', response.status);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
-      console.log('✅ Flash sales fetched:', result);
+      // console.log('✅ Flash sales fetched:', result);
       
       if (result.success && result.data) {
         console.log('📊 Flash sales count:', result.data.length);
@@ -180,7 +180,7 @@ const AdminFlashSalesManagement = () => {
         })
       });
 
-      console.log('Update response status:', updateResponse.status);
+      // console.log('Update response status:', updateResponse.status);
 
       if (!updateResponse.ok) {
         const errorData = await updateResponse.json();
@@ -238,7 +238,7 @@ const AdminFlashSalesManagement = () => {
         })
       });
 
-      console.log('Remove response status:', response.status);
+      // console.log('Remove response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();

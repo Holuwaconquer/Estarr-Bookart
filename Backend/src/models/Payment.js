@@ -13,7 +13,7 @@ const paymentSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['korapay', 'manual-bank-transfer'],
+    enum: ['korapay', 'questpay', 'manual-bank-transfer'],
     required: true
   },
   amount: {

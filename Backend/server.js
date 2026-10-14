@@ -20,6 +20,7 @@ const categoryRoutes = require('./src/routes/categories');
 const bankAccountRoutes = require('./src/routes/bankAccounts');
 const shippingLocationRoutes = require('./src/routes/shippingLocations');
 const emailRoutes = require('./src/routes/emails');
+const questpayWebhookRoutes = require('./src/routes/questpayWebhook');
 const userRoutes = require('./src/routes/users');
 
 const app = express();
@@ -94,6 +95,11 @@ const loginLimiter = rateLimit({
 app.use('/api/users/login', loginLimiter);
 
 app.use(compression());
+app.use(
+  process.env.QUESTPAY_WEBHOOK_PATH || '/api/webhooks/questpay',
+  express.raw({ type: 'application/json', limit: '1mb' }),
+  questpayWebhookRoutes
+);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

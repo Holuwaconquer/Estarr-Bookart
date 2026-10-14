@@ -22,18 +22,18 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        console.log('🔐 Initializing auth...');
+        // console.log('🔐 Initializing auth...');
         
         // Check if token exists BEFORE clearing anything
         const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
         const userStr = localStorage.getItem('user');
         
-        console.log('🔑 Token exists on init:', !!token);
-        console.log('👤 User exists on init:', !!userStr);
+        // console.log('🔑 Token exists on init:', !!token);
+        // console.log('👤 User exists on init:', !!userStr);
         
         // If no token or user, don't need to verify
         if (!token || !userStr) {
-          console.log('⚠️ No token or user found, skipping auth check');
+          // console.log('⚠️ No token or user found, skipping auth check');
           setIsInitialized(true);
           setAuthLoading(false);
           return;
@@ -44,9 +44,9 @@ const AuthProvider = ({ children }) => {
           const user = JSON.parse(userStr);
           setUser(user);
           setAuthenticated(true);
-          console.log('✅ Restored user from localStorage:', user.email);
+          // console.log('✅ Restored user from localStorage:', user.email);
         } catch (e) {
-          console.error('❌ Failed to parse user from localStorage:', e);
+          // console.error('❌ Failed to parse user from localStorage:', e);
           clearAuth();
           setIsInitialized(true);
           setAuthLoading(false);
@@ -54,13 +54,13 @@ const AuthProvider = ({ children }) => {
         }
         
         // Then verify with server
-        console.log('🔄 Verifying auth with server...');
+        // console.log('🔄 Verifying auth with server...');
         await checkAuth();
       } catch (error) {
         console.error('❌ Error initializing auth:', error);
         clearAuth();
       } finally {
-        console.log('✅ Auth initialization complete');
+        // console.log('✅ Auth initialization complete');
         setIsInitialized(true);
         setAuthLoading(false);
       }

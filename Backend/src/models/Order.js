@@ -42,7 +42,7 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['card', 'paypal', 'bank-transfer', 'korapay', 'manual'],
+    enum: ['card', 'paypal', 'bank-transfer', 'korapay', 'questpay', 'manual'],
     required: true
   },
   paymentStatus: {

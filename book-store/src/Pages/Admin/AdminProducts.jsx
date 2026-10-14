@@ -569,7 +569,7 @@ const AdminProducts = () => {
                 {/* Author */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Author *
+                    Author
                   </label>
                   <input
                     type="text"
@@ -577,7 +577,6 @@ const AdminProducts = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, author: e.target.value })
                     }
-                    required
                     className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
                   />
                 </div>
@@ -616,7 +615,7 @@ const AdminProducts = () => {
                 {/* Stock */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Stock *
+                    Stock
                   </label>
                   <input
                     type="number"
@@ -624,7 +623,6 @@ const AdminProducts = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, stock: e.target.value })
                     }
-                    required
                     className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
                   />
                 </div>

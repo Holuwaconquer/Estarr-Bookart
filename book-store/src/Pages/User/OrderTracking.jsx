@@ -24,8 +24,11 @@ const OrderTracking = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await orderAPI.getUserOrders();
-      setOrders(response.data?.orders || []);
+      const response = await orderAPI.getMyOrders();
+      setOrders(
+        response.data?.orders ||
+          (Array.isArray(response.data) ? response.data : []),
+      );
     } catch (error) {
       toast.error('Failed to fetch orders');
     } finally {
@@ -36,7 +39,8 @@ const OrderTracking = () => {
   const getOrderStatus = (status) => {
     const statuses = {
       pending: { icon: HiClock, color: 'text-yellow-500', bg: 'bg-yellow-50', label: 'Pending' },
-      confirmed: { icon: HiCheckCircle, color: 'text-blue-500', bg: 'bg-blue-50', label: 'Confirmed' },
+      received: { icon: HiCheckCircle, color: 'text-blue-500', bg: 'bg-blue-50', label: 'Received' },
+      processing: { icon: HiCheckCircle, color: 'text-blue-500', bg: 'bg-blue-50', label: 'Processing' },
       shipped: { icon: HiTruck, color: 'text-purple-500', bg: 'bg-purple-50', label: 'Shipped' },
       delivered: { icon: HiCheckCircle, color: 'text-green-500', bg: 'bg-green-50', label: 'Delivered' },
       cancelled: { icon: HiArrowRight, color: 'text-red-500', bg: 'bg-red-50', label: 'Cancelled' }
@@ -141,7 +145,7 @@ const OrderTracking = () => {
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <p className="font-semibold text-gray-900">Order #{order._id.slice(-8)}</p>
+                        <p className="font-semibold text-gray-900">Order #{order.orderNumber || order._id.slice(-8)}</p>
                         <p className="text-sm text-gray-500">
                           {new Date(order.createdAt).toLocaleDateString()}
                         </p>
@@ -158,7 +162,7 @@ const OrderTracking = () => {
                       <div>
                         <p className="text-xs text-gray-500">Items: {order.items?.length || 0}</p>
                         <p className="font-semibold text-gray-900">
-                          ₦{(order.totalAmount || 0).toLocaleString()}
+                          ₦{(order.total || 0).toLocaleString()}
                         </p>
                       </div>
                       <HiArrowRight className="w-5 h-5 text-gray-400" />
@@ -177,6 +181,25 @@ const OrderTracking = () => {
               >
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Order Details</h2>
 
+                <div className="border-b pb-4 mb-4">
+                  <p className="text-xs text-gray-500">Order reference</p>
+                  <p className="font-mono font-bold text-gray-900">
+                    {selectedOrder.orderNumber || selectedOrder._id}
+                  </p>
+                  <p className="mt-2 text-sm text-gray-600">
+                    Payment:{" "}
+                    <span className="font-medium capitalize">
+                      {selectedOrder.paymentStatus || "pending"}
+                    </span>
+                  </p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Method:{" "}
+                    <span className="font-medium capitalize">
+                      {selectedOrder.paymentMethod || "N/A"}
+                    </span>
+                  </p>
+                </div>
+
                 {/* Timeline */}
                 <OrderTimeline order={selectedOrder} />
 
@@ -187,30 +210,82 @@ const OrderTracking = () => {
                     {selectedOrder.items?.map((item, idx) => (
                       <div key={idx} className="flex justify-between text-sm">
                         <span className="text-gray-600">{item.title} x{item.quantity}</span>
-                        <span className="font-medium text-gray-900">₦{item.price * item.quantity}</span>
+                        <span className="font-medium text-gray-900">₦{(Number(item.price) * Number(item.quantity)).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Shipping Info */}
-                {selectedOrder.shippingInfo && (
-                  <div className="border-t mt-4 pt-4">
-                    <p className="font-semibold text-gray-900 mb-2">Shipping To</p>
-                    <p className="text-sm text-gray-600">
-                      {selectedOrder.shippingInfo.address}
-                      <br />
-                      {selectedOrder.shippingInfo.city}, {selectedOrder.shippingInfo.state}
+                <div className="border-t mt-4 pt-4">
+                  <p className="font-semibold text-gray-900 mb-2">
+                    Selected shipping location
+                  </p>
+                  {selectedOrder.shippingLocation ? (
+                    <div className="text-sm text-gray-600">
+                      <p className="font-medium text-gray-900">
+                        {selectedOrder.shippingLocation.name}
+                      </p>
+                      <p>
+                        {[
+                          selectedOrder.shippingLocation.region,
+                          selectedOrder.shippingLocation.state,
+                          selectedOrder.shippingLocation.city,
+                        ]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </p>
+                      <p>
+                        Shipping:{" "}
+                        {Number(selectedOrder.shippingFee) === 0
+                          ? "Free"
+                          : `₦${Number(selectedOrder.shippingFee).toLocaleString()}`}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">
+                      Shipping location details are unavailable.
                     </p>
-                  </div>
-                )}
+                  )}
+                  <p className="font-semibold text-gray-900 mt-4 mb-2">
+                    Shipping address
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {selectedOrder.shippingAddress?.street}
+                    <br />
+                    {[
+                      selectedOrder.shippingAddress?.city,
+                      selectedOrder.shippingAddress?.state,
+                      selectedOrder.shippingAddress?.zipCode,
+                      selectedOrder.shippingAddress?.country,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                    <br />
+                    {selectedOrder.shippingAddress?.phone}
+                  </p>
+                </div>
 
-                {/* Total */}
-                <div className="border-t mt-4 pt-4 flex justify-between">
-                  <span className="font-semibold text-gray-900">Total</span>
-                  <span className="text-lg font-bold text-blue-600">
-                    ₦{(selectedOrder.totalAmount || 0).toLocaleString()}
-                  </span>
+                {/* Price breakdown */}
+                <div className="border-t mt-4 pt-4 space-y-2 text-sm">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Subtotal</span>
+                    <span>₦{Number(selectedOrder.subtotal || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Shipping</span>
+                    <span>
+                      {Number(selectedOrder.shippingFee || 0) === 0
+                        ? "Free"
+                        : `₦${Number(selectedOrder.shippingFee).toLocaleString()}`}
+                    </span>
+                  </div>
+                  <div className="border-t pt-3 flex justify-between">
+                    <span className="font-semibold text-gray-900">Total</span>
+                    <span className="text-lg font-bold text-blue-600">
+                      ₦{Number(selectedOrder.total || 0).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Actions */}

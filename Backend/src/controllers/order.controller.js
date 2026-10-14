@@ -4,8 +4,6 @@ const ShippingLocation = require("../models/ShippingLocation");
 const ApiResponse = require("../utils/apiResponse");
 const cloudinary = require("../config/cloudinary");
 const {
-  sendOrderNotificationEmail,
-  sendOrderConfirmationEmail,
   sendOrderStatusUpdateEmail,
 } = require("../services/emailService");
 const User = require("../models/User");
@@ -54,6 +52,14 @@ exports.createOrder = async (req, res, next) => {
       shippingLocation: shippingLocationId,
     } = req.body;
     const userId = req.userId;
+
+    if (paymentMethod !== "questpay") {
+      return ApiResponse.error(
+        res,
+        "QuestPay is currently the only available payment method",
+        400,
+      );
+    }
 
     // Validate items
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -145,19 +151,6 @@ exports.createOrder = async (req, res, next) => {
       total,
       status: "pending",
       paymentStatus: "pending",
-    });
-
-    // Fetch user details for email
-    const user = await User.findById(userId).select("name email phonenumber");
-
-    // Send admin notification (don't await - send in background)
-    sendOrderNotificationEmail(order, user).catch((err) => {
-      console.error("Background admin notification error:", err);
-    });
-
-    // Send order confirmation to customer (don't await - send in background)
-    sendOrderConfirmationEmail(order, user).catch((err) => {
-      console.error("Background order confirmation error:", err);
     });
 
     return ApiResponse.success(res, "Order created successfully", order, 201);
@@ -289,6 +282,7 @@ exports.getMyOrders = async (req, res, next) => {
     const orders = await Order.find({ user: req.userId })
       .sort("-createdAt")
       .populate("items.book", "title author image")
+      .populate("shippingLocation")
       .select("-__v");
 
     return ApiResponse.success(res, "Orders retrieved successfully", orders);
@@ -304,6 +298,7 @@ exports.getOrderById = async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.id)
       .populate("items.book", "title author image price")
+      .populate("shippingLocation")
       .select("-__v");
 
     if (!order) {
@@ -360,6 +355,7 @@ exports.getAllOrders = async (req, res, next) => {
         .skip(skip)
         .limit(limitNum)
         .populate("user", "name email")
+        .populate("shippingLocation")
         .select("-__v"),
       Order.countDocuments(query),
     ]);

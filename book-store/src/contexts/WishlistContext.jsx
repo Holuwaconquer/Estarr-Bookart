@@ -16,14 +16,14 @@ export const WishlistProvider = ({ children }) => {
 
   // Load wishlist from localStorage on mount
   useEffect(() => {
-    console.log('🚀 WishlistProvider: Loading from localStorage...');
+    // console.log('🚀 WishlistProvider: Loading from localStorage...');
     const savedWishlist = localStorage.getItem('wishlist');
-    console.log('📦 Saved wishlist from localStorage:', savedWishlist);
+    // console.log('📦 Saved wishlist from localStorage:', savedWishlist);
     
     if (savedWishlist) {
       try {
         const parsedWishlist = JSON.parse(savedWishlist);
-        console.log('✅ Parsed wishlist:', parsedWishlist);
+        // console.log('✅ Parsed wishlist:', parsedWishlist);
         setWishlist(parsedWishlist);
       } catch (error) {
         console.error('❌ Error parsing wishlist from localStorage:', error);
@@ -41,12 +41,12 @@ export const WishlistProvider = ({ children }) => {
   useEffect(() => {
     if (!isInitialized) return; // Don't save on initial load
     
-    console.log('💾 Saving wishlist to localStorage:', wishlist);
+    // console.log('💾 Saving wishlist to localStorage:', wishlist);
     try {
       localStorage.setItem('wishlist', JSON.stringify(wishlist));
-      console.log('✅ Wishlist saved successfully to localStorage');
+      // console.log('✅ Wishlist saved successfully to localStorage');
     } catch (error) {
-      console.error('❌ Error saving wishlist to localStorage:', error);
+      // console.error('❌ Error saving wishlist to localStorage:', error);
     }
   }, [wishlist, isInitialized]);
 

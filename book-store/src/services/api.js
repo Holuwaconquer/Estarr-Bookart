@@ -33,14 +33,14 @@ const request = async (path, options = {}) => {
     }
   }
 
-  console.log("🌐 Making request to:", url);
-  console.log("📤 Request headers:", options.headers);
-  console.log("📤 Request is FormData:", isFormData);
+  // console.log("🌐 Making request to:", url);
+  // console.log("📤 Request headers:", options.headers);
+  // console.log("📤 Request is FormData:", isFormData);
 
   try {
     const res = await fetch(url, options);
 
-    console.log("📥 Response status:", res.status, res.statusText);
+    // console.log("📥 Response status:", res.status, res.statusText);
 
     if (res.status === 403) {
       const body = await parseJSON(res);
@@ -148,8 +148,8 @@ const getToken = () => {
     (t) => t && t !== "undefined" && t !== "null",
   );
 
-  console.log("🔑 Token sources:", tokenSources);
-  console.log("🔑 Found token:", token ? "Yes" : "No");
+  // console.log("🔑 Token sources:", tokenSources);
+  // console.log("🔑 Found token:", token ? "Yes" : "No");
 
   return token;
 };
@@ -159,7 +159,7 @@ const getCurrentUser = () => {
     const userStr = localStorage.getItem("user");
     return userStr ? JSON.parse(userStr) : null;
   } catch (error) {
-    console.error("Error parsing user from localStorage:", error);
+    // console.error("Error parsing user from localStorage:", error);
     return null;
   }
 };
@@ -167,11 +167,11 @@ const getCurrentUser = () => {
 const authHeaders = () => {
   const token = getToken();
 
-  console.log(
-    "🔑 Auth headers - Token:",
-    token ? `Yes (${token.substring(0, 10)}...)` : "No",
-  );
-  console.log("🔑 User from localStorage:", getCurrentUser()?.email);
+  // console.log(
+  //   "🔑 Auth headers - Token:",
+  //   token ? `Yes (${token.substring(0, 10)}...)` : "No",
+  // );
+  // console.log("🔑 User from localStorage:", getCurrentUser()?.email);
 
   const headers = {
     "Content-Type": "application/json",
@@ -406,13 +406,13 @@ export const userAPI = {
 
   checkAuth: async () => {
     try {
-      console.log("🔐 Checking auth with headers:", authHeaders());
+      // console.log("🔐 Checking auth with headers:", authHeaders());
       const response = await request("/users/check-auth", {
         method: "GET",
         credentials: "include", // Important for cookies
         headers: authHeaders(),
       });
-      console.log("✅ Check auth response:", response);
+      // console.log("✅ Check auth response:", response);
       return response;
     } catch (error) {
       console.error("❌ Check auth error:", error);
@@ -1005,6 +1005,23 @@ export const shippingLocationAPI = {
       headers: { ...authHeaders() },
     });
   },
+};
+
+export const questpayAPI = {
+  initializeCheckout: async (orderId) =>
+    request("/payments/questpay/initialize", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+      },
+      body: JSON.stringify({ orderId }),
+    }),
+
+  verifyCheckout: async (reference) =>
+    request(`/payments/questpay/verify/${encodeURIComponent(reference)}`, {
+      headers: { ...authHeaders() },
+    }),
 };
 
 export default {

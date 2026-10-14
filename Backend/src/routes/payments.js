@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const paymentController = require('../controllers/payment.controller');
+const questpayController = require('../controllers/questpay.controller');
 const { protect, authorize } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
@@ -49,9 +50,15 @@ router.post(
 );
 
 router.post(
-  '/manual-transfer/create',
+  '/questpay/initialize',
   protect,
-  paymentController.createManualTransferPayment
+  questpayController.initializeCheckout
+);
+
+router.get(
+  '/questpay/verify/:reference',
+  protect,
+  questpayController.verifyCheckout
 );
 
 router.post(

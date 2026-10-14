@@ -38,7 +38,7 @@ const Cart = () => {
         })),
       );
     } else {
-      console.log("📦 Cart is empty");
+      // console.log("📦 Cart is empty");
     }
   }, [items]);
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useContext, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import {
@@ -11,6 +11,7 @@ import {
   HiCheckCircle,
   HiMap,
   HiTruck,
+  HiLightningBolt,
 } from "react-icons/hi";
 import { useCart } from "../contexts/CartContext";
 import { AuthContext } from "../AuthContext";
@@ -19,17 +20,18 @@ import api, {
   orderAPI,
   bankAccountAPI,
   shippingLocationAPI,
+  questpayAPI,
 } from "../services/api";
-import { paymentAPI } from "../services/payment.service";
 import { emailAPI } from "../services/email.service";
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { items, clearCart } = useCart();
   const { authenticated, user } = useContext(AuthContext);
 
   const [step, setStep] = useState(1); // 1: Review, 2: Shipping Location, 3: Shipping Address, 4: Payment Method
-  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("questpay");
   const [loading, setLoading] = useState(false);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [proofFile, setProofFile] = useState(null);
@@ -39,6 +41,9 @@ const Checkout = () => {
   const [shippingLocations, setShippingLocations] = useState([]);
   const [selectedShippingLocation, setSelectedShippingLocation] =
     useState(null);
+  const [questpayResult, setQuestpayResult] = useState(null);
+  const clearCartRef = useRef(clearCart);
+  clearCartRef.current = clearCart;
 
   const [formData, setFormData] = useState({
     street: "",
@@ -85,11 +90,11 @@ const Checkout = () => {
       : selectedShippingLocation.shippingFee
     : 0;
 
-  console.log(
-    "📦 Checkout selected shipping location:",
-    selectedShippingLocation,
-  );
-  console.log("💰 Checkout final shipping fee:", shippingFee);
+  // console.log(
+  //   "📦 Checkout selected shipping location:",
+  //   selectedShippingLocation,
+  // );
+  // console.log("💰 Checkout final shipping fee:", shippingFee);
 
   const total = subtotal + shippingFee;
 
@@ -104,6 +109,13 @@ const Checkout = () => {
       }
       return savings;
     }, 0) || 0;
+  const completedOrder =
+    questpayResult?.status === "paid" ? questpayResult.order : null;
+  const summarySubtotal = completedOrder?.subtotal ?? subtotal;
+  const summaryShippingFee = completedOrder?.shippingFee ?? shippingFee;
+  const summaryTotal = completedOrder?.total ?? total;
+  const summaryShippingLocation =
+    completedOrder?.shippingLocation || selectedShippingLocation;
   useEffect(() => {
     document.title = "Checkout Page | EStarr Bookart";
     window.scrollTo(0, 0);
@@ -112,20 +124,68 @@ const Checkout = () => {
   // Fetch bank accounts on mount
   useEffect(() => {
     if (!authenticated) {
-      navigate(`/login?next=${encodeURIComponent("/checkout")}`, {
-        replace: true,
-      });
+      navigate(
+        `/login?next=${encodeURIComponent(`/checkout${location.search}`)}`,
+        {
+          replace: true,
+        },
+      );
       return;
     }
 
-    if (!items?.length) {
+    const checkoutParams = new URLSearchParams(location.search);
+    const returningFromQuestPay =
+      checkoutParams.has("ref") || checkoutParams.has("reference");
+    if (!items?.length && !returningFromQuestPay && !questpayResult) {
       navigate("/cart");
       return;
     }
 
     fetchBankAccounts();
     fetchShippingLocations();
-  }, [authenticated, items, navigate]);
+  }, [authenticated, items, navigate, location.search, questpayResult]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const reference = params.get("ref") || params.get("reference");
+    if (!reference || !authenticated) return;
+
+    let active = true;
+    setPaymentMethod("questpay");
+    setStep(4);
+    setQuestpayResult({ status: "verifying" });
+    questpayAPI
+      .verifyCheckout(reference)
+      .then(async (response) => {
+        if (!active) return;
+        const result = response?.data;
+        setPaymentMethod("questpay");
+        setCurrentOrderId(result?.order?._id || null);
+        setStep(4);
+        setQuestpayResult({
+          status: result?.status || "pending",
+          order: result?.order,
+          reference,
+        });
+        if (result?.status === "paid") {
+          await clearCartRef.current();
+          toast.success("QuestPay payment confirmed");
+        }
+      })
+      .catch((error) => {
+        if (!active) return;
+        setPaymentMethod("questpay");
+        setStep(4);
+        setQuestpayResult({ status: "error", message: error.message });
+      })
+      .finally(() => {
+        if (active) navigate("/checkout", { replace: true });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [authenticated, location.search, navigate]);
 
   const fetchBankAccounts = async () => {
     try {
@@ -192,12 +252,20 @@ const Checkout = () => {
       const orderRes = await api.cartAPI.createOrder(orderPayload);
 
       if (orderRes?.data?._id) {
+        if (paymentMethod === "questpay") {
+          const checkout = await questpayAPI.initializeCheckout(
+            orderRes.data._id,
+          );
+          const checkoutUrl = checkout?.data?.checkout_url;
+          if (!checkoutUrl) {
+            throw new Error("QuestPay did not return a checkout link");
+          }
+          window.location.assign(checkoutUrl);
+          return;
+        }
+
         toast.success("Order created successfully!");
-
-        // Store the order ID for proof upload
         setCurrentOrderId(orderRes.data._id);
-
-        // Proceed to manual payment
         setStep(4);
       } else {
         throw new Error("Failed to create order");
@@ -623,57 +691,92 @@ const Checkout = () => {
               {/* Step 4: Payment Method */}
               {step === 4 && (
                 <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-xl font-bold mb-4">
-                    Select Payment Method
-                  </h2>
-                  <div className="space-y-4">
-                    {/* Manual Bank Transfer Option */}
-                    <motion.div
-                      onClick={() => setPaymentMethod("manual")}
-                      whileHover={{ scale: 1.02 }}
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                        paymentMethod === "manual"
-                          ? "border-purple-600 bg-purple-50"
-                          : "border-gray-300 hover:border-purple-600"
+                  {!questpayResult && (
+                    <>
+                      <h2 className="text-xl font-bold mb-4">
+                        Payment
+                      </h2>
+                      <div className="space-y-4">
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          className="p-4 border-2 border-purple-600 bg-purple-50 rounded-lg"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-5 h-5 rounded-full border-2 border-purple-600 flex items-center justify-center">
+                              <HiCheck className="w-3 h-3 text-purple-600" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-bold">
+                                Bank Transfer
+                              </h3>
+                              <p className="text-sm text-gray-600">
+                                Pay securely using a hosted checkout
+                              </p>
+                            </div>
+                            <HiLightningBolt className="w-6 h-6 text-purple-600" />
+                          </div>
+                        </motion.div>
+                      </div>
+                      <div className="flex gap-4 mt-6">
+                        <button
+                          onClick={() => setStep(3)}
+                          className="flex-1 border border-purple-600 text-purple-600 py-3 rounded-lg font-bold hover:bg-purple-50"
+                        >
+                          Back
+                        </button>
+                        <button
+                          onClick={handleCreateOrder}
+                          disabled={loading}
+                          className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 disabled:bg-gray-400"
+                        >
+                          {loading ? "Processing..." : "Continue"}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                  {questpayResult && (
+                    <div
+                      className={`rounded-lg border p-5 ${
+                        questpayResult.status === "paid"
+                          ? "bg-green-50 border-green-200"
+                          : questpayResult.status === "verifying" ||
+                              questpayResult.status === "pending"
+                            ? "bg-amber-50 border-amber-200"
+                            : "bg-red-50 border-red-200"
                       }`}
                     >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                            paymentMethod === "manual"
-                              ? "border-purple-600"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {paymentMethod === "manual" && (
-                            <HiCheck className="w-3 h-3 text-purple-600" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-bold">Manual Bank Transfer</h3>
-                          <p className="text-sm text-gray-600">
-                            Transfer to our account and upload proof
-                          </p>
-                        </div>
-                        <HiUpload className="w-6 h-6 text-purple-600" />
-                      </div>
-                    </motion.div>
-                  </div>
-                  <div className="flex gap-4 mt-6">
-                    <button
-                      onClick={() => setStep(3)}
-                      className="flex-1 border border-purple-600 text-purple-600 py-3 rounded-lg font-bold hover:bg-purple-50"
-                    >
-                      Back
-                    </button>
-                    <button
-                      onClick={handleCreateOrder}
-                      disabled={!paymentMethod || loading}
-                      className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 disabled:bg-gray-400"
-                    >
-                      {loading ? "Processing..." : "Continue"}
-                    </button>
-                  </div>
+                      <h2 className="text-xl font-bold mb-2">
+                        {questpayResult.status === "paid"
+                          ? "Payment confirmed"
+                          : questpayResult.status === "verifying"
+                            ? "Verifying your payment"
+                            : questpayResult.status === "pending"
+                              ? "Payment is still pending"
+                              : "Payment could not be confirmed"}
+                      </h2>
+                      <p className="text-sm text-gray-700">
+                        {questpayResult.status === "paid"
+                          ? "Your order has been paid and is being prepared."
+                          : questpayResult.status === "verifying"
+                            ? "Please wait while QuestPay confirms the transaction."
+                            : questpayResult.status === "pending"
+                              ? "If you completed the transfer, verification may take a moment. You can check your order status shortly."
+                              : questpayResult.message ||
+                                "Please try again or contact support if you were charged."}
+                      </p>
+                      {questpayResult.reference && (
+                        <p className="mt-3 text-xs text-gray-600">
+                          Payment reference: {questpayResult.reference}
+                        </p>
+                      )}
+                      <button
+                        onClick={() => navigate("/dashboard/orders")}
+                        className="mt-5 w-full rounded-lg bg-purple-600 py-3 font-bold text-white hover:bg-purple-700"
+                      >
+                        View Orders
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -918,13 +1021,41 @@ const Checkout = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow p-6 sticky top-8">
               <h3 className="text-lg font-bold mb-4">Order Summary</h3>
+              {completedOrder?.orderNumber && (
+                <div className="mb-4 rounded-lg bg-green-50 border border-green-200 p-3">
+                  <p className="text-xs font-medium text-green-800">
+                    Order reference
+                  </p>
+                  <p className="font-mono font-bold text-green-900">
+                    {completedOrder.orderNumber}
+                  </p>
+                </div>
+              )}
+              {completedOrder?.items?.length > 0 && (
+                <div className="space-y-3 pb-4 mb-4 border-b border-gray-300">
+                  {completedOrder.items.map((item, index) => (
+                    <div
+                      key={item.book?._id || item.book || index}
+                      className="flex justify-between gap-3 text-sm"
+                    >
+                      <span className="text-gray-600">
+                        {item.title} × {item.quantity}
+                      </span>
+                      <span className="font-medium whitespace-nowrap">
+                        ₦
+                        {(Number(item.price) * Number(item.quantity)).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="space-y-3 pb-4 border-b border-gray-300">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal</span>
-                  <span>₦{subtotal.toLocaleString()}</span>
+                  <span>₦{summarySubtotal.toLocaleString()}</span>
                 </div>
 
-                {totalSavings > 0 && (
+              {!completedOrder && totalSavings > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-green-600">Discounts Applied</span>
                     <span className="text-green-600 font-bold">
@@ -937,12 +1068,14 @@ const Checkout = () => {
                   <span>Shipping</span>
                   <span
                     className={
-                      shippingFee === 0 ? "text-green-600 font-bold" : ""
+                      summaryShippingFee === 0
+                        ? "text-green-600 font-bold"
+                        : ""
                     }
                   >
-                    {shippingFee === 0
+                    {summaryShippingFee === 0
                       ? "FREE"
-                      : `₦${shippingFee.toLocaleString()}`}
+                      : `₦${summaryShippingFee.toLocaleString()}`}
                   </span>
                 </div>
               </div>
@@ -952,37 +1085,61 @@ const Checkout = () => {
                   <HiMap className="w-4 h-4" />
                   Selected Shipping Destination
                 </div>
-                {selectedShippingLocation ? (
+                {summaryShippingLocation ? (
                   <div className="space-y-2 text-sm text-gray-700">
                     <div className="font-semibold">
-                      {selectedShippingLocation.name}
+                      {summaryShippingLocation.name}
                     </div>
                     <div>
-                      {selectedShippingLocation.region} •{" "}
-                      {selectedShippingLocation.state}
-                      {selectedShippingLocation.city
-                        ? `, ${selectedShippingLocation.city}`
+                      {summaryShippingLocation.region} •{" "}
+                      {summaryShippingLocation.state}
+                      {summaryShippingLocation.city
+                        ? `, ${summaryShippingLocation.city}`
                         : ""}
                     </div>
                     <div>
-                      {selectedShippingLocation.isFreeShipping ? (
+                      {summaryShippingLocation.isFreeShipping ||
+                      summaryShippingFee === 0 ? (
                         <span className="text-green-600 font-semibold">
                           Free shipping
                         </span>
                       ) : (
                         <span className="text-purple-600 font-semibold">
                           ₦
-                          {selectedShippingLocation.shippingFee.toLocaleString()}
+                          {summaryShippingFee.toLocaleString()}
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {selectedShippingLocation.estimatedDeliveryDays} day
-                      {selectedShippingLocation.estimatedDeliveryDays !== 1
-                        ? "s"
-                        : ""}{" "}
-                      delivery estimate
-                    </div>
+                    {summaryShippingLocation.estimatedDeliveryDays && (
+                      <div className="text-xs text-gray-500">
+                        {summaryShippingLocation.estimatedDeliveryDays} day
+                        {summaryShippingLocation.estimatedDeliveryDays !== 1
+                          ? "s"
+                          : ""}{" "}
+                        delivery estimate
+                      </div>
+                    )}
+                    {completedOrder?.shippingAddress && (
+                      <div className="border-t border-purple-200 pt-2">
+                        <p className="font-semibold text-gray-800">
+                          Shipping address
+                        </p>
+                        <p>
+                          {[
+                            completedOrder.shippingAddress.street,
+                            completedOrder.shippingAddress.city,
+                            completedOrder.shippingAddress.state,
+                            completedOrder.shippingAddress.zipCode,
+                            completedOrder.shippingAddress.country,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </p>
+                        {completedOrder.shippingAddress.phone && (
+                          <p>{completedOrder.shippingAddress.phone}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500">
@@ -994,10 +1151,12 @@ const Checkout = () => {
 
               <div className="flex justify-between font-bold text-lg mt-4">
                 <span>Total</span>
-                <span className="text-blue-600">₦{total.toLocaleString()}</span>
+                <span className="text-blue-600">
+                  ₦{summaryTotal.toLocaleString()}
+                </span>
               </div>
 
-              {totalSavings > 0 && (
+              {!completedOrder && totalSavings > 0 && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-green-800">

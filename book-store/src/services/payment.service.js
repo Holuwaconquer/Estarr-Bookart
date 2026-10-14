@@ -5,6 +5,43 @@
 const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '') + '/api';
 
 export const paymentAPI = {
+  // QuestPay hosted bank-transfer checkout
+  initializeQuestpayPayment: async (orderId) => {
+    const response = await fetch(`${API_BASE_URL}/payments/questpay/initialize`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `******'token')}`
+      },
+      body: JSON.stringify({ orderId })
+    });
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Failed to initialize QuestPay checkout');
+    }
+
+    return result;
+  },
+
+  verifyQuestpayPayment: async (reference) => {
+    const response = await fetch(
+      `${API_BASE_URL}/payments/questpay/verify/${encodeURIComponent(reference)}`,
+      {
+        headers: {
+          Authorization: `******'token')}`
+        }
+      }
+    );
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Failed to verify QuestPay payment');
+    }
+
+    return result;
+  },
+
   // Korapay Payment
   initiateKorapayPayment: async (orderData) => {
     return fetch(`${API_BASE_URL}/payments/korapay/initialize`, {

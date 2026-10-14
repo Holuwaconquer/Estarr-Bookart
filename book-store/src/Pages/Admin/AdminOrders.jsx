@@ -15,6 +15,9 @@ const AdminOrders = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [statusOrder, setStatusOrder] = useState(null);
+  const [statusDraft, setStatusDraft] = useState('');
+  const [showStatusModal, setShowStatusModal] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(null);
   const [proofImageDataUrl, setProofImageDataUrl] = useState(null);
 
@@ -79,9 +82,13 @@ const AdminOrders = () => {
       // Make API call to update status
       await orderAPI.updateOrderStatus(orderId, newStatus);
       toast.success(`Order status updated to ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`);
+      if (selectedOrder?._id === orderId) {
+        setSelectedOrder((order) => ({ ...order, status: newStatus }));
+      }
       
       // Refresh the order list to ensure consistency
       await fetchOrders();
+      return true;
     } catch (error) {
       // Revert on error
       setOrders(orders.map(o => 
@@ -89,6 +96,7 @@ const AdminOrders = () => {
       ));
       toast.error('Failed to update order status: ' + (error.message || 'Unknown error'));
       console.error('Status update error:', error);
+      return false;
     } finally {
       setUpdatingStatus(null);
     }
@@ -250,7 +258,7 @@ const AdminOrders = () => {
                           className="border-b border-gray-700/30 bg-gray-100 hover:bg-gray-100 transition-all"
                         >
                           <td className="px-6 py-4">
-                            <p className="text-white font-medium font-mono text-sm">{order._id.slice(-8)}</p>
+                            <p className="text-white font-medium font-mono text-sm">{order.orderNumber || order._id.slice(-8)}</p>
                           </td>
                           <td className="px-6 py-4">
                             <div>
@@ -262,27 +270,18 @@ const AdminOrders = () => {
                             <p className="text-cyan-400 font-semibold">₦{order.total?.toLocaleString()}</p>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="relative">
-                              <select
-                                value={order.status}
-                                onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                                disabled={updatingStatus === order._id}
-                                className={`px-3 py-1 rounded-full text-sm font-medium border ${statusColors[order.status]} bg-transparent focus:outline-none cursor-pointer transition-all ${
-                                  updatingStatus === order._id ? 'opacity-50 cursor-wait' : ''
-                                }`}
-                              >
-                                {statusOptions.map(status => (
-                                  <option key={status} value={status} className="bg-gray-900">
-                                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                                  </option>
-                                ))}
-                              </select>
-                              {updatingStatus === order._id && (
-                                <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-gray-900/50 rounded-full">
-                                  <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-                                </div>
-                              )}
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setStatusOrder(order);
+                                setStatusDraft(order.status);
+                                setShowStatusModal(true);
+                              }}
+                              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${statusColors[order.status]}`}
+                            >
+                              <span className="capitalize">{order.status}</span>
+                              <HiPencil className="w-4 h-4" />
+                            </button>
                           </td>
                           <td className="px-6 py-4 text-gray-400 text-sm">
                             {new Date(order.createdAt).toLocaleDateString()}
@@ -301,6 +300,83 @@ const AdminOrders = () => {
                       ))}
                     </tbody>
                    </table>
+                </div>
+              )}
+
+              {showStatusModal && statusOrder && (
+                <div
+                  className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4"
+                  onClick={() => setShowStatusModal(false)}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    onClick={(event) => event.stopPropagation()}
+                    className="w-full max-w-md rounded-2xl border border-[#e8e3dc] bg-white p-6 shadow-2xl"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold text-[#28202f]">
+                          Update order status
+                        </h2>
+                        <p className="mt-1 text-sm text-[#7b7180]">
+                          Order {statusOrder.orderNumber || statusOrder._id}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowStatusModal(false)}
+                        className="rounded-lg p-2 text-[#7b7180] hover:bg-[#f5f2ee]"
+                        aria-label="Close status dialog"
+                      >
+                        <HiX className="h-5 w-5" />
+                      </button>
+                    </div>
+
+                    <label className="mt-6 block text-sm font-semibold text-[#28202f]">
+                      New status
+                      <select
+                        value={statusDraft}
+                        onChange={(event) => setStatusDraft(event.target.value)}
+                        className="mt-2 w-full rounded-lg border border-[#e8e3dc] bg-white px-3 py-2 text-[#28202f]"
+                      >
+                        {statusOptions.map((status) => (
+                          <option key={status} value={status}>
+                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowStatusModal(false)}
+                        className="rounded-lg border border-[#e8e3dc] px-4 py-2 font-semibold text-[#51485c]"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={
+                          statusDraft === statusOrder.status ||
+                          updatingStatus === statusOrder._id
+                        }
+                        onClick={async () => {
+                          const updated = await handleStatusChange(
+                            statusOrder._id,
+                            statusDraft,
+                          );
+                          if (updated) setShowStatusModal(false);
+                        }}
+                        className="rounded-lg bg-purple-700 px-4 py-2 font-semibold text-white! hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {updatingStatus === statusOrder._id
+                          ? 'Saving...'
+                          : 'Save status'}
+                      </button>
+                    </div>
+                  </motion.div>
                 </div>
               )}
             </motion.div>
@@ -393,8 +469,16 @@ const AdminOrders = () => {
               {/* Order Info */}
               <div className="grid  md:grid-cols-2 gap-4">
                 <div>
+                  <p className="text-gray-400 text-sm">Order reference</p>
+                  <p className="text-white font-mono">{selectedOrder.orderNumber || selectedOrder._id}</p>
+                </div>
+                <div>
                   <p className="text-gray-400 text-sm">Date</p>
                   <p className="text-white">{new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm">Payment</p>
+                  <p className="text-white capitalize">{selectedOrder.paymentStatus}</p>
                 </div>
               </div>
 
@@ -420,6 +504,26 @@ const AdminOrders = () => {
                       <p className="text-cyan-400 font-semibold">₦{(item.price * item.quantity).toLocaleString()}</p>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Shipping Address */}
+              <div>
+                <h3 className="text-lg font-bold text-white mb-3">📦 Selected Shipping Location</h3>
+                <div className="bg-gray-800/50 rounded-lg p-4 space-y-1">
+                  {selectedOrder.shippingLocation ? (
+                    <>
+                      <p className="text-white font-medium">{selectedOrder.shippingLocation.name}</p>
+                      <p className="text-gray-300">
+                        {[selectedOrder.shippingLocation.region, selectedOrder.shippingLocation.state, selectedOrder.shippingLocation.city].filter(Boolean).join(', ')}
+                      </p>
+                      <p className="text-gray-400 text-sm">
+                        {Number(selectedOrder.shippingFee) === 0 ? 'Free shipping' : `Shipping fee: ₦${Number(selectedOrder.shippingFee).toLocaleString()}`}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-gray-400">Shipping location details are unavailable.</p>
+                  )}
                 </div>
               </div>
 

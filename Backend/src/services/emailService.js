@@ -3,7 +3,8 @@ const { Resend } = require('resend');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Admin email address
-const ADMIN_EMAIL = 'estarrbookart@gmail.com';
+// const ADMIN_EMAIL = 'estarrbookart@gmail.com';
+const ADMIN_EMAIL = 'holuwaconquer488@gmail.com';
 
 const sendOrderNotificationEmail = async (order, user) => {
   try {
@@ -282,11 +283,11 @@ const sendOrderConfirmationEmail = async (order, user) => {
         <body>
           <div class="container">
             <div class="header">
-              <h1>✅ Order Received!</h1>
+              <h1>✅ Payment Confirmed!</h1>
             </div>
             <div class="content">
               <p>Hello <strong>${user.name || 'Valued Customer'}</strong>,</p>
-              <p>Thank you for your order! We've received it and will process it shortly.</p>
+              <p>Thank you for your payment. Your order is confirmed and will be prepared for shipment.</p>
               <div class="order-info">
                 <p><strong>Order #:</strong> ${order.orderNumber || order._id.slice(-8)}</p>
                 <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
