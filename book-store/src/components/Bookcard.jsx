@@ -285,7 +285,7 @@ const BookCard = ({ book = {} }) => {
           )}
 
           {/* Price & Action */}
-          <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+          <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-4">
             <div>
               <div className="text-[11px] text-ink/40">Price</div>
               <div className="flex items-baseline gap-2 font-mono">

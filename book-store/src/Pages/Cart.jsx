@@ -1,7 +1,6 @@
-import React, { useContext, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../contexts/CartContext.jsx";
-import { AuthContext } from "../AuthContext.jsx";
 import {
   HiTrash,
   HiArrowLeft,
@@ -19,7 +18,6 @@ const Cart = () => {
   const navigate = useNavigate();
   const { items, removeFromCart, clearCart, totalItems, updateQuantity } =
     useCart();
-  const { authenticated } = useContext(AuthContext);
 
   useEffect(() => {
     document.title = "Shopping Cart | EStarr Bookart";
@@ -92,10 +90,6 @@ const Cart = () => {
     }, 0) || 0;
 
   const handleCheckout = () => {
-    if (!authenticated) {
-      navigate(`/login?next=${encodeURIComponent('/checkout')}`);
-      return;
-    }
     navigate("/checkout");
   };
 

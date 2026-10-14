@@ -29,7 +29,7 @@ const ProtectedRouteForAuth = ({ children }) => {
     const nextPath = requestedPath && requestedPath.startsWith('/') && !requestedPath.startsWith('//')
       ? requestedPath
       : null;
-    const redirectPath = user.role === 'admin' ? '/admin/dashboard' : (nextPath || '/dashboard');
+    const redirectPath = nextPath || (user.role === 'admin' ? '/admin/dashboard' : '/dashboard');
     
     // Don't redirect if we're already going to the right place
     if (currentPath !== redirectPath) {

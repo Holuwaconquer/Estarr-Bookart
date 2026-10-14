@@ -386,7 +386,7 @@ const sendNewsletterSubscriptionEmail = async (email) => {
 
   const { error } = await resend.emails.send({
     from: 'EStarr Bookart <noreply@estarrbookart.com.ng>',
-    to: 'holuwaconquer488@gmail.com',
+    to: 'estarrbookart@gmail.com',
     subject: 'New newsletter subscriber | EStarr Bookart',
     text: `NEW NEWSLETTER SUBSCRIBER\n\nSomeone has joined the EStarr Bookart reading list.\n\nSubscriber email: ${email}\n\nYou can reply directly to this email address to contact them.`,
     html: `

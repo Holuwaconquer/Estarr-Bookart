@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import BookCard from '../components/Bookcard.jsx';
 import { bookAPI, categoryAPI } from '../services/api';
 import { useCart } from '../contexts/CartContext.jsx';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 // ---------------------------------------------------------------------
@@ -32,6 +33,10 @@ const DANGER = '#DC2626';
 
 const CategoryPage = () => {
   const { addToCart, removeFromCart, cart } = useCart();
+  const [searchParams] = useSearchParams();
+  const searchQuery = (
+    searchParams.get('q') || searchParams.get('search') || ''
+  ).trim();
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('featured');
   const [priceRange, setPriceRange] = useState([0, 100000]);
@@ -168,7 +173,10 @@ const CategoryPage = () => {
         setLoadingCategories(true);
 
         // Fetch books
-        const booksResponse = await bookAPI.getAllBooks({ limit: 50 });
+        const booksResponse = await bookAPI.getAllBooks({
+          limit: 50,
+          ...(searchQuery ? { search: searchQuery } : {}),
+        });
         let fetchedBooks = [];
 
         if (Array.isArray(booksResponse)) {
@@ -250,7 +258,7 @@ const CategoryPage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [searchQuery]);
 
   const filters = [
     { id: 'bestseller', label: 'Bestsellers', icon: HiFire },

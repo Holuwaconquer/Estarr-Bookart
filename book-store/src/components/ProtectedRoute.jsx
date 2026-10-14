@@ -18,8 +18,8 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to={`/login?next=${encodeURIComponent(next)}`} replace />
   }
 
-  // Prevent admins from accessing user dashboard
-  if (user && user.role === 'admin') {
+  // Keep admins out of the user dashboard, but allow them to shop and checkout.
+  if (user && user.role === 'admin' && location.pathname.startsWith('/dashboard')) {
     console.log('⚠️ Admin tried to access user dashboard, redirecting to admin dashboard');
     return <Navigate to="/admin/dashboard" replace />
   }

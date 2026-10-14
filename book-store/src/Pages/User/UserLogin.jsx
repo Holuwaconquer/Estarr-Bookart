@@ -59,6 +59,25 @@ const UserLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Handle redirect if already authenticated
+  useEffect(() => {
+    // This component is wrapped in ProtectedRouteForAuth, so this shouldn't happen
+    // But keep it as a safety check
+    if (authenticated && user) {
+      console.log('User already authenticated, redirecting...');
+      const requestedPath = new URLSearchParams(location.search).get('next');
+      const nextPath = requestedPath && requestedPath.startsWith('/') && !requestedPath.startsWith('//')
+        ? requestedPath
+        : null;
+      const redirectPath = nextPath || (user?.role === 'admin' ? '/admin/dashboard' : '/dashboard');
+      const timer = setTimeout(() => {
+        navigate(redirectPath, { replace: true });
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [authenticated, user, location.search, navigate]);
+
   // Show loading while auth is initializing
   if (authLoading || !isInitialized) {
     return (
@@ -72,25 +91,6 @@ const UserLogin = () => {
       </AuthLayout>
     );
   }
-
-  // Handle redirect if already authenticated
-  useEffect(() => {
-    // This component is wrapped in ProtectedRouteForAuth, so this shouldn't happen
-    // But keep it as a safety check
-    if (authenticated && user) {
-      console.log('User already authenticated, redirecting...');
-      const requestedPath = new URLSearchParams(location.search).get('next');
-      const nextPath = requestedPath && requestedPath.startsWith('/') && !requestedPath.startsWith('//')
-        ? requestedPath
-        : null;
-      const redirectPath = user?.role === 'admin' ? '/admin/dashboard' : (nextPath || '/dashboard');
-      const timer = setTimeout(() => {
-        navigate(redirectPath, { replace: true });
-      }, 100);
-
-      return () => clearTimeout(timer);
-    }
-  }, [authenticated, user, navigate]);
 
   const handleChange = (e) => {
     setFormData(prev => ({
@@ -124,8 +124,8 @@ const UserLogin = () => {
           ? requestedPath
           : null;
 
-        // Check user role and redirect to the requested internal page when available.
-        if (result.data?.role === 'admin') {
+        // Honor the requested internal destination before applying role defaults.
+        if (result.data?.role === 'admin' && !nextPath) {
           toast.success('Redirecting to admin dashboard...');
           console.log('🔄 Admin logged in via user login, redirecting to:', '/admin/dashboard');
           setTimeout(() => {

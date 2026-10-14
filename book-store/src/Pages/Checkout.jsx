@@ -112,7 +112,9 @@ const Checkout = () => {
   // Fetch bank accounts on mount
   useEffect(() => {
     if (!authenticated) {
-      navigate("/login");
+      navigate(`/login?next=${encodeURIComponent("/checkout")}`, {
+        replace: true,
+      });
       return;
     }
 
