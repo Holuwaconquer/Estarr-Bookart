@@ -143,10 +143,10 @@ const BookCard = ({ book = {} }) => {
       whileHover={{ y: -6 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="group relative"
+      className="group relative h-full"
     >
       <div
-        className="relative bg-white border border-black/[0.06] rounded-2xl overflow-hidden transition-all duration-300"
+        className="relative flex h-full flex-col bg-white border border-black/[0.06] rounded-2xl overflow-hidden transition-all duration-300"
         style={{ boxShadow: isHovered ? `0 16px 32px -12px ${tint}40` : '0 2px 10px rgba(30,27,41,0.05)' }}
       >
         <div className="h-[3px] w-full" style={{ background: tint }} />
@@ -176,7 +176,7 @@ const BookCard = ({ book = {} }) => {
         </button>
 
         {/* Book Image */}
-        <Link to={`/product/${bookId}`} className="h-[200px]">
+        <Link to={`/product/${bookId}`} className="block h-[200px] shrink-0">
           <div className="relative h-full overflow-hidden cursor-pointer" style={{ background: `${tint}0D` }}>
             <motion.div
               animate={{ rotateY: isHovered ? 14 : 0, rotateX: isHovered ? -4 : 0 }}
@@ -186,7 +186,7 @@ const BookCard = ({ book = {} }) => {
               <img
                 src={book.image || "https://placehold.co/128x192"}
                 alt={book.title || "Book Cover"}
-                className="w-full h-full object-contain rounded shadow-lg"
+                className="w-full h-full! object-cover rounded shadow-lg"
               />
             </motion.div>
 
@@ -237,9 +237,9 @@ const BookCard = ({ book = {} }) => {
         </Link>
 
         {/* Book Details */}
-        <div className="p-3">
+        <div className="flex flex-1 flex-col p-3">
           {/* Title */}
-          <h3 className="font-serif font-bold uppercase text-ink text-base mb-1">
+          <h3 className="font-serif font-bold uppercase text-ink text-base mb-1 line-clamp-2">
             {book.title || 'Premium Book'}
           </h3>
 
@@ -269,8 +269,23 @@ const BookCard = ({ book = {} }) => {
             {book.description || 'Premium collector\'s edition with exquisite binding and features'}
           </p>
 
+          {/* Features */}
+          {book.features && book.features.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-4 pt-4 border-t border-black/[0.06]">
+              {book.features.slice(0, 2).map((feature, index) => (
+                <span
+                  key={index}
+                  className="px-2 py-1 text-xs rounded-full border"
+                  style={{ background: `${tint}12`, borderColor: `${tint}30`, color: DEEP }}
+                >
+                  {feature}
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Price & Action */}
-          <div className="flex items-center justify-between gap-2">
+          <div className="mt-auto flex items-center justify-between gap-2 pt-4">
             <div>
               <div className="text-[11px] text-ink/40">Price</div>
               <div className="flex items-baseline gap-2 font-mono">
@@ -318,21 +333,6 @@ const BookCard = ({ book = {} }) => {
               </IconButton>
             )}
           </div>
-
-          {/* Features */}
-          {book.features && book.features.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-4 pt-4 border-t border-black/[0.06]">
-              {book.features.slice(0, 2).map((feature, index) => (
-                <span
-                  key={index}
-                  className="px-2 py-1 text-xs rounded-full border"
-                  style={{ background: `${tint}12`, borderColor: `${tint}30`, color: DEEP }}
-                >
-                  {feature}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </motion.div>

@@ -535,6 +535,7 @@ const CategoryPage = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
+                      className="h-full"
                     >
                       <BookCard book={book} />
                     </motion.div>
@@ -561,7 +562,7 @@ const CategoryPage = () => {
                           <div className="md:w-1/4 mb-4 md:mb-0">
                             <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-black/[0.03]">
                               {book.image ? (
-                                <img src={book.image} alt={book.title} className="w-full h-full object-cover" />
+                                <img src={book.image} alt={book.title} className="w-full h-full! object-cover" />
                               ) : (
                                 <div className="absolute inset-0 flex items-center justify-center">
                                   <div className="w-24 h-32 rounded-lg shadow-md" style={{ background: `linear-gradient(135deg, ${PURPLE[3]}, ${PURPLE[1]})` }} />
