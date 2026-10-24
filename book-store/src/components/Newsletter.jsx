@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { HiMail, HiArrowRight, HiSparkles, HiGift, HiStar, HiEye } from 'react-icons/hi';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+import { emailAPI } from '../services/email.service';
 
 const Newsletter = () => {
   const [email, setEmail] = useState('');
+  const [subscribedEmail, setSubscribedEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -11,19 +14,17 @@ const Newsletter = () => {
     e.preventDefault();
     if (!email.trim()) return;
 
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setIsSubmitted(true);
-    setEmail('');
-    
-    // Reset after 5 seconds
-    setTimeout(() => {
-      setIsSubmitted(false);
+    try {
+      setIsSubmitting(true);
+      await emailAPI.subscribeNewsletter(email.trim());
+      setSubscribedEmail(email.trim());
+      setIsSubmitted(true);
+      setEmail('');
+    } catch (error) {
+      toast.error(error.message || 'Unable to subscribe. Please try again.');
+    } finally {
       setIsSubmitting(false);
-    }, 5000);
+    }
   };
 
   return (
@@ -100,10 +101,10 @@ const Newsletter = () => {
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-3">Welcome to the Circle!</h3>
                   <p className="text-gray-300 mb-6">
-                    You're now part of our exclusive collector's community. Check your email for a special welcome gift.
+                    You’re subscribed to our regular newsletter. Check your inbox for a confirmation email.
                   </p>
                   <div className="text-sm text-emerald-400">
-                    Special offer sent to: <span className="font-mono">{email}</span>
+                    Confirmation sent to: <span className="font-mono">{subscribedEmail}</span>
                   </div>
                 </motion.div>
               ) : (
@@ -152,7 +153,7 @@ const Newsletter = () => {
                         By subscribing, you agree to our{' '}
                         <a href="#" className="text-cyan-400 hover:text-cyan-300">Privacy Policy</a>.
                         <br />
-                        <span className="text-xs">No spam. Unsubscribe anytime.</span>
+                        <span className="text-xs">New arrivals, recommendations, and special offers.</span>
                       </p>
                     </div>
                   </form>

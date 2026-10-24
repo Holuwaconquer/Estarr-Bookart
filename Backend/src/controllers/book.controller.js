@@ -1,6 +1,7 @@
 const Book = require("../models/Book");
 const ApiResponse = require("../utils/apiResponse");
 const cloudinary = require("../config/cloudinary");
+const generateBookDescription = require("../services/bookDescriptionGenerator");
 
 const uploadImageToCloudinary = async (file, folder = "book-covers") => {
   if (!file) {
@@ -320,6 +321,28 @@ exports.uploadBookImage = async (req, res, next) => {
     });
   } catch (error) {
     console.error("❌ Error uploading book image:", error);
+    next(error);
+  }
+};
+
+// @desc    Generate a locally composed book description for an admin
+// @route   POST /api/books/generate-description
+// @access  Private/Admin
+exports.generateDescription = async (req, res, next) => {
+  try {
+    if (typeof req.body?.title !== "string" || !req.body.title.trim()) {
+      return ApiResponse.error(res, "A book title is required to generate a description", 400);
+    }
+
+    const description = generateBookDescription({
+      title: req.body?.title,
+      author: req.body?.author,
+      category: req.body?.category,
+      about: req.body?.about,
+    });
+
+    return ApiResponse.success(res, "Book description generated", { description });
+  } catch (error) {
     next(error);
   }
 };

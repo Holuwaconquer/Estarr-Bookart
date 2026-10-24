@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useCart } from '../contexts/CartContext.jsx';
 import { useWishlist } from '../contexts/WishlistContext.jsx';
 import toast from 'react-hot-toast';
+import { getResponsiveImageSrcSet } from '../utils/imageOptimization';
 
 // ---------------------------------------------------------------------
 // Same palette as Landingpage.jsx / ProductDetail.jsx / CategoryPage.jsx.
@@ -55,6 +56,7 @@ const BookCard = ({ book = {} }) => {
   const bookId = book._id || book.id;
   const tint = tintFor(book.category?.name || book.category || book.title);
   const price = Number(book.price) || 0;
+  const imageSource = getResponsiveImageSrcSet(book.image);
   const discount = Number(book.discount) || 0;
   const originalPrice = Number(book.originalPrice) || 0;
   const displayedPrice =
@@ -176,7 +178,7 @@ const BookCard = ({ book = {} }) => {
         </button>
 
         {/* Book Image */}
-        <Link to={`/product/${bookId}`} className="block h-[200px] shrink-0">
+        <Link to={`/product/${bookId}`} className="block h-[160px] shrink-0">
           <div className="relative h-full overflow-hidden cursor-pointer" style={{ background: `${tint}0D` }}>
             <motion.div
               animate={{ rotateY: isHovered ? 14 : 0, rotateX: isHovered ? -4 : 0 }}
@@ -184,9 +186,12 @@ const BookCard = ({ book = {} }) => {
               className="w-full h-full"
             >
               <img
-                src={book.image || "https://placehold.co/128x192"}
+                {...(imageSource || {})}
+                src={imageSource?.src || book.image || "https://placehold.co/320x480"}
                 alt={book.title || "Book Cover"}
-                className="w-full h-full! object-cover rounded shadow-lg"
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full! object-contain p-2 rounded shadow-lg"
               />
             </motion.div>
 
@@ -239,12 +244,12 @@ const BookCard = ({ book = {} }) => {
         {/* Book Details */}
         <div className="flex flex-1 flex-col p-3">
           {/* Title */}
-          <h3 className="font-serif font-bold uppercase text-ink text-base mb-1 line-clamp-2">
+          <h3 className="font-serif font-extrabold uppercase text-ink text-[14px] mb-1 line-clamp-2">
             {book.title || 'Premium Book'}
           </h3>
 
           {/* Author */}
-          <p className="text-xs text-ink/50 mb-1.5">
+          <p className="text-xs font-medium text-ink/50 mb-1.5">
             by {book.author || 'Unknown Author'}
           </p>
 

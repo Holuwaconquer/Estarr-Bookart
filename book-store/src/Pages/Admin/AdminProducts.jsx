@@ -9,6 +9,7 @@ import {
   HiFilter,
   HiEye,
   HiX,
+  HiSparkles,
 } from "react-icons/hi";
 import toast from "react-hot-toast";
 import AdminSidebar from "../../components/AdminSidebar";
@@ -28,6 +29,8 @@ const AdminProducts = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
+  const [descriptionNotes, setDescriptionNotes] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [formData, setFormData] = useState({
@@ -111,6 +114,7 @@ const AdminProducts = () => {
 
   const handleAddBook = () => {
     setEditingBook(null);
+    setDescriptionNotes("");
     setFormData({
       title: "",
       author: "",
@@ -132,6 +136,7 @@ const AdminProducts = () => {
 
   const handleEditBook = (book) => {
     setEditingBook(book);
+    setDescriptionNotes("");
 
     // Format existing images for the CloudinaryUpload component
     const existingImages = [];
@@ -167,6 +172,31 @@ const AdminProducts = () => {
         images: [...prev.images, uploadedImages],
         image: prev.image || uploadedImages.url,
       }));
+    }
+  };
+
+  const handleGenerateDescription = async () => {
+    if (!formData.title.trim()) {
+      toast.error("Enter the book title first");
+      return;
+    }
+
+    try {
+      setGeneratingDescription(true);
+      const response = await bookAPI.generateDescription({
+        title: formData.title,
+        author: formData.author,
+        category: formData.category,
+        about: descriptionNotes,
+      });
+      const description = response.data?.description;
+      if (!description) throw new Error("The description generator returned no text");
+      setFormData((prev) => ({ ...prev, description }));
+      toast.success("Description generated. Review and edit it before saving.");
+    } catch (error) {
+      toast.error(error.message || "Failed to generate description");
+    } finally {
+      setGeneratingDescription(false);
     }
   };
 
@@ -244,7 +274,7 @@ const AdminProducts = () => {
         <AdminHeader isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
         <main className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 via-blue-50 to-cyan-50">
-          <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+          <div className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:px-8 lg:py-8">
             {/* Header */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -361,7 +391,7 @@ const AdminProducts = () => {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full min-w-[1050px]">
                     <thead>
                       <tr className="border-b border-gray-300/50 bg-gray-100/30">
                         <th className="px-6 py-4 text-left text-sm text-gray-700 font-medium">
@@ -678,8 +708,37 @@ const AdminProducts = () => {
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
+                  About this book
                 </label>
+                <textarea
+                  value={descriptionNotes}
+                  onChange={(e) => setDescriptionNotes(e.target.value)}
+                  rows="3"
+                  maxLength={1200}
+                  placeholder="Add the plot, key ideas, themes, or intended readers. The helper uses only the details you provide."
+                  className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 resize-y"
+                />
+                <div className="flex flex-wrap items-center justify-between gap-3 mt-3 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Book description
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateDescription}
+                    disabled={generatingDescription || !formData.title.trim()}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-100 text-violet-800 text-sm font-semibold hover:bg-violet-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {generatingDescription ? (
+                      <span className="w-4 h-4 border-2 border-violet-400/40 border-t-violet-800 rounded-full animate-spin" />
+                    ) : (
+                      <HiSparkles className="w-4 h-4" />
+                    )}
+                    {generatingDescription ? "Generating..." : "Generate description"}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mb-2">
+                  Lightweight built-in writing assistant. Check the generated copy for accuracy.
+                </p>
                 <textarea
                   value={formData.description}
                   onChange={(e) =>

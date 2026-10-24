@@ -809,6 +809,17 @@ export const reviewAPI = {
 
 // Admin Book API
 export const adminBookAPI = {
+  generateDescription: async (details) => {
+    return request("/books/generate-description", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+      },
+      body: JSON.stringify(details),
+    });
+  },
+
   createBook: async (bookData) => {
     return request("/books", {
       method: "POST",
@@ -851,6 +862,7 @@ bookAPI.createBook = adminBookAPI.createBook;
 bookAPI.updateBook = adminBookAPI.updateBook;
 bookAPI.deleteBook = adminBookAPI.deleteBook;
 bookAPI.getAdminBooks = adminBookAPI.getAdminBooks;
+bookAPI.generateDescription = adminBookAPI.generateDescription;
 
 // Category API for frontend - uses /categories endpoint managed by admin
 export const categoryAPI = {

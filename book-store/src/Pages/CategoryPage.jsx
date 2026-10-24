@@ -19,8 +19,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import BookCard from '../components/Bookcard.jsx';
 import { bookAPI, categoryAPI } from '../services/api';
 import { useCart } from '../contexts/CartContext.jsx';
-import { useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { getResponsiveImageSrcSet } from '../utils/imageOptimization';
 
 // ---------------------------------------------------------------------
 // Same palette as Landingpage.jsx / ProductDetail.jsx.
@@ -30,10 +31,16 @@ const AMBER = '#D97706';
 const TEAL = '#0F766E';
 const DEEP = '#4C1D95';
 const DANGER = '#DC2626';
+const normalizeCategoryName = (value) => String(value || '')
+  .toLowerCase()
+  .trim()
+  .replace(/\s+/g, '-');
 
 const CategoryPage = () => {
   const { addToCart, removeFromCart, cart } = useCart();
   const [searchParams] = useSearchParams();
+  const { category: routeCategory } = useParams();
+  const requestedCategory = searchParams.get('cat') || routeCategory || '';
   const searchQuery = (
     searchParams.get('q') || searchParams.get('search') || ''
   ).trim();
@@ -98,16 +105,10 @@ const CategoryPage = () => {
     return booksArray.filter((book) => {
       // 1. Category filter
       if (selectedCategories.length > 0) {
-        const bookCategory = book.category ? book.category.toLowerCase().trim() : '';
-        const normalizedBookCategory = bookCategory.replace(/\s+/g, '-');
-
-        const hasMatchingCategory = selectedCategories.some(catId => {
-          const normalizedCatId = catId.toLowerCase();
-          return normalizedBookCategory === normalizedCatId ||
-                bookCategory === normalizedCatId ||
-                bookCategory.includes(normalizedCatId) ||
-                normalizedCatId.includes(bookCategory);
-        });
+        const normalizedBookCategory = normalizeCategoryName(
+          typeof book.category === 'string' ? book.category : book.category?.name
+        );
+        const hasMatchingCategory = selectedCategories.includes(normalizedBookCategory);
 
         if (!hasMatchingCategory) {
           return false;
@@ -207,19 +208,23 @@ const CategoryPage = () => {
 
           if (apiCategories.length > 0) {
             const styledCategories = apiCategories.map((cat, idx) => ({
-              id: (cat._id || cat.name || '').toLowerCase().replace(/\s+/g, '-'),
+              id: normalizeCategoryName(cat.name || cat),
               name: cat.name || cat,
               count: fetchedBooks.filter(book =>
-                book.category && book.category.toLowerCase() === (cat.name || cat).toLowerCase()
+                normalizeCategoryName(
+                  typeof book.category === 'string' ? book.category : book.category?.name
+                ) === normalizeCategoryName(cat.name || cat)
               ).length,
               color: PURPLE[idx % PURPLE.length]
             }));
             setCategories(styledCategories);
           } else if (bookCategories.length > 0) {
             const styledCategories = bookCategories.map((cat, idx) => ({
-              id: cat.toLowerCase().replace(/\s+/g, '-'),
+              id: normalizeCategoryName(cat),
               name: cat,
-              count: fetchedBooks.filter(book => book.category === cat).length,
+              count: fetchedBooks.filter(book =>
+                normalizeCategoryName(book.category) === normalizeCategoryName(cat)
+              ).length,
               color: PURPLE[idx % PURPLE.length]
             }));
             setCategories(styledCategories);
@@ -235,9 +240,11 @@ const CategoryPage = () => {
 
           if (bookCategories.length > 0) {
             const styledCategories = bookCategories.map((cat, idx) => ({
-              id: cat.toLowerCase().replace(/\s+/g, '-'),
+              id: normalizeCategoryName(cat),
               name: cat,
-              count: fetchedBooks.filter(book => book.category === cat).length,
+              count: fetchedBooks.filter(book =>
+                normalizeCategoryName(book.category) === normalizeCategoryName(cat)
+              ).length,
               color: PURPLE[idx % PURPLE.length]
             }));
             setCategories(styledCategories);
@@ -259,6 +266,10 @@ const CategoryPage = () => {
 
     fetchData();
   }, [searchQuery]);
+
+  useEffect(() => {
+    setSelectedCategories(requestedCategory ? [normalizeCategoryName(requestedCategory)] : []);
+  }, [requestedCategory]);
 
   const filters = [
     { id: 'bestseller', label: 'Bestsellers', icon: HiFire },
@@ -297,9 +308,92 @@ const CategoryPage = () => {
     setPriceRange([0, 100000]);
   };
 
+  const activeCategoryNames = categories
+    .filter((category) => selectedCategories.includes(category.id))
+    .map((category) => category.name);
+
   return (
     <div className="min-h-screen bg-paper text-ink">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <section className="relative isolate overflow-hidden bg-[#211238] text-white">
+        <div
+          className="absolute inset-0 -z-10 opacity-80"
+          style={{
+            background:
+              'radial-gradient(circle at 82% 10%, rgba(139,92,246,.42), transparent 30%), radial-gradient(circle at 8% 100%, rgba(217,119,6,.18), transparent 34%), linear-gradient(115deg, #211238, #3B1765 62%, #4C1D95)',
+          }}
+        />
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-white/80">
+                <HiSparkles className="h-4 w-4 text-amber-300" />
+                The EStarr Bookshop
+              </div>
+              <p className="mt-5 text-sm font-semibold text-violet-200">
+                {searchQuery ? 'Your search starts here' : 'A good book is never far away'}
+              </p>
+              <h1 className="mt-2 font-serif text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
+                {searchQuery ? (
+                  <>Results for <span className="text-amber-200">“{searchQuery}”</span></>
+                ) : (
+                  <>Find your next <span className="text-amber-200">favourite</span></>
+                )}
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg">
+                Browse stories, ideas, and timeless reads selected for every kind of reader.
+                Choose a shelf or refine the collection to find just the right book.
+              </p>
+            </div>
+            <div className="flex gap-3 sm:gap-4">
+              <div className="min-w-32 rounded-2xl border border-white/15 bg-white/10 px-5 py-4 backdrop-blur-sm">
+                <p className="font-serif text-3xl font-semibold text-white">{sortedBooks.length}</p>
+                <p className="mt-1 text-xs font-medium uppercase tracking-wider text-white/60">Books shown</p>
+              </div>
+              <div className="min-w-32 rounded-2xl border border-white/15 bg-white/10 px-5 py-4 backdrop-blur-sm">
+                <p className="font-serif text-3xl font-semibold text-white">{categories.length}</p>
+                <p className="mt-1 text-xs font-medium uppercase tracking-wider text-white/60">Categories</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-9 border-t border-white/15 pt-6">
+            <div className="flex items-center gap-3 overflow-x-auto pb-1">
+              <button
+                type="button"
+                onClick={() => setSelectedCategories([])}
+                aria-pressed={selectedCategories.length === 0}
+                className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                  selectedCategories.length === 0
+                    ? 'border-white bg-white text-[#3B1765]'
+                    : 'border-white/25 bg-white/5 text-white hover:bg-white/15'
+                }`}
+              >
+                All books
+              </button>
+              {!loadingCategories && categories.slice(0, 8).map((category) => {
+                const active = selectedCategories.includes(category.id);
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => handleCategoryToggle(category.id)}
+                    aria-pressed={active}
+                    className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                      active
+                        ? 'border-amber-200 bg-amber-200 text-[#32184e]'
+                        : 'border-white/25 bg-white/5 text-white hover:bg-white/15'
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         {/* Mobile Filter Button */}
         <div className="lg:hidden mb-6">
           <button
@@ -318,7 +412,7 @@ const CategoryPage = () => {
 
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Desktop Sidebar */}
-          <div className="hidden lg:block lg:w-1/4">
+          <div className="hidden lg:block lg:w-72 lg:shrink-0">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -427,13 +521,19 @@ const CategoryPage = () => {
           </div>
 
           {/* Main Content */}
-          <div className="lg:w-3/4">
+          <div className="min-w-0 flex-1">
             {/* Toolbar */}
-            <div className="bg-white border border-black/[0.06] rounded-2xl p-6 mb-6" style={{ boxShadow: '0 4px 20px rgba(30,27,41,0.05)' }}>
+            <div className="bg-white border border-black/[0.06] rounded-2xl p-4 sm:p-6 mb-6" style={{ boxShadow: '0 4px 20px rgba(30,27,41,0.05)' }}>
               <div className="flex flex-wrap md:items-center justify-between gap-4">
                 <div>
-                  <h2 className="font-serif text-2xl font-semibold text-ink">All Collections</h2>
-                  <p className="text-ink/50 text-sm">Showing {sortedBooks.length} book{sortedBooks.length !== 1 ? 's' : ''}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">The collection</p>
+                  <h2 className="mt-1 font-serif text-2xl font-semibold text-ink">
+                    {activeCategoryNames.length ? activeCategoryNames.join(', ') : 'All books'}
+                  </h2>
+                  <p className="mt-1 text-ink/50 text-sm">
+                    {searchQuery ? `Search results for “${searchQuery}” · ` : ''}
+                    {sortedBooks.length} book{sortedBooks.length !== 1 ? 's' : ''}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -555,6 +655,9 @@ const CategoryPage = () => {
                     const bookId = book._id || book.id;
                     const inCart = isBookInCart(bookId);
                     const isProcessing = addingToCart[bookId];
+                    const imageSource = getResponsiveImageSrcSet(book.image, {
+                      sizes: '(max-width: 768px) 90vw, 25vw',
+                    });
 
                     return (
                       <motion.div
@@ -570,7 +673,14 @@ const CategoryPage = () => {
                           <div className="md:w-1/4 mb-4 md:mb-0">
                             <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-black/[0.03]">
                               {book.image ? (
-                                <img src={book.image} alt={book.title} className="w-full h-full! object-cover" />
+                                <img
+                                  {...(imageSource || {})}
+                                  src={imageSource?.src || book.image}
+                                  alt={book.title}
+                                  loading="lazy"
+                                  decoding="async"
+                                  className="w-full h-full! object-contain p-2"
+                                />
                               ) : (
                                 <div className="absolute inset-0 flex items-center justify-center">
                                   <div className="w-24 h-32 rounded-lg shadow-md" style={{ background: `linear-gradient(135deg, ${PURPLE[3]}, ${PURPLE[1]})` }} />
@@ -667,13 +777,13 @@ const CategoryPage = () => {
             )}
 
             {/* Pagination */}
-            {sortedBooks.length > 6 && !loadingBooks && (
+            {sortedBooks.length > 20 && !loadingBooks && (
               <div className="mt-8 lg:mt-12 flex justify-center">
-                <nav className="flex items-center gap-2">
+                <nav className="flex items-center gap-1">
                   <button className="px-4 py-2 border border-black/[0.1] rounded-xl hover:bg-black/[0.03] transition-colors text-sm text-ink/70">
                     Previous
                   </button>
-                  {[1, 2, 3].map((page) => (
+                  {[1, 2].map((page) => (
                     <button
                       key={page}
                       className="px-4 py-2 rounded-xl transition-colors text-sm"
@@ -683,7 +793,7 @@ const CategoryPage = () => {
                     </button>
                   ))}
                   <span className="px-2 text-ink/30">...</span>
-                  {[8, 9, 10].map((page) => (
+                  {[10].map((page) => (
                     <button
                       key={page}
                       className="px-4 py-2 border border-black/[0.1] rounded-xl hover:bg-black/[0.03] transition-colors text-sm text-ink/70"

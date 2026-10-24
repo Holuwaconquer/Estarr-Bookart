@@ -10,6 +10,7 @@ const {
   getFlashDeals,
   getBooksByCategory,
   uploadBookImage,
+  generateDescription,
   createBook,
   updateBook,
   deleteBook,
@@ -61,6 +62,7 @@ router.get("/category/:category", getBooksByCategory);
 router.get("/:id", getBookById);
 
 // Protected admin routes
+router.post("/generate-description", protect, authorize("admin"), generateDescription);
 router.post(
   "/upload-image",
   protect,

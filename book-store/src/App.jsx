@@ -2,67 +2,74 @@ import React from 'react'
 import { Routes, Route, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { HiHome, HiArrowLeft, HiSparkles } from 'react-icons/hi'
-import Home from './Pages/Home'
-import Landingpage from './Pages/Landingpage'
-import Cart from './Pages/Cart'
-import Checkout from './Pages/Checkout'
-import CategoryPage from './Pages/CategoryPage'
-import ProductDetail from './Pages/ProductDetail'
-import BlogPage from './Pages/BlogPage'
-import BlogDetail from './Pages/BlogDetail'
+import { lazy, Suspense } from 'react'
+
+const Home = lazy(() => import('./Pages/Home'));
+const Landingpage = lazy(() => import('./Pages/Landingpage'));
+const Cart = lazy(() => import('./Pages/Cart'));
+const Checkout = lazy(() => import('./Pages/Checkout'));
+const CategoryPage = lazy(() => import('./Pages/CategoryPage'));
+const ProductDetail = lazy(() => import('./Pages/ProductDetail'));
+const BlogPage = lazy(() => import('./Pages/BlogPage'));
+const BlogDetail = lazy(() => import('./Pages/BlogDetail'));
 
 // User Pages
-import UserLogin from './Pages/User/UserLogin'
-import UserSignup from './Pages/User/UserSignup'
-import ForgotPassword from './Pages/User/ForgotPassword'
-import ResetPassword from './Pages/User/ResetPassword'
-import PasswordReset from './Pages/User/PasswordReset'
+const UserLogin = lazy(() => import('./Pages/User/UserLogin'));
+const UserSignup = lazy(() => import('./Pages/User/UserSignup'));
+const ForgotPassword = lazy(() => import('./Pages/User/ForgotPassword'));
+const ResetPassword = lazy(() => import('./Pages/User/ResetPassword'));
+const PasswordReset = lazy(() => import('./Pages/User/PasswordReset'));
 
 // Dashboard Layout
-import DashboardLayout from './layouts/DashboardLayouts'
-import Overview from './Pages/User/Dashboard/Overview'
-import Profile from './Pages/User/Dashboard/Profile'
-import Orders from './Pages/User/Dashboard/Orders'
-import Wishlist from './Pages/User/Dashboard/Wishlist'
-import Settings from './Pages/User/Dashboard/Settings'
+const DashboardLayout = lazy(() => import('./layouts/DashboardLayouts'));
+const Overview = lazy(() => import('./Pages/User/Dashboard/Overview'));
+const Profile = lazy(() => import('./Pages/User/Dashboard/Profile'));
+const Orders = lazy(() => import('./Pages/User/Dashboard/Orders'));
+const Wishlist = lazy(() => import('./Pages/User/Dashboard/Wishlist'));
+const Settings = lazy(() => import('./Pages/User/Dashboard/Settings'));
 
 // Admin Pages
-import AdminLogin from './Pages/Admin/AdminLogin'
-import AdminDashboard from './Pages/Admin/AdminDashoard'
-import AdminProducts from './Pages/Admin/AdminProducts'
-import AdminCategories from './Pages/Admin/AdminCategories'
-import AdminFlashSales from './Pages/Admin/AdminFlashSales'
-import AdminOrders from './Pages/Admin/AdminOrders'
-import AdminBlog from './Pages/Admin/AdminBlog'
-import AdminBankAccounts from './Pages/Admin/AdminBankAccounts'
-import AdminUsers from './Pages/Admin/AdminUsers'
-import AdminShippingLocations from './Pages/Admin/AdminShippingLocations'
+const AdminLogin = lazy(() => import('./Pages/Admin/AdminLogin'));
+const AdminDashboard = lazy(() => import('./Pages/Admin/AdminDashoard'));
+const AdminProducts = lazy(() => import('./Pages/Admin/AdminProducts'));
+const AdminCategories = lazy(() => import('./Pages/Admin/AdminCategories'));
+const AdminFlashSales = lazy(() => import('./Pages/Admin/AdminFlashSales'));
+const AdminOrders = lazy(() => import('./Pages/Admin/AdminOrders'));
+const AdminBlog = lazy(() => import('./Pages/Admin/AdminBlog'));
+const AdminBankAccounts = lazy(() => import('./Pages/Admin/AdminBankAccounts'));
+const AdminUsers = lazy(() => import('./Pages/Admin/AdminUsers'));
+const AdminShippingLocations = lazy(() => import('./Pages/Admin/AdminShippingLocations'));
 import ProtectedRoute from './components/ProtectedRoute'
 import ProtectedRouteForAuth from './components/ProtectedRouteForAuth'
 import AdminRoute from './components/AdminRoute'
 import UserRoleChecker from './components/UserRoleChecker'
-import AboutUs from './Pages/AboutUs'
-import BlogPost from './Pages/BlogPost'
+const AboutUs = lazy(() => import('./Pages/AboutUs'));
+const BlogPost = lazy(() => import('./Pages/BlogPost'));
 
 // Import pages with new hierarchical structure
-import PrivacyPolicy from './Pages/Legal/PrivacyPolicy';
-import TermsOfService from './Pages/Legal/TermsOfService';
-import ReturnsPolicy from './Pages/Legal/ReturnsPolicy';
-import ShippingInfo from './Pages/Legal/ShippingInfo';
-import Faq from './Pages/Support/Faq';
-import Contact from './Pages/Contact';
-import BrandPage from './Pages/About/BrandPage'
+const PrivacyPolicy = lazy(() => import('./Pages/Legal/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./Pages/Legal/TermsOfService'));
+const ReturnsPolicy = lazy(() => import('./Pages/Legal/ReturnsPolicy'));
+const ShippingInfo = lazy(() => import('./Pages/Legal/ShippingInfo'));
+const Faq = lazy(() => import('./Pages/Support/Faq'));
+const Contact = lazy(() => import('./Pages/Contact'));
+const BrandPage = lazy(() => import('./Pages/About/BrandPage'));
 
 // Layout components for nested routes
-import LegalLayout from './layouts/LegalLayout';
-import SupportLayout from './layouts/SupportLayout';
-import AboutLayout from './layouts/AboutLayout';
+const LegalLayout = lazy(() => import('./layouts/LegalLayout'));
+const SupportLayout = lazy(() => import('./layouts/SupportLayout'));
+const AboutLayout = lazy(() => import('./layouts/AboutLayout'));
 
 const App = () => {
   const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE || 'admin'
 
   return (
     <>
+    <Suspense fallback={
+      <main role="status" className="min-h-screen bg-paper flex items-center justify-center text-ink">
+        Loading page...
+      </main>
+    }>
     <Routes>
       {/* Main Layout */}
       <Route path='/' element={<Home />}>
@@ -136,6 +143,7 @@ const App = () => {
       {/* 404 */}
       <Route path='*' element={<NotFoundPage />} />
     </Routes>
+    </Suspense>
     <WhatsAppButton />
     </>
   )

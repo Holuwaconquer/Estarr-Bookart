@@ -25,6 +25,7 @@ Preview as appropriate):
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
   `CLOUDINARY_API_SECRET` for book images and payment proofs.
 - `RESEND_API_KEY` for email delivery.
+- `RESEND_FROM_EMAIL` — sender address on a domain verified in Resend.
 - `KORAPAY_PUBLIC_KEY` and `KORAPAY_SECRET_KEY` only if the legacy Korapay
   routes are used.
 - `NODE_ENV=production`.
@@ -47,6 +48,14 @@ The API's in-memory rate limiter is per function instance and is not a
 distributed abuse-control mechanism. Use Vercel Firewall or a shared rate-limit
 store for production-wide limits. MongoDB sessions/transactions used by
 checkout require a replica set (MongoDB Atlas supports this).
+
+Newsletter signups are stored in MongoDB and trigger a confirmation email to
+the subscriber plus a notification to the store. Resend must allow delivery to
+the subscriber address and the configured sender domain must be verified.
+This signup flow does not yet schedule or send recurring newsletter campaigns.
+Admin book forms include a built-in description helper that composes copy from
+the title, category, author, and optional notes. It uses local rules rather
+than an external AI service; generated text should be reviewed before saving.
 
 ## Backend configuration
 

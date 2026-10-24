@@ -5,6 +5,7 @@ import { HiShoppingCart, HiTrash } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import { FaTags } from "react-icons/fa6";
 import { useCart } from '../contexts/CartContext';
+import { getResponsiveImageSrcSet } from '../utils/imageOptimization';
 
 const FlashDeals = () => {
   const { cart, addToCart, removeFromCart } = useCart();
@@ -200,6 +201,9 @@ const FlashDeals = () => {
                   item.book === deal.id,
               );
               const isPending = pendingDealId === deal.id;
+              const imageSource = getResponsiveImageSrcSet(deal.image, {
+                sizes: '(max-width: 768px) 45vw, 24vw',
+              });
 
               return (
                 <motion.div
@@ -213,10 +217,13 @@ const FlashDeals = () => {
                 >
                   {/* Image */}
                   <div className="relative h-52 overflow-hidden bg-white">
-                    <img 
-                      src={deal.image} 
+                    <img
+                      {...(imageSource || {})}
+                      src={imageSource?.src || deal.image}
                       alt={deal.title}
-                      className="group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute top-2 right-2 bg-yellow-400 text-black px-3 py-1 rounded-full font-bold text-sm shadow-lg">
                       -{deal.discount}%

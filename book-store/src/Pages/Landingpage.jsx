@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import FlashDeals from '../components/FlashDeals';
 import { useCart } from '../contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
+import { getResponsiveImageSrcSet } from '../utils/imageOptimization';
 
 // ---------------------------------------------------------------------
 // Palette — purple-led, two disciplined accents.
@@ -50,11 +51,13 @@ const Landingpage = () => {
   const [newBooks, setNewBooks] = useState([]);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [allBooks, setAllBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [wishlist, setWishlist] = useState(new Set());
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreBooks, setHasMoreBooks] = useState(false);
+  const [loadingMoreBooks, setLoadingMoreBooks] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -77,11 +80,12 @@ const Landingpage = () => {
     const fetchBooks = async () => {
       try {
         setLoading(true);
-        const response = await bookAPI.getAllBooks({ limit: 50 });
+        const response = await bookAPI.getAllBooks({ page: 1, limit: 12 });
         const books = response.data?.books || response.data || [];
+        setCurrentPage(1);
+        setHasMoreBooks(Boolean(response.data?.pagination?.hasNext));
 
         if (books.length > 0) {
-          setAllBooks(books);
           setFeaturedBooks(books.slice(0, 20));
           setFilteredBooks(books.slice(0, 20));
           setNewBooks(books.slice(0, 8));
@@ -96,14 +100,6 @@ const Landingpage = () => {
             }
           }
 
-          const derived = Array.from(
-            new Set(books.map((b) => (b.category?.name || b.category || '').toString().trim()).filter(Boolean))
-          );
-          if (derived.length > 0) {
-            setCategories((prev) =>
-              prev[0]?.name === defaultCategories[0].name ? derived.slice(0, 8).map((name) => ({ name })) : prev
-            );
-          }
         }
       } catch (error) {
         console.error('Failed to fetch books:', error);
@@ -117,15 +113,62 @@ const Landingpage = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedCategory) {
-      const filtered = allBooks.filter(
-        (book) => (book.category?.name || book.category || '').toLowerCase() === selectedCategory.toLowerCase()
-      );
-      setFilteredBooks(filtered.slice(0, 20));
-    } else {
+    let active = true;
+
+    if (!selectedCategory) {
       setFilteredBooks(featuredBooks);
+      return () => {
+        active = false;
+      };
     }
-  }, [selectedCategory, allBooks, featuredBooks]);
+
+    const fetchCategoryBooks = async () => {
+      try {
+        setLoading(true);
+        const response = await bookAPI.getAllBooks({ category: selectedCategory, page: 1, limit: 12 });
+        if (active) {
+          setFilteredBooks(response.data?.books || []);
+          setCurrentPage(1);
+          setHasMoreBooks(Boolean(response.data?.pagination?.hasNext));
+        }
+      } catch (error) {
+        console.error('Failed to fetch books for category:', error);
+        if (active) toast.error('Failed to load books for this category');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    fetchCategoryBooks();
+    return () => {
+      active = false;
+    };
+  }, [selectedCategory, featuredBooks]);
+
+  const handleLoadMoreBooks = async () => {
+    if (loadingMoreBooks || loading) return;
+
+    try {
+      setLoadingMoreBooks(true);
+      const nextPage = currentPage + 1;
+      const response = await bookAPI.getAllBooks({
+        ...(selectedCategory ? { category: selectedCategory } : {}),
+        page: nextPage,
+        limit: 12,
+      });
+      setFilteredBooks((previous) => [
+        ...previous,
+        ...(response.data?.books || []),
+      ]);
+      setCurrentPage(nextPage);
+      setHasMoreBooks(Boolean(response.data?.pagination?.hasNext));
+    } catch (error) {
+      console.error('Failed to load more books:', error);
+      toast.error('Failed to load more books');
+    } finally {
+      setLoadingMoreBooks(false);
+    }
+  };
 
   const toggleWishlist = (bookId) => {
     setWishlist((prev) => {
@@ -173,6 +216,7 @@ const Landingpage = () => {
     const [isInCart, setIsInCart] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const tint = tintFor(book?.category?.name || book?.category || book?.title);
+    const imageSource = getResponsiveImageSrcSet(book?.image || book?.coverImage);
     useEffect(() => {
       if (book?._id && cart) {
         setIsInCart(cart.some((item) => item.id === book._id || item._id === book._id || item.book === book._id));
@@ -214,14 +258,21 @@ const Landingpage = () => {
       >
         <div className="h-[3px] w-full" style={{ background: tint }} />
 
-        <div className="relative h-[190px] flex items-center justify-center overflow-hidden" style={{ background: `${tint}0D` }}>
+        <div className="relative h-[160px] flex items-center justify-center overflow-hidden" style={{ background: `${tint}0D` }}>
           <motion.img
-            src={book?.image || book?.coverImage || `https://via.placeholder.com/250x300?text=${encodeURIComponent(book?.title || 'Book')}`}
+            {...(imageSource || {})}
+            src={imageSource?.src || book?.image || book?.coverImage || `https://placehold.co/480x640?text=${encodeURIComponent(book?.title || 'Book')}`}
             alt={book?.title}
-            className="w-full h-full! object-cover"
+            loading={eager ? 'eager' : 'lazy'}
+            fetchPriority={eager && index === 0 ? 'high' : 'auto'}
+            decoding="async"
+            className="w-full h-full! object-contain p-2"
             whileHover={{ scale: 1.06 }}
             transition={{ duration: 0.4 }}
-            onError={(e) => { e.target.src = 'https://via.placeholder.com/250x300?text=No+Image'; }}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = `https://placehold.co/480x640?text=${encodeURIComponent(book?.title || 'No Image')}`;
+            }}
           />
 
           <motion.button
@@ -248,11 +299,11 @@ const Landingpage = () => {
 
         <div className="flex flex-1 flex-col justify-between p-4">
           <div>
-            <h3 className="font-serif text-[17px] leading-snug text-ink font-bold">{book?.title || 'Unknown'}</h3>
-            <p className="text-xs text-ink/50 mt-1 mb-3 truncate">{book?.author || 'Unknown author'}</p>
+            <h3 className="font-serif text-[14px] md:text-[17px] leading-[1.1] text-ink font-bold">{book?.title || 'Unknown'}</h3>
+            <p className="text-xs text-ink/50 mt-1 truncate">{book?.author || 'Unknown author'}</p>
 
             <div className="flex items-center gap-2 mb-3">
-              <p className="font-mono text-base font-bold text-ink">&#8358;{(book?.price || 0).toLocaleString()}</p>
+              <p className="font-mono text-base font-extrabold text-ink">&#8358;{(book?.price || 0).toLocaleString()}</p>
               {book?.originalPrice && (
                 <p className="font-mono text-xs text-ink/30 line-through">&#8358;{book.originalPrice.toLocaleString()}</p>
               )}
@@ -368,7 +419,7 @@ const Landingpage = () => {
                 </motion.div>
               ))
             ) : filteredBooks.length > 0 ? (
-              filteredBooks.map((book, idx) => <BookCard key={book._id} book={book} index={idx} eager={idx < 8} />)
+              filteredBooks.map((book, idx) => <BookCard key={book._id} book={book} index={idx} eager={idx < 2} />)
             ) : (
               <div className="col-span-full py-16 text-center">
                 <motion.div
@@ -387,6 +438,19 @@ const Landingpage = () => {
               </div>
             )}
           </div>
+          {!loading && hasMoreBooks && (
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                onClick={handleLoadMoreBooks}
+                disabled={loadingMoreBooks}
+                className="px-6 py-3 rounded-full font-semibold text-white disabled:opacity-60"
+                style={{ background: `linear-gradient(120deg, ${PURPLE[1]}, ${DEEP})` }}
+              >
+                {loadingMoreBooks ? 'Loading books...' : 'Load more books'}
+              </button>
+            </div>
+          )}
         </div>
       </section>
 

@@ -7,6 +7,7 @@ import { HiHeart, HiShoppingBag, HiStar, HiArrowLeft, HiCheckCircle, HiTruck, Hi
 import toast from 'react-hot-toast';
 import { useWishlist } from '../contexts/WishlistContext';
 import BookCard from '../components/Bookcard';
+import { getResponsiveImageSrcSet } from '../utils/imageOptimization';
 
 // ---------------------------------------------------------------------
 // Same palette as Landingpage.jsx — purple does the work, amber marks
@@ -198,6 +199,12 @@ const ProductDetail = () => {
   const avgRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : 4.5;
+  const selectedCover = book.images?.[selectedImageIndex]?.url
+    || book.images?.[selectedImageIndex]
+    || book.image;
+  const coverSource = getResponsiveImageSrcSet(selectedCover, {
+    sizes: '(max-width: 768px) 80vw, 40vw',
+  });
 
   return (
     <div className="min-h-screen bg-paper text-ink pt-10 pb-20 relative overflow-hidden">
@@ -238,9 +245,13 @@ const ProductDetail = () => {
                 {book.images && book.images.length > 0 ? (
                   <div className="relative w-full h-full">
                     <img
-                      src={book.images[selectedImageIndex]?.url || book.images[selectedImageIndex]}
+                      {...(coverSource || {})}
+                      src={coverSource?.src || selectedCover}
                       alt={book.title}
-                      className="w-full h-full object-cover rounded-lg shadow-xl"
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
+                      className="w-full h-full object-contain rounded-lg shadow-xl"
                     />
                     {book.images.length > 1 && (
                       <div className="absolute bottom-2 right-2 bg-ink/85 px-3 py-1 rounded-full text-sm text-white">
@@ -250,7 +261,15 @@ const ProductDetail = () => {
                   </div>
                 ) : book.image ? (
                   <div className="relative w-full h-full">
-                    <img src={book.image} alt={book.title} className="w-full h-full object-cover rounded-lg shadow-xl" />
+                    <img
+                      {...(coverSource || {})}
+                      src={coverSource?.src || book.image}
+                      alt={book.title}
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
+                      className="w-full h-full object-contain rounded-lg shadow-xl"
+                    />
                   </div>
                 ) : (
                   <>
@@ -288,7 +307,7 @@ const ProductDetail = () => {
             )}
 
             <div className="flex flex-wrap gap-2">
-              {book.discount && (
+              {Number(book.discount) > 0 && (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 text-white"
@@ -298,13 +317,13 @@ const ProductDetail = () => {
                   {book.discount}% OFF
                 </motion.div>
               )}
-              <motion.div
+              {/* <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="px-4 py-2 rounded-full text-sm font-semibold text-white"
                 style={{ background: `linear-gradient(120deg, ${PURPLE[1]}, ${DEEP})` }}
               >
                 {book.edition}
-              </motion.div>
+              </motion.div> */}
               {book.stock > 0 && (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -340,7 +359,7 @@ const ProductDetail = () => {
                 by <span className="font-semibold" style={{ color: PURPLE[0] }}>{book.author}</span>
               </p>
 
-              <div className="flex items-center gap-4 mb-8">
+              {/* <div className="flex items-center gap-4 mb-8">
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
                     <HiStar
@@ -352,7 +371,7 @@ const ProductDetail = () => {
                 </div>
                 <span className="text-lg font-semibold text-ink">{avgRating}</span>
                 <span className="text-ink/50">({reviews.length} reviews)</span>
-              </div>
+              </div> */}
 
               <p className="text-ink/70 leading-relaxed mb-8">
                 {book.description}
@@ -380,7 +399,7 @@ const ProductDetail = () => {
             <div className="space-y-6">
               <div>
                 <div className="flex items-baseline gap-4 mb-2">
-                  <span className="font-mono text-4xl font-bold text-ink">
+                  <span className="font-mono text-4xl font-extrabold text-ink">
                     &#8358;{book.price?.toLocaleString()}
                   </span>
                   {book.originalPrice && book.originalPrice > book.price && (
