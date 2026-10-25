@@ -43,6 +43,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import ProtectedRouteForAuth from './components/ProtectedRouteForAuth'
 import AdminRoute from './components/AdminRoute'
 import UserRoleChecker from './components/UserRoleChecker'
+import EstherAssistant from './components/EstherAssistant'
 const AboutUs = lazy(() => import('./Pages/AboutUs'));
 const BlogPost = lazy(() => import('./Pages/BlogPost'));
 
@@ -144,6 +145,7 @@ const App = () => {
       <Route path='*' element={<NotFoundPage />} />
     </Routes>
     </Suspense>
+    <EstherAssistant />
     <WhatsAppButton />
     </>
   )

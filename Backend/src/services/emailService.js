@@ -516,7 +516,7 @@ const sendContactMessageEmail = async ({ name, email, subject, message }) => {
   const from = `EStarr Bookart <${process.env.RESEND_FROM_EMAIL || 'noreply@estarrbookart.com.ng'}>`;
   const { error } = await resend.emails.send({
     from,
-    to: 'holuwaconquer488@gmail.com',
+    to: 'estarrbookart@gmail.com',
     replyTo: email,
     subject: `Contact form: ${subject}`,
     text: [
