@@ -9,18 +9,27 @@ import { useWishlist } from '../contexts/WishlistContext';
 import BookCard from '../components/Bookcard';
 import { getResponsiveImageSrcSet } from '../utils/imageOptimization';
 
-// ---------------------------------------------------------------------
-// Same palette as Landingpage.jsx — purple does the work, amber marks
-// warmth/urgency, teal marks trust, red is reserved for destructive
-// actions only. Keep these three files in sync (or better, move this
-// block into a shared /lib/theme.js and import it everywhere).
-// ---------------------------------------------------------------------
 const PURPLE = ['#5B21B6', '#6D28D9', '#7C3AED', '#8B5CF6', '#A78BFA'];
 const AMBER = '#D97706';
 const TEAL = '#0F766E';
 const DEEP = '#4C1D95';
 const DANGER = '#DC2626';
 const BUY_NOW_STORAGE_KEY = 'estarrBuyNowCheckout';
+const SAMPLE_READER_NAMES = {
+  first: ['Adaeze', 'Tunde', 'Zainab', 'Chinedu', 'Folake', 'Musa', 'Ifeoma', 'Babatunde', 'Amaka', 'Oluwaseun', 'Amina', 'Emeka'],
+  last: ['Okafor', 'Ajayi', 'Bello', 'Adeyemi', 'Nwosu', 'Ibrahim', 'Ojo', 'Eze', 'Lawal', 'Balogun', 'Obi', 'Yusuf'],
+  cities: ['Osun', 'Abuja', 'Osun', 'Osun', 'Enugu', 'Port Harcourt', 'Jos', 'Kano', 'Benin City', 'Abeokuta', 'Ilorin', 'Uyo'],
+};
+
+const getStableHash = (value) => {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+};
+
 const generateSampleImpressions = (book) => {
   if (!book?.title) return [];
 
@@ -28,23 +37,28 @@ const generateSampleImpressions = (book) => {
   const author = book.author?.trim();
   const category = (book.category?.name || book.category || 'books').toString().trim();
   const byAuthor = author ? ` by ${author}` : '';
+  const productKey = String(book._id || book.id || title);
+  const productHash = getStableHash(productKey);
+  const sampleProfiles = [0, 1, 2].map((index) => {
+    return {
+      name: `${SAMPLE_READER_NAMES.first[(productHash + index * 5) % SAMPLE_READER_NAMES.first.length]} ${SAMPLE_READER_NAMES.last[(Math.floor(productHash / SAMPLE_READER_NAMES.first.length) + index * 7) % SAMPLE_READER_NAMES.last.length]}`,
+      city: SAMPLE_READER_NAMES.cities[(Math.floor(productHash / (SAMPLE_READER_NAMES.first.length * SAMPLE_READER_NAMES.last.length)) + index * 5) % SAMPLE_READER_NAMES.cities.length],
+    };
+  });
 
   return [
     {
-      name: 'Okikiola Fakorede',
-      city: 'Lagos',
+      ...sampleProfiles[0],
       comment: `I came across “${title}” while browsing ${category} books. The title has me curious, and I’d want to read a few pages before deciding if it’s my next weekend pick.`,
-      createdAt: "01/10/2026"
+      createdAt: "18/10/2026",
     },
     {
-      name: 'Tunde Ajayi',
-      city: 'Abuja',
-      createdAt: "04/09/2026",
+      ...sampleProfiles[1],
+      createdAt: "01/10/2026",
       comment: `“${title}”${byAuthor} is going on my to-read list. I enjoy finding books in the ${category} section, and this one looks worth a closer look.`,
     },
     {
-      name: 'Zainab Oyelaja.',
-      city: 'Kaduna',
+      ...sampleProfiles[2],
       createdAt: "21/09/2026",
       comment: `I’d save “${title}” for a quiet evening. I’m always glad to discover another ${category} title, and I’d be interested to see what makes this book stand out.`,
     },
@@ -612,16 +626,16 @@ const ProductDetail = () => {
           className="bg-white border border-black/[0.06] rounded-2xl p-8"
           style={{ boxShadow: '0 4px 20px rgba(30,27,41,0.05)' }}
         >
-          <h2 className="font-serif text-3xl font-semibold mb-2 text-ink">Customer Reviews ({sampleImpressions.length})</h2>
-          {/* <p className="mb-8 text-sm text-ink/55">
-            Customer reviews are submitted by readers.
-          </p> */}
+          <h2 className="font-serif text-3xl font-semibold mb-2 text-ink">Reader Impressions</h2>
+          <p className="mb-8 text-sm text-ink/55">
+            These are fictional, automatically composed examples with fictional Nigerian profiles. They are not customer reviews or verified purchase feedback.
+          </p>
 
           {sampleImpressions.length > 0 ? (
             <div className="space-y-6">
               {sampleImpressions.map((impression, idx) => (
                 <motion.div
-                  key={impression._id}
+                  key={`${book._id || book.id}-${impression.name}`}
                   initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
@@ -636,21 +650,15 @@ const ProductDetail = () => {
                       {impression.name?.[0] || 'U'}
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-                        <p className="font-semibold text-ink">{impression.name || 'Anonymous'}</p>
-                        <div className="flex gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <HiStar
-                              key={i}
-                              className={`w-4 h-4 ${i < impression.rating ? 'fill-current' : 'text-ink/15'}`}
-                              style={i < impression.rating ? { color: AMBER } : {}}
-                            />
-                          ))}
-                        </div>
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <p className="font-semibold text-ink">{impression.name}</p>
+                        <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700">
+                          Sample
+                        </span>
                       </div>
                       <p className="text-ink/70 mb-2">{impression.comment}</p>
-                      <p className="text-sm text-ink/40">
-                        {impression.createdAt}
+                      <p className="text-sm text-violet-700">
+                        {impression.city}, Nigeria · {impression.createdAt}
                       </p>
                     </div>
                   </div>
@@ -676,7 +684,7 @@ const ProductDetail = () => {
                   More books like this
                 </h2>
                 <p className="mt-2 max-w-xl text-sm text-ink/55">
-                  Continue exploring stories selected from the same shelf.
+                  Continue exploring books selected from the same category.
                 </p>
               </div>
               <button
