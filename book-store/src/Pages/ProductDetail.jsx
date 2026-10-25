@@ -306,7 +306,7 @@ const ProductDetail = () => {
         <motion.button
           whileHover={{ x: -4 }}
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 mb-8 font-semibold transition-colors"
+          className="flex items-center gap-2 mb-2 font-semibold transition-colors"
           style={{ color: PURPLE[0] }}
         >
           <HiArrowLeft className="w-5 h-5" />
