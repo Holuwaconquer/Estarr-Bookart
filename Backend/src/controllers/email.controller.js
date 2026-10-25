@@ -1,7 +1,37 @@
 const ApiResponse = require("../utils/apiResponse");
 const { validateEmail } = require("../utils/validation");
-const { sendNewsletterSubscriptionEmail } = require("../services/emailService");
+const {
+  sendContactMessageEmail,
+  sendNewsletterSubscriptionEmail,
+} = require("../services/emailService");
 const NewsletterSubscriber = require("../models/NewsletterSubscriber");
+
+exports.sendContactMessage = async (req, res, next) => {
+  try {
+    const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+    const email = typeof req.body?.email === "string" ? req.body.email.trim() : "";
+    const subject = typeof req.body?.subject === "string" ? req.body.subject.trim() : "";
+    const message = typeof req.body?.message === "string" ? req.body.message.trim() : "";
+
+    if (!name || name.length > 120) {
+      return ApiResponse.error(res, "Please provide a name (maximum 120 characters)", 400);
+    }
+    if (!validateEmail(email)) {
+      return ApiResponse.error(res, "Please provide a valid email address", 400);
+    }
+    if (!subject || subject.length > 180 || /[\r\n]/.test(subject)) {
+      return ApiResponse.error(res, "Please provide a valid subject (maximum 180 characters)", 400);
+    }
+    if (!message || message.length > 5000) {
+      return ApiResponse.error(res, "Please provide a message (maximum 5000 characters)", 400);
+    }
+
+    await sendContactMessageEmail({ name, email, subject, message });
+    return ApiResponse.success(res, "Your message has been sent successfully");
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.subscribeToNewsletter = async (req, res, next) => {
   try {

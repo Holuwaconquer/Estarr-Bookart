@@ -5,6 +5,22 @@
 const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '') + '/api';
 
 export const emailAPI = {
+  // Send a contact form message to the EStarr Bookart inbox
+  sendContactMessage: async (message) => {
+    const response = await fetch(`${API_BASE_URL}/emails/contact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message)
+    });
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Failed to send your message');
+    }
+
+    return result;
+  },
+
   // Send order confirmation
   sendOrderConfirmation: async (orderId) => {
     return fetch(`${API_BASE_URL}/emails/order-confirmation`, {

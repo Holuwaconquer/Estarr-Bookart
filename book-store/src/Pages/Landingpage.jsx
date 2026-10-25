@@ -343,8 +343,8 @@ const Landingpage = () => {
       {/* strip + drifting purple blobs carry the motion.                */}
       {/* ------------------------------------------------------------- */}
       <section id="catalog" className="relative pt-6 pb-6 px-4 overflow-hidden">
-        <Blob color={PURPLE[1]} size={320} style={{ top: '-140px', left: '-80px' }} duration={16} />
-        <Blob color={PURPLE[3]} size={260} style={{ top: '-100px', right: '-60px' }} duration={13} delay={1} />
+        {/* <Blob color={PURPLE[1]} size={320} style={{ top: '-140px', left: '-80px' }} duration={16} /> */}
+        {/* <Blob color={PURPLE[3]} size={260} style={{ top: '-100px', right: '-60px' }} duration={13} delay={1} /> */}
 
         <div className="relative max-w-7xl mx-auto">
           {/* Category bubbles */}

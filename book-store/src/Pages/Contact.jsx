@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { HiMail, HiPhone, HiLocationMarker, HiClock, HiCheckCircle } from 'react-icons/hi';
 import { FaInstagram, FaFacebook, FaTwitter, FaLinkedin } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { emailAPI } from '../services/email.service';
 
 const Contact = () => {
   useEffect(() => {
@@ -29,17 +30,25 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      await emailAPI.sendContactMessage({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject.trim(),
+        message: formData.message.trim(),
+      });
       setSubmitted(true);
-      setSubmitting(false);
-      toast.success('Message sent successfully! We\'ll get back to you soon.');
       setFormData({ name: '', email: '', subject: '', message: '' });
-      
-      // Reset submitted status after 5 seconds
-      setTimeout(() => setSubmitted(false), 5000);
-    }, 1500);
+      toast.success('Message sent successfully! We\'ll get back to you soon.');
+
+      window.setTimeout(() => setSubmitted(false), 5000);
+    } catch (error) {
+      console.error('Failed to send contact message:', error);
+      toast.error(error.message || 'Failed to send your message. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const contactInfo = [
@@ -176,6 +185,7 @@ const Contact = () => {
                         value={formData.name}
                         onChange={handleChange}
                         required
+                        maxLength={120}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition"
                         placeholder="John Doe"
                       />
@@ -189,6 +199,7 @@ const Contact = () => {
                         value={formData.email}
                         onChange={handleChange}
                         required
+                        maxLength={254}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition"
                         placeholder="john@example.com"
                       />
@@ -202,6 +213,7 @@ const Contact = () => {
                         value={formData.subject}
                         onChange={handleChange}
                         required
+                        maxLength={180}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition"
                         placeholder="Question about order, shipping, etc."
                       />
@@ -214,6 +226,7 @@ const Contact = () => {
                         value={formData.message}
                         onChange={handleChange}
                         required
+                        maxLength={5000}
                         rows="6"
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition resize-none"
                         placeholder="Please provide details about your inquiry..."

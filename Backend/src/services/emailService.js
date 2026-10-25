@@ -501,9 +501,69 @@ const sendNewsletterSubscriptionEmail = async (
   });
 };
 
+const sendContactMessageEmail = async ({ name, email, subject, message }) => {
+  const escapeHtml = (value) => value.replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[character]);
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeSubject = escapeHtml(subject);
+  const safeMessage = escapeHtml(message);
+  const from = `EStarr Bookart <${process.env.RESEND_FROM_EMAIL || 'noreply@estarrbookart.com.ng'}>`;
+  const { error } = await resend.emails.send({
+    from,
+    to: 'holuwaconquer488@gmail.com',
+    replyTo: email,
+    subject: `Contact form: ${subject}`,
+    text: [
+      'NEW CONTACT FORM MESSAGE',
+      '',
+      `Name: ${name}`,
+      `Email: ${email}`,
+      `Subject: ${subject}`,
+      '',
+      'Message:',
+      message,
+    ].join('\n'),
+    html: `
+      <!doctype html>
+      <html lang="en">
+        <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+        <body style="margin:0;padding:32px 16px;background:#f4f1f8;font-family:Arial,Helvetica,sans-serif;color:#28202f;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:640px;margin:0 auto;background:#fff;border:1px solid #e8e2f0;border-radius:12px;overflow:hidden;">
+            <tr><td style="padding:24px 28px;background:#4c1d95;color:#fff;">
+              <p style="margin:0 0 6px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#e9ddff;">EStarr Bookart</p>
+              <h1 style="margin:0;font-size:24px;">New contact message</h1>
+            </td></tr>
+            <tr><td style="padding:28px;">
+              <p style="margin:0 0 8px;"><strong>Name:</strong> ${safeName}</p>
+              <p style="margin:0 0 8px;"><strong>Email:</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></p>
+              <p style="margin:0 0 20px;"><strong>Subject:</strong> ${safeSubject}</p>
+              <p style="margin:0 0 8px;font-weight:bold;">Message</p>
+              <div style="padding:16px;background:#faf8fd;border-radius:8px;line-height:1.7;white-space:pre-wrap;">${safeMessage}</div>
+            </td></tr>
+            <tr><td style="padding:16px 28px;border-top:1px solid #eee8f5;color:#8a8194;font-size:12px;">
+              Sent from the EStarr Bookart contact form.
+            </td></tr>
+          </table>
+        </body>
+      </html>
+    `,
+  });
+
+  if (error) {
+    throw new Error(`Contact email delivery failed: ${error.message || error}`);
+  }
+};
+
 module.exports = {
   sendOrderNotificationEmail,
   sendOrderConfirmationEmail,
   sendOrderStatusUpdateEmail,
   sendNewsletterSubscriptionEmail,
+  sendContactMessageEmail,
 };
