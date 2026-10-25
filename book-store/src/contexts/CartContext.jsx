@@ -220,34 +220,34 @@ export const CartProvider = ({ children }) => {
       }
 
       // Show success toast with animation
-      toast.success(
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg overflow-hidden">
-            <img
-              src={book.image}
-              alt={book.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <p className="font-semibold">Added to cart</p>
-            <p className="text-sm text-gray-600">{book.title}</p>
-          </div>
-        </div>,
-        {
-          duration: 3000,
-          position: "bottom-right",
-          style: {
-            background: "white",
-            color: "#1f2937",
-            borderRadius: "12px",
-            padding: "16px",
-            boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)",
-          },
-        },
-      );
+      // toast.success(
+      //   <div className="flex items-center gap-3">
+      //     <div className="w-10 h-10 rounded-lg overflow-hidden">
+      //       <img
+      //         src={book.image}
+      //         alt={book.title}
+      //         className="w-full h-full object-cover"
+      //       />
+      //     </div>
+      //     <div>
+      //       <p className="font-semibold">Added to cart</p>
+      //       <p className="text-sm text-gray-600">{book.title}</p>
+      //     </div>
+      //   </div>,
+      //   {
+      //     duration: 3000,
+      //     position: "bottom-right",
+      //     style: {
+      //       background: "white",
+      //       color: "#1f2937",
+      //       borderRadius: "12px",
+      //       padding: "16px",
+      //       boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)",
+      //     },
+      //   },
+      // );
     } catch (error) {
-      toast.error("Failed to add item to cart");
+      // toast.error("Failed to add item to cart");
       console.error("Add to cart error:", error);
     }
   };
@@ -308,7 +308,7 @@ export const CartProvider = ({ children }) => {
         localStorage.setItem("cart", JSON.stringify(updatedCart));
       }
 
-      toast.success("Item removed from cart");
+      // toast.success("Item removed from cart");
     } catch (error) {
       toast.error("Failed to remove item");
       console.error("❌ Remove from cart error:", error);
