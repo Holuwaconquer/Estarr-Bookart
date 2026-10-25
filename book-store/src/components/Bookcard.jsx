@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { HiShoppingBag, HiHeart, HiStar, HiEye, HiTrash, HiPlus } from 'react-icons/hi';
 import { motion } from 'framer-motion';
 import { useCart } from '../contexts/CartContext.jsx';
@@ -51,7 +51,7 @@ const BookCard = ({ book = {} }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
-
+  const navigate = useNavigate();
   // Get book ID
   const bookId = book._id || book.id;
   const tint = tintFor(book.category?.name || book.category || book.title);
@@ -146,6 +146,7 @@ const BookCard = ({ book = {} }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="group relative h-full"
+      onClick={(e) => {navigate(`/product/${bookId}`); e.preventDefault(); e.stopPropagation();}}
     >
       <div
         className="relative flex h-full flex-col bg-white border border-black/[0.06] rounded-2xl overflow-hidden transition-all duration-300"

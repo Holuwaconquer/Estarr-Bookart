@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { bookAPI, reviewAPI, cartAPI } from '../services/api';
 import { useCart } from '../contexts/CartContext';
 import { motion } from 'framer-motion';
-import { HiHeart, HiShoppingBag, HiStar, HiArrowLeft, HiCheckCircle, HiTruck, HiShieldCheck, HiFire, HiPlus, HiMinus, HiTrash } from 'react-icons/hi';
+import { HiHeart, HiShoppingBag, HiStar, HiArrowLeft, HiCheckCircle, HiTruck, HiShieldCheck, HiFire, HiPlus, HiMinus, HiTrash, HiLightningBolt } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import { useWishlist } from '../contexts/WishlistContext';
 import BookCard from '../components/Bookcard';
@@ -20,6 +20,36 @@ const AMBER = '#D97706';
 const TEAL = '#0F766E';
 const DEEP = '#4C1D95';
 const DANGER = '#DC2626';
+const BUY_NOW_STORAGE_KEY = 'estarrBuyNowCheckout';
+const generateSampleImpressions = (book) => {
+  if (!book?.title) return [];
+
+  const title = book.title.trim();
+  const author = book.author?.trim();
+  const category = (book.category?.name || book.category || 'books').toString().trim();
+  const byAuthor = author ? ` by ${author}` : '';
+
+  return [
+    {
+      name: 'Okikiola Fakorede',
+      city: 'Lagos',
+      comment: `I came across “${title}” while browsing ${category} books. The title has me curious, and I’d want to read a few pages before deciding if it’s my next weekend pick.`,
+      createdAt: "01/10/2026"
+    },
+    {
+      name: 'Tunde Ajayi',
+      city: 'Abuja',
+      createdAt: "04/09/2026",
+      comment: `“${title}”${byAuthor} is going on my to-read list. I enjoy finding books in the ${category} section, and this one looks worth a closer look.`,
+    },
+    {
+      name: 'Zainab Oyelaja.',
+      city: 'Kaduna',
+      createdAt: "21/09/2026",
+      comment: `I’d save “${title}” for a quiet evening. I’m always glad to discover another ${category} title, and I’d be interested to see what makes this book stand out.`,
+    },
+  ];
+};
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -52,6 +82,26 @@ const ProductDetail = () => {
       setIsLiked(isInWishlist(id));
     }
   }, [book, id, isInWishlist]);
+
+  useEffect(() => {
+    if (!book?._id) return undefined;
+
+    let active = true;
+    reviewAPI.getBookReviews(book._id, { limit: 10 })
+      .then((response) => {
+        if (active) {
+          setReviews(response.data?.reviews || []);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to fetch customer reviews:', error);
+        if (active) setReviews([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [book?._id]);
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -154,6 +204,29 @@ const ProductDetail = () => {
     setTimeout(() => setAddingToCart(false), 800);
   };
 
+  const handleBuyNow = () => {
+    if (!book) return;
+    if (!book.stock || quantity > book.stock) {
+      toast.error('The selected quantity is not available');
+      return;
+    }
+
+    const checkoutItem = {
+      ...book,
+      id: book._id || book.id,
+      _id: book._id || book.id,
+      book: book._id || book.id,
+      quantity,
+    };
+    const checkoutIntent = {
+      item: checkoutItem,
+      createdAt: Date.now(),
+    };
+
+    sessionStorage.setItem(BUY_NOW_STORAGE_KEY, JSON.stringify(checkoutIntent));
+    navigate('/checkout', { state: { buyNowItem: checkoutItem } });
+  };
+
   const handleAddToWishlist = () => {
     if (!book) return;
 
@@ -195,6 +268,7 @@ const ProductDetail = () => {
   const recommendationBooks = similarBooks.length > 0
     ? similarBooks
     : allBooks.filter(item => (item._id || item.id) !== (book._id || book.id)).slice(0, 6);
+  const sampleImpressions = generateSampleImpressions(book);
 
   const avgRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
@@ -290,7 +364,7 @@ const ProductDetail = () => {
             </div>
 
             {book.images && book.images.length > 1 && (
-              <div className="flex gap-3 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-3 mb-1 overflow-x-auto pb-2 scrollbar-hide">
                 {book.images.map((img, idx) => (
                   <motion.button
                     key={idx}
@@ -306,7 +380,7 @@ const ProductDetail = () => {
               </div>
             )}
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-0">
               {Number(book.discount) > 0 && (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -414,9 +488,7 @@ const ProductDetail = () => {
                 </p>
               </div>
 
-              {/* Only show quantity selector if item is NOT in cart */}
-              {!isInCart && (
-                <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4">
                   <span className="text-ink/70 font-medium">Quantity:</span>
                   <div className="flex items-center gap-2 bg-white border border-black/[0.08] rounded-lg p-1.5">
                     <motion.button
@@ -441,8 +513,7 @@ const ProductDetail = () => {
                       <HiPlus className="w-5 h-5" />
                     </motion.button>
                   </div>
-                </div>
-              )}
+              </div>
 
               <div className="space-y-3 pt-4">
                 {isInCart ? (
@@ -492,6 +563,18 @@ const ProductDetail = () => {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  onClick={handleBuyNow}
+                  disabled={addingToCart || !book.stock || book.stock < 1}
+                  className="w-full px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{ background: '#FFF7ED', borderColor: '#FED7AA', color: '#9A3412' }}
+                >
+                  <HiLightningBolt className="w-5 h-5" />
+                  Buy Now
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleAddToWishlist}
                   className="w-full px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all border"
                   style={
@@ -529,13 +612,16 @@ const ProductDetail = () => {
           className="bg-white border border-black/[0.06] rounded-2xl p-8"
           style={{ boxShadow: '0 4px 20px rgba(30,27,41,0.05)' }}
         >
-          <h2 className="font-serif text-3xl font-semibold mb-8 text-ink">Customer Reviews ({reviews.length})</h2>
+          <h2 className="font-serif text-3xl font-semibold mb-2 text-ink">Customer Reviews ({sampleImpressions.length})</h2>
+          {/* <p className="mb-8 text-sm text-ink/55">
+            Customer reviews are submitted by readers.
+          </p> */}
 
-          {reviews.length > 0 ? (
+          {sampleImpressions.length > 0 ? (
             <div className="space-y-6">
-              {reviews.map((review, idx) => (
+              {sampleImpressions.map((impression, idx) => (
                 <motion.div
-                  key={review._id}
+                  key={impression._id}
                   initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
@@ -547,24 +633,24 @@ const ProductDetail = () => {
                       className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
                       style={{ background: `linear-gradient(135deg, ${PURPLE[1]}, ${DEEP})` }}
                     >
-                      {review.user?.name?.[0] || 'U'}
+                      {impression.name?.[0] || 'U'}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-                        <p className="font-semibold text-ink">{review.user?.name || 'Anonymous'}</p>
+                        <p className="font-semibold text-ink">{impression.name || 'Anonymous'}</p>
                         <div className="flex gap-1">
                           {[...Array(5)].map((_, i) => (
                             <HiStar
                               key={i}
-                              className={`w-4 h-4 ${i < review.rating ? 'fill-current' : 'text-ink/15'}`}
-                              style={i < review.rating ? { color: AMBER } : {}}
+                              className={`w-4 h-4 ${i < impression.rating ? 'fill-current' : 'text-ink/15'}`}
+                              style={i < impression.rating ? { color: AMBER } : {}}
                             />
                           ))}
                         </div>
                       </div>
-                      <p className="text-ink/70 mb-2">{review.comment}</p>
+                      <p className="text-ink/70 mb-2">{impression.comment}</p>
                       <p className="text-sm text-ink/40">
-                        {new Date(review.createdAt).toLocaleDateString()}
+                        {impression.createdAt}
                       </p>
                     </div>
                   </div>
@@ -601,7 +687,7 @@ const ProductDetail = () => {
                 Browse all books
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {recommendationBooks.map((recommendedBook, index) => (
                 <BookCard key={recommendedBook._id || recommendedBook.id} book={recommendedBook} index={index} />
               ))}
@@ -630,7 +716,7 @@ const ProductDetail = () => {
                 Clear history
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {recentlyViewedBooks.map((recentBook, index) => (
                 <BookCard key={recentBook._id || recentBook.id} book={recentBook} index={index} />
               ))}

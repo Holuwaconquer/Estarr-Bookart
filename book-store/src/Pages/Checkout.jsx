@@ -24,11 +24,41 @@ import api, {
 } from "../services/api";
 import { emailAPI } from "../services/email.service";
 
+const BUY_NOW_STORAGE_KEY = "estarrBuyNowCheckout";
+const BUY_NOW_INTENT_MAX_AGE = 30 * 60 * 1000;
+
 const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items, clearCart } = useCart();
+  const { items: cartItems, clearCart } = useCart();
   const { authenticated, user } = useContext(AuthContext);
+  const [buyNowItem] = useState(() => {
+    const routeItem = location.state?.buyNowItem;
+    if (routeItem) return routeItem;
+
+    try {
+      const storedIntent = sessionStorage.getItem(BUY_NOW_STORAGE_KEY);
+      if (!storedIntent) return null;
+
+      const intent = JSON.parse(storedIntent);
+      if (
+        !intent?.item ||
+        !Number.isFinite(intent.createdAt) ||
+        Date.now() - intent.createdAt > BUY_NOW_INTENT_MAX_AGE
+      ) {
+        sessionStorage.removeItem(BUY_NOW_STORAGE_KEY);
+        return null;
+      }
+
+      return intent.item;
+    } catch (error) {
+      console.error("Failed to restore Buy Now checkout:", error);
+      sessionStorage.removeItem(BUY_NOW_STORAGE_KEY);
+      return null;
+    }
+  });
+  const isBuyNowCheckout = Boolean(buyNowItem);
+  const items = isBuyNowCheckout ? [buyNowItem] : cartItems;
 
   const [step, setStep] = useState(1); // 1: Review, 2: Shipping Location, 3: Shipping Address, 4: Payment Method
   const [paymentMethod, setPaymentMethod] = useState("questpay");
@@ -168,7 +198,11 @@ const Checkout = () => {
           reference,
         });
         if (result?.status === "paid") {
-          await clearCartRef.current();
+          if (isBuyNowCheckout) {
+            sessionStorage.removeItem(BUY_NOW_STORAGE_KEY);
+          } else {
+            await clearCartRef.current();
+          }
           toast.success("QuestPay payment confirmed");
         }
       })
@@ -185,7 +219,7 @@ const Checkout = () => {
     return () => {
       active = false;
     };
-  }, [authenticated, location.search, navigate]);
+  }, [authenticated, isBuyNowCheckout, location.search, navigate]);
 
   const fetchBankAccounts = async () => {
     try {
