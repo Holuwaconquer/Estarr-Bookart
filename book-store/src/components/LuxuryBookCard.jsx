@@ -11,9 +11,9 @@ const LuxuryBookCard = ({ book }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e) => {
     setIsAdding(true);
-    addToCart(book);
+    addToCart(book, 1, e.currentTarget);
     setTimeout(() => setIsAdding(false), 800);
   };
 
@@ -33,6 +33,7 @@ const LuxuryBookCard = ({ book }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="group relative"
+      data-cart-animation-product
     >
       <div className="relative bg-gradient-to-b from-white/5 to-transparent backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:border-amber-500/30 transition-all duration-300">
         {/* Edition Badge */}

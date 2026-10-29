@@ -39,11 +39,37 @@ class EstherCommandTests(unittest.TestCase):
         self.assertEqual(result["intent"], "search_books")
         self.assertEqual(result["query"], "love")
 
+    def test_understands_natural_search_phrases(self):
+        examples = [
+            ("Esther, I'm looking for books on finance", "finance"),
+            ("Esther, I want to read romance books", "romance"),
+            ("Esther, do you have books about Nigerian history", "Nigerian history"),
+            ("Esther, can you recommend me some books about faith", "faith"),
+            ("Esther, do you have any books on budgeting", "budgeting"),
+            ("Esther, what books do you have about business", "business"),
+        ]
+        for command, expected_query in examples:
+            with self.subTest(command=command):
+                result = parse_command(command)
+                self.assertEqual(result["intent"], "search_books")
+                self.assertEqual(result["query"].lower(), expected_query.lower())
+
     def test_add_to_cart_extracts_title_and_quantity(self):
         result = parse_command("Esther add 2 copies of Daughters of Africa to my cart")
         self.assertEqual(result["intent"], "add_to_cart")
         self.assertEqual(result["title"], "Daughters of Africa")
         self.assertEqual(result["quantity"], 2)
+
+    def test_understands_polite_add_to_cart_commands(self):
+        examples = [
+            ("Esther, can you add The Alchemist to my cart", "The Alchemist"),
+            ("Esther, I want you to put Daughters of Africa in my basket", "Daughters of Africa"),
+        ]
+        for command, expected_title in examples:
+            with self.subTest(command=command):
+                result = parse_command(command)
+                self.assertEqual(result["intent"], "add_to_cart")
+                self.assertEqual(result["title"], expected_title)
 
     def test_add_without_title_asks_for_title(self):
         result = parse_command("Esther add a book to my cart")

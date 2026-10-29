@@ -177,6 +177,7 @@ const Cart = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                     className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                    data-cart-animation-product
                   >
                     <div className="flex p-3 sm:p-4 gap-3 sm:gap-4">
                       {/* Book Image - Small thumbnail */}
@@ -187,6 +188,7 @@ const Cart = () => {
                               src={item.image}
                               alt={item.title}
                               className="w-full h-full object-cover"
+                              data-cart-animation-product
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300" />
@@ -245,7 +247,12 @@ const Cart = () => {
 
                           {/* Remove Button */}
                           <button
-                            onClick={() => removeFromCart(item.id || item._id)}
+                            onClick={(event) =>
+                              removeFromCart(
+                                item.id || item._id,
+                                event.currentTarget,
+                              )
+                            }
                             className="p-1 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                           >
                             <HiX className="w-4 h-4 text-gray-400 hover:text-red-500" />

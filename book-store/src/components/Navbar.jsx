@@ -128,6 +128,7 @@ const Navbar = () => {
                 whileHover={{ scale: 1.1, rotate: -8 }}
                 whileTap={{ scale: 0.9 }}
                 className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-violet/10 transition-colors"
+                data-cart-animation-target
               >
                 <IoCartOutline className="w-[18px] h-[18px] text-ink" />
               </motion.div>

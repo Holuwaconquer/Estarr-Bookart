@@ -227,7 +227,7 @@ const Landingpage = () => {
       e.preventDefault();
       e.stopPropagation();
       setIsProcessing(true);
-      await addToCart(book);
+      await addToCart(book, 1, e.currentTarget);
       toast.success(`${book?.title || 'Book'} added to cart`);
       setTimeout(() => setIsProcessing(false), 800);
     };
@@ -236,7 +236,7 @@ const Landingpage = () => {
       e.preventDefault();
       e.stopPropagation();
       setIsProcessing(true);
-      await removeFromCart(book._id);
+      await removeFromCart(book._id, e.currentTarget);
       toast.success(`${book?.title || 'Book'} removed from cart`);
       setTimeout(() => setIsProcessing(false), 800);
     };
@@ -252,6 +252,7 @@ const Landingpage = () => {
         whileHover={{ y: -8 }}
         onClick={() => navigate(`/product/${book?._id}`)}
         className="group relative flex h-full flex-col bg-white rounded-2xl overflow-hidden border border-black/[0.06] transition-all duration-300 cursor-pointer"
+        data-cart-animation-product
         style={{ boxShadow: '0 2px 10px rgba(30,27,41,0.05)' }}
         onMouseEnter={(e) => { e.currentTarget.style.boxShadow = `0 16px 32px -12px ${tint}40`; e.currentTarget.style.borderColor = `${tint}66`; }}
         onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 2px 10px rgba(30,27,41,0.05)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)'; }}
@@ -360,8 +361,8 @@ const Landingpage = () => {
               return (
                 <motion.button
                   key={idx}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 1, y: 10 }}
+                  animate={{ opacity: 1, y: 1 }}
                   transition={{ delay: 0.15 + idx * 0.04 }}
                   whileHover={{ scale: 1.06, y: -2 }}
                   whileTap={{ scale: 0.95 }}

@@ -19,8 +19,8 @@ const Wishlist = () => {
     toast.success('Removed from wishlist');
   };
 
-  const handleAddToCart = (book) => {
-    addToCart(book);
+  const handleAddToCart = (book, sourceElement) => {
+    addToCart(book, 1, sourceElement);
     toast.success(`${book.title} added to cart`);
   };
 
@@ -75,6 +75,7 @@ const Wishlist = () => {
                 variants={itemVariants}
                 whileHover={{ y: -8, shadow: '0 20px 40px rgba(0,0,0,0.1)' }}
                 className="bg-white rounded-xl shadow-lg overflow-hidden group"
+                data-cart-animation-product
               >
                 {/* Image Container */}
                 <div className="relative h-64 bg-gradient-to-br from-purple-100 to-blue-100 overflow-hidden">
@@ -146,7 +147,9 @@ const Wishlist = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => handleAddToCart(book)}
+                      onClick={(event) =>
+                        handleAddToCart(book, event.currentTarget)
+                      }
                       disabled={book.stock === 0}
                       className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >

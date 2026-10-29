@@ -104,7 +104,7 @@ const FlashDeals = () => {
     null,
   );
 
-  const handleCartToggle = async (deal) => {
+  const handleCartToggle = async (deal, sourceElement) => {
     if (pendingDealId === deal.id) return;
 
     setPendingDealId(deal.id);
@@ -117,9 +117,9 @@ const FlashDeals = () => {
       );
 
       if (isInCart) {
-        await removeFromCart(deal.id);
+        await removeFromCart(deal.id, sourceElement);
       } else {
-        await addToCart(deal);
+        await addToCart(deal, 1, sourceElement);
       }
     } finally {
       setPendingDealId(null);
@@ -210,6 +210,7 @@ const FlashDeals = () => {
                   key={deal.id}
                   whileHover={{ scale: 1.05 }}
                   className="flex h-full flex-col bg-white rounded-[4px] overflow-hidden shadow-md hover:border-white/50 transition-all group"
+                  data-cart-animation-product
                 >
                 <Link
                   to={`/product/${deal.id}`}
@@ -250,7 +251,9 @@ const FlashDeals = () => {
                 </Link>
                   <button
                     type="button"
-                    onClick={() => handleCartToggle(deal)}
+                    onClick={(event) =>
+                      handleCartToggle(deal, event.currentTarget)
+                    }
                     disabled={isPending}
                     aria-label={isInCart ? `Remove ${deal.title} from cart` : `Add ${deal.title} to cart`}
                     className={`flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white transition-colors disabled:cursor-wait disabled:opacity-60 ${

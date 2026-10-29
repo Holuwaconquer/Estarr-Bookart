@@ -69,7 +69,7 @@ const CategoryPage = () => {
     const bookId = book._id || book.id;
     setAddingToCart(prev => ({ ...prev, [bookId]: 'adding' }));
 
-    await addToCart(book);
+    await addToCart(book, 1, e.currentTarget);
 
     setTimeout(() => {
       setAddingToCart(prev => ({ ...prev, [bookId]: false }));
@@ -83,7 +83,7 @@ const CategoryPage = () => {
 
     setAddingToCart(prev => ({ ...prev, [bookId]: 'removing' }));
 
-    await removeFromCart(bookId);
+    await removeFromCart(bookId, e.currentTarget);
 
     setTimeout(() => {
       setAddingToCart(prev => ({ ...prev, [bookId]: false }));
@@ -666,6 +666,7 @@ const CategoryPage = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                         className="bg-white border border-black/[0.06] rounded-2xl overflow-hidden"
+                        data-cart-animation-product
                         style={{ boxShadow: '0 4px 20px rgba(30,27,41,0.05)' }}
                       >
                         <div className="flex flex-col md:flex-row p-6">

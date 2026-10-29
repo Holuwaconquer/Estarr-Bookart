@@ -28,6 +28,7 @@ const EstherAssistant = () => {
   const { addToCart } = useCart();
   const [open, setOpen] = useState(false);
   const [listening, setListening] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState('Tap the microphone to start.');
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([
@@ -42,6 +43,7 @@ const EstherAssistant = () => {
   const checkoutConfirmationRef = useRef(false);
   const messagesEndRef = useRef(null);
   const preferredVoiceRef = useRef(null);
+  const recognitionRestartTimerRef = useRef(null);
 
   useEffect(() => {
     checkoutConfirmationRef.current = checkoutConfirmation;
@@ -64,6 +66,7 @@ const EstherAssistant = () => {
 
   useEffect(() => () => {
     listeningRef.current = false;
+    window.clearTimeout(recognitionRestartTimerRef.current);
     recognitionRef.current?.stop();
     window.speechSynthesis?.cancel();
   }, []);
@@ -89,11 +92,15 @@ const EstherAssistant = () => {
     utterance.onend = () => {
       speakingRef.current = false;
       if (listeningRef.current) {
-        try {
-          recognitionRef.current?.start();
-        } catch (error) {
-          console.warn('Voice recognition could not restart:', error);
-        }
+        setVoiceStatus('Listening for your command…');
+        window.clearTimeout(recognitionRestartTimerRef.current);
+        recognitionRestartTimerRef.current = window.setTimeout(() => {
+          try {
+            if (listeningRef.current) recognitionRef.current?.start();
+          } catch (error) {
+            console.warn('Voice recognition could not restart:', error);
+          }
+        }, 300);
       }
     };
     utterance.onerror = () => {
@@ -249,6 +256,8 @@ const EstherAssistant = () => {
     if (listeningRef.current) {
       listeningRef.current = false;
       setListening(false);
+      setVoiceStatus('Microphone is off.');
+      window.clearTimeout(recognitionRestartTimerRef.current);
       recognitionRef.current?.stop();
       return;
     }
@@ -261,40 +270,79 @@ const EstherAssistant = () => {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'en-NG';
+    recognition.lang = 'en-GB';
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
+    recognition.onstart = () => setVoiceStatus('Listening… say “Esther” and your request.');
     recognition.onresult = (event) => {
-      const result = event.results[event.results.length - 1];
-      if (result?.isFinal) submitCommand(result[0].transcript, true);
-    };
-    recognition.onerror = (event) => {
-      if (event.error !== 'no-speech' && event.error !== 'aborted') {
-        respond(event.error === 'not-allowed'
-          ? 'Please allow microphone access in your browser settings to use voice commands.'
-          : 'I couldn’t hear that clearly. Please try again or type your command.');
+      const finalTranscript = [];
+      let interimTranscript = '';
+
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        const result = event.results[index];
+        const transcript = result[0]?.transcript?.trim();
+        if (!transcript) continue;
+        if (result.isFinal) finalTranscript.push(transcript);
+        else interimTranscript += `${transcript} `;
+      }
+
+      if (interimTranscript.trim()) setVoiceStatus(`I heard: “${interimTranscript.trim()}”`);
+      if (finalTranscript.length) {
+        setVoiceStatus('Working on your request…');
+        submitCommand(finalTranscript.join(' '), true);
       }
     };
+    recognition.onerror = (event) => {
+      const recoverableMessages = {
+        'no-speech': 'I didn’t detect speech. Try speaking after the listening indicator appears.',
+        'nomatch': 'I heard speech but couldn’t make out the words. Try a shorter phrase.',
+      };
+      const fatalMessages = {
+        'not-allowed': 'Microphone access is blocked. Allow it in your browser’s site settings, then tap the microphone again.',
+        'service-not-allowed': 'The browser’s speech recognition service is unavailable. Check browser permissions or type your request.',
+        'audio-capture': 'No microphone was found. Connect or enable a microphone, then try again.',
+        'network': 'The browser speech service could not connect. Check your internet connection, or type your request.',
+        'language-not-supported': 'This browser does not support the selected speech language. Try another supported browser.',
+      };
+      if (event.error === 'aborted') return;
+
+      if (recoverableMessages[event.error]) {
+        setVoiceStatus(recoverableMessages[event.error]);
+        return;
+      }
+      const message = fatalMessages[event.error]
+        || `Speech recognition stopped (${event.error || 'unknown error'}). You can type your request instead.`;
+      listeningRef.current = false;
+      setListening(false);
+      setVoiceStatus(message);
+      window.clearTimeout(recognitionRestartTimerRef.current);
+      recognition.stop();
+      addMessage('assistant', message);
+    };
     recognition.onend = () => {
-      if (listeningRef.current && !speakingRef.current) {
+      if (!listeningRef.current || speakingRef.current) return;
+      window.clearTimeout(recognitionRestartTimerRef.current);
+      recognitionRestartTimerRef.current = window.setTimeout(() => {
         try {
-          recognition.start();
+          if (listeningRef.current && !speakingRef.current) recognition.start();
         } catch (error) {
           console.warn('Voice recognition could not restart:', error);
         }
-      }
+      }, 300);
     };
 
     recognitionRef.current = recognition;
     listeningRef.current = true;
     setListening(true);
     setOpen(true);
+    setVoiceStatus('Starting microphone…');
     try {
       recognition.start();
       respond('I’m listening. Say “Esther” and then your command.');
     } catch (error) {
       listeningRef.current = false;
       setListening(false);
+      setVoiceStatus('Could not start microphone. Check browser permissions.');
       console.error('Could not start voice recognition:', error);
       respond('I couldn’t start the microphone. Please check your browser permissions.');
     }
@@ -310,6 +358,8 @@ const EstherAssistant = () => {
   const closeAssistant = () => {
     listeningRef.current = false;
     setListening(false);
+    setVoiceStatus('Microphone is off.');
+    window.clearTimeout(recognitionRestartTimerRef.current);
     recognitionRef.current?.stop();
     window.speechSynthesis?.cancel();
     speakingRef.current = false;
@@ -332,7 +382,7 @@ const EstherAssistant = () => {
               <HiSparkles className="h-5 w-5 text-amber-200" />
               <div>
                 <p className="font-semibold">Esther</p>
-                <p className="text-xs text-white/70">{listening ? 'Microphone on' : 'Voice & text assistant'}</p>
+                <p className="text-xs text-white/70">{voiceStatus}</p>
               </div>
             </div>
             <button

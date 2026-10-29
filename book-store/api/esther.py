@@ -4,15 +4,22 @@ import re
 
 WAKE_WORD = re.compile(r"^(?:(?:hey|okay|ok)\s+)?esther\b[\s,:-]*", re.IGNORECASE)
 ADD_TO_CART = re.compile(
-    r"^(?:please\s+)?(?:add|put|place|include)\s+(?:(\d{1,2})\s+)?"
-    r"(?:(?:copies|books?)\s+of\s+)?(?:(?:a|the)\s+)?(?:book\s+)?"
-    r"(.+?)\s+(?:to|in|into)\s+(?:my\s+)?cart[.! ]*$",
+    r"^(?:(?:please|can you|could you|would you|i want you to|i'd like you to)\s+)?"
+    r"(?:add|put|place|include)\s+(?:(\d{1,2})\s+)?"
+    r"(?:(?:copies|books?)\s+of\s+)?(?:book\s+)?"
+    r"(.+?)\s+(?:to|in|into)\s+(?:my\s+)?(?:cart|basket)[.! ]*$",
     re.IGNORECASE,
 )
 SEARCH_BOOKS = re.compile(
-    r"^(?:please\s+)?(?:show|find|search|browse|recommend|look\s+for)"
-    r"(?:\s+me)?\s+(?:some\s+)?(?:books?\s+)?"
-    r"(?:(?:related\s+to|about|on|in(?:\s+the)?\s+category|for)\s+)?"
+    r"^(?:(?:please|can you|could you|would you)\s+)?"
+    r"(?:(?:i am|i'm)\s+)?(?:looking for|searching for|interested in|i want to read|want to read|i want|want)"
+    r"(?:\s+me)?\s+(?:(?:some|any|a few|a)\s+)?(?:books?\s+)?"
+    r"(?:(?:related to|about|on|in(?:\s+the)?\s+category|for)\s+)?"
+    r"(.+?)(?:\s+books?)?[.! ]*$|"
+    r"^(?:(?:please|can you|could you|would you)\s+)?"
+    r"(?:show|find|search|browse|recommend|look for|do you have|what books do you have)"
+    r"(?:\s+me)?\s+(?:(?:some|any|a few|a)\s+)?(?:books?\s+)?"
+    r"(?:(?:related to|about|on|in(?:\s+the)?\s+category|for)\s+)?"
     r"(.+?)(?:\s+books?)?[.! ]*$",
     re.IGNORECASE,
 )
@@ -45,13 +52,19 @@ def parse_command(text):
     if not command:
         return {"intent": "wake", "message": "I’m listening. What can I help you find?"}
 
-    if re.fullmatch(r"(?:yes|yeah|confirm|continue|go ahead|okay|ok)[.! ]*", command, re.IGNORECASE):
+    if re.fullmatch(r"(?:yes|yeah|yep|confirm|continue|go ahead|okay|ok|sure)[.! ]*", command, re.IGNORECASE):
         return {"intent": "confirm", "message": "Okay."}
 
-    add_match = ADD_TO_CART.match(command)
+    normalized_command = re.sub(
+        r"^(?:hey\s+)?(?:please|can you|could you|would you|i want you to|i'd like you to)\s+",
+        "",
+        command,
+        flags=re.IGNORECASE,
+    )
+    add_match = ADD_TO_CART.match(normalized_command) or ADD_TO_CART.match(command)
     if add_match:
         title = add_match.group(2).strip(" \t.,!?")
-        title = re.sub(r"^(?:the\s+)?book\s+", "", title, flags=re.IGNORECASE).strip()
+        title = re.sub(r"^(?:(?:a|the)\s+)?book\s+", "", title, flags=re.IGNORECASE).strip()
         if title and title.lower() not in {"book", "a book", "the book"}:
             quantity = max(1, min(int(add_match.group(1) or 1), 20))
             return {
@@ -60,7 +73,12 @@ def parse_command(text):
                 "quantity": quantity,
                 "message": f"I’ll look for {title}.",
             }
-    if re.match(r"^(?:please\s+)?(?:add|put|place|include)\b", command, re.IGNORECASE):
+    if re.match(
+        r"^(?:(?:please|can you|could you|would you|i want you to|i'd like you to)\s+)?"
+        r"(?:add|put|place|include)\b",
+        command,
+        re.IGNORECASE,
+    ):
         return {
             "intent": "unrecognized",
             "message": "Tell me the book title you want added to your cart.",
@@ -79,7 +97,9 @@ def parse_command(text):
 
     search_match = SEARCH_BOOKS.match(command)
     if search_match:
-        query = search_match.group(1).strip(" \t.,!?")
+        query = (search_match.group(1) or search_match.group(2) or "").strip(" \t.,!?")
+        query = re.sub(r"^(?:any|some|a few|a)\s+", "", query, flags=re.IGNORECASE)
+        query = re.sub(r"^(?:books?\s+)?(?:about|on|related to)\s+", "", query, flags=re.IGNORECASE)
         if query and query.lower() not in {"books", "book"}:
             return {
                 "intent": "search_books",

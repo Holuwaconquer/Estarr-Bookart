@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
+import { motion as Motion } from "framer-motion";
 import { cartAPI, bookAPI } from "../services/api";
 import { toast } from "react-hot-toast";
 
@@ -16,6 +23,60 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [cartFlight, setCartFlight] = useState(null);
+  const cartFlightSequence = useRef(0);
+
+  const captureCartFlight = (book, direction, sourceElement) => {
+    if (
+      !sourceElement ||
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return null;
+    }
+
+    const cartTarget = document.querySelector("[data-cart-animation-target]");
+    const productContainer = sourceElement.closest?.(
+      "[data-cart-animation-product]",
+    );
+    const productImage = sourceElement.matches?.("img")
+      ? sourceElement
+      : productContainer?.querySelector("img");
+    const productRect =
+      productImage?.getBoundingClientRect() ||
+      productContainer?.getBoundingClientRect();
+    const cartRect = cartTarget?.getBoundingClientRect();
+
+    if (!productRect || !cartRect) return null;
+
+    const startRect = direction === "add" ? productRect : cartRect;
+    const endRect = direction === "add" ? cartRect : productRect;
+    const size = 56;
+
+    return {
+      id: ++cartFlightSequence.current,
+      image: book.image || book.coverImage || productImage?.currentSrc || productImage?.src,
+      title: book.title || "Book cover",
+      fromX: startRect.left + startRect.width / 2 - size / 2,
+      fromY: startRect.top + startRect.height / 2 - size / 2,
+      toX: endRect.left + endRect.width / 2 - size / 2,
+      toY: endRect.top + endRect.height / 2 - size / 2,
+    };
+  };
+
+  const playCartFlight = (flight) => {
+    if (!flight) return;
+    setCartFlight(flight);
+
+    const cartTarget = document.querySelector("[data-cart-animation-target]");
+    cartTarget?.animate?.(
+      [
+        { transform: "scale(1)" },
+        { transform: "scale(1.28) rotate(-8deg)" },
+        { transform: "scale(1)" },
+      ],
+      { duration: 420, easing: "ease-out" },
+    );
+  };
 
   // Normalize cart items to use consistent id field
   const normalizeItems = (items) => {
@@ -149,8 +210,9 @@ export const CartProvider = ({ children }) => {
   };
 
   // Add to cart with backend sync
-  const addToCart = async (book, quantity = 1) => {
+  const addToCart = async (book, quantity = 1, sourceElement) => {
     try {
+      const flight = captureCartFlight(book, "add", sourceElement);
       const token = localStorage.getItem("accessToken");
       const bookId = book._id || book.id;
       const cartItem = {
@@ -218,6 +280,7 @@ export const CartProvider = ({ children }) => {
         setCart(updatedCart);
         localStorage.setItem("cart", JSON.stringify(updatedCart));
       }
+      playCartFlight(flight);
 
       // Show success toast with animation
       // toast.success(
@@ -253,8 +316,16 @@ export const CartProvider = ({ children }) => {
   };
 
   // Remove from cart
-  const removeFromCart = async (itemId) => {
+  const removeFromCart = async (itemId, sourceElement) => {
     try {
+      const itemToRemove = cart.find(
+        (item) => item.id === itemId || item._id === itemId || item.book === itemId,
+      );
+      const flight = captureCartFlight(
+        itemToRemove || {},
+        "remove",
+        sourceElement,
+      );
       const token = localStorage.getItem("accessToken");
 
       if (token) {
@@ -308,6 +379,7 @@ export const CartProvider = ({ children }) => {
         localStorage.setItem("cart", JSON.stringify(updatedCart));
       }
 
+      playCartFlight(flight);
       // toast.success("Item removed from cart");
     } catch (error) {
       toast.error("Failed to remove item");
@@ -420,5 +492,48 @@ export const CartProvider = ({ children }) => {
     syncCartWithBackend,
   };
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider value={value}>
+      {children}
+      {cartFlight && (
+        <Motion.div
+          key={cartFlight.id}
+          initial={{
+            x: cartFlight.fromX,
+            y: cartFlight.fromY,
+            scale: 0.78,
+            opacity: 0.96,
+            rotate: -8,
+          }}
+          animate={{
+            x: cartFlight.toX,
+            y: cartFlight.toY,
+            scale: 0.3,
+            opacity: 0.08,
+            rotate: 8,
+          }}
+          transition={{ duration: 1.9, ease: [0.22, 0.68, 0, 1] }}
+          onAnimationComplete={() =>
+            setCartFlight((current) =>
+              current?.id === cartFlight.id ? null : current,
+            )
+          }
+          aria-hidden="true"
+          className="pointer-events-none fixed left-0 top-0 z-[100] h-20 w-14 overflow-hidden rounded-md border border-white/80 bg-white shadow-[0_12px_30px_rgba(30,27,41,0.28)]"
+        >
+          {cartFlight.image ? (
+            <img
+              src={cartFlight.image}
+              alt=""
+              className="h-full w-full object-contain p-1"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-gradient-to-br from-violet-500 to-rose-400 p-1 text-center text-[8px] font-semibold text-white">
+              {cartFlight.title}
+            </div>
+          )}
+        </Motion.div>
+      )}
+    </CartContext.Provider>
+  );
 };

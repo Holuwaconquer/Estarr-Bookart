@@ -115,10 +115,10 @@ const BookCard = ({ book = {} }) => {
     e.stopPropagation();
 
     setIsAdding(true);
-    addToCart(book);
-    toast.success(`${book.title || 'Book'} added to cart!`);
+    addToCart(book, 1, e.currentTarget);
+    // toast.success(`${book.title || 'Book'} added to cart!`);
 
-    setTimeout(() => setIsAdding(false), 800);
+    setTimeout(() => setIsAdding(false), 300);
   };
 
   const handleRemoveFromCart = (e) => {
@@ -126,10 +126,10 @@ const BookCard = ({ book = {} }) => {
     e.stopPropagation();
 
     setIsAdding(true);
-    removeFromCart(bookId);
-    toast.success(`${book.title || 'Book'} removed from cart!`);
+    removeFromCart(bookId, e.currentTarget);
+    // toast.success(`${book.title || 'Book'} removed from cart!`);
 
-    setTimeout(() => setIsAdding(false), 800);
+    setTimeout(() => setIsAdding(false), 300);
   };
 
   const discountBadge = book.discount && book.discount > 0 ? (
@@ -146,6 +146,7 @@ const BookCard = ({ book = {} }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="group relative h-full"
+      data-cart-animation-product
       onClick={(e) => {navigate(`/product/${bookId}`); e.preventDefault(); e.stopPropagation();}}
     >
       <div

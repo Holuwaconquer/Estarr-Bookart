@@ -200,20 +200,20 @@ const ProductDetail = () => {
     fetchBook();
   }, [id, navigate]);
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (event) => {
     if (!book) return;
 
     setAddingToCart(true);
-    await addToCart(book, quantity);
+    await addToCart(book, quantity, event.currentTarget);
 
     setTimeout(() => setAddingToCart(false), 800);
   };
 
-  const handleRemoveFromCart = async () => {
+  const handleRemoveFromCart = async (event) => {
     if (!id) return;
 
     setAddingToCart(true);
-    await removeFromCart(id);
+    await removeFromCart(id, event.currentTarget);
 
     setTimeout(() => setAddingToCart(false), 800);
   };
@@ -313,7 +313,10 @@ const ProductDetail = () => {
           Back to Shopping
         </motion.button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+        <div
+          className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16"
+          data-cart-animation-product
+        >
           {/* Left — Book Showcase */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -340,6 +343,7 @@ const ProductDetail = () => {
                       fetchPriority="high"
                       decoding="async"
                       className="w-full h-full object-contain rounded-lg shadow-xl"
+                      data-cart-animation-product
                     />
                     {book.images.length > 1 && (
                       <div className="absolute bottom-2 right-2 bg-ink/85 px-3 py-1 rounded-full text-sm text-white">
@@ -357,6 +361,7 @@ const ProductDetail = () => {
                       fetchPriority="high"
                       decoding="async"
                       className="w-full h-full object-contain rounded-lg shadow-xl"
+                      data-cart-animation-product
                     />
                   </div>
                 ) : (
